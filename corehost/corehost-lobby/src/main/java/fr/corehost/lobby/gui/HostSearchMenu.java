@@ -16,10 +16,15 @@ import fr.corehost.api.host.HostData;
 import fr.corehost.api.host.HostStatus;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import org.bukkit.configuration.ConfigurationSection;
 
 public class HostSearchMenu implements CustomMenu {
 
     private final Inventory inventory;
+    private String gameFilter = "ALL";
+    private HostStatus statusFilter = null;
 
     public HostSearchMenu() {
         this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_AQUA + "Recherche de Host");
@@ -28,6 +33,11 @@ public class HostSearchMenu implements CustomMenu {
 
     private void initializeItems() {
         // Bottom bar decoration
+        drawBottomBar();
+        drawHosts();
+    }
+    
+    private void drawBottomBar() {
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
         if (fillerMeta != null) {
@@ -65,8 +75,48 @@ public class HostSearchMenu implements CustomMenu {
         }
         inventory.setItem(50, refreshItem);
         
+        // Filter by Game item (Slot 45)
+        ItemStack gameFilterItem = new ItemStack(Material.HOPPER);
+        ItemMeta gameFilterMeta = gameFilterItem.getItemMeta();
+        if (gameFilterMeta != null) {
+            gameFilterMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Jeu");
+            gameFilterMeta.setLore(java.util.Arrays.asList(
+                ChatColor.GRAY + "Actuel : " + ChatColor.YELLOW + (gameFilter.equals("ALL") ? "Tous" : gameFilter),
+                "",
+                ChatColor.GREEN + "► Cliquez pour changer"
+            ));
+            gameFilterItem.setItemMeta(gameFilterMeta);
+        }
+        inventory.setItem(45, gameFilterItem);
+        
+        // Filter by Status item (Slot 46)
+        ItemStack statusFilterItem = new ItemStack(Material.COMPARATOR);
+        ItemMeta statusFilterMeta = statusFilterItem.getItemMeta();
+        if (statusFilterMeta != null) {
+            statusFilterMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Statut");
+            statusFilterMeta.setLore(java.util.Arrays.asList(
+                ChatColor.GRAY + "Actuel : " + ChatColor.YELLOW + (statusFilter == null ? "Tous" : statusFilter.name()),
+                "",
+                ChatColor.GREEN + "► Cliquez pour changer"
+            ));
+            statusFilterItem.setItemMeta(statusFilterMeta);
+        }
+        inventory.setItem(46, statusFilterItem);
+    }
+    
+    private void drawHosts() {
+        // Clear host slots
+        for(int i = 0; i < 45; i++) {
+            inventory.setItem(i, new ItemStack(Material.AIR));
+        }
+        
         // Fetch running hosts from Redis
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
+        
+        if (plugin.getHostManager() == null) {
+            return; // Redis is not configured or failed to initialize
+        }
+        
         List<HostData> hosts = plugin.getHostManager().getAllHosts();
         
         int slot = 0;
@@ -74,8 +124,19 @@ public class HostSearchMenu implements CustomMenu {
 
         for (HostData host : hosts) {
             if (slot >= 45) break; // Maximum capacity in this page
+            
+            // Apply Filters
+            if (!gameFilter.equals("ALL") && !host.getGameType().equalsIgnoreCase(gameFilter)) {
+                continue;
+            }
+            if (statusFilter != null && host.getStatus() != statusFilter) {
+                continue;
+            }
 
-            Material mat = host.getGameType().equalsIgnoreCase("Sumo") ? Material.SLIME_BALL : Material.RED_BANNER;
+            String materialName = plugin.getConfig().getString("games." + host.getGameType() + ".material", "BEDROCK");
+            Material mat = Material.matchMaterial(materialName);
+            if (mat == null) mat = Material.BEDROCK;
+            
             ItemStack hostItem = new ItemStack(mat);
             ItemMeta hostMeta = hostItem.getItemMeta();
             
@@ -120,13 +181,19 @@ public class HostSearchMenu implements CustomMenu {
 
         if (clicked.getType() == Material.EMERALD) {
             player.sendMessage(ChatColor.YELLOW + "Rafraîchissement de la liste des serveurs...");
-            // Clear items and re-initialize
-            for(int i = 0; i < 45; i++) {
-                inventory.setItem(i, new ItemStack(Material.AIR));
-            }
-            initializeItems();
+            drawHosts();
         } else if (clicked.getType() == Material.NETHER_STAR) {
             new HostCreateMenu().open(player);
+        } else if (clicked.getType() == Material.HOPPER && event.getSlot() == 45) {
+            // Cycle Game Filter
+            cycleGameFilter();
+            drawBottomBar();
+            drawHosts();
+        } else if (clicked.getType() == Material.COMPARATOR && event.getSlot() == 46) {
+            // Cycle Status Filter
+            cycleStatusFilter();
+            drawBottomBar();
+            drawHosts();
         } else {
             // Check if it's a server item
             CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
@@ -141,6 +208,37 @@ public class HostSearchMenu implements CustomMenu {
                     player.closeInventory();
                 }
             }
+        }
+    }
+    
+    private void cycleGameFilter() {
+        CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
+        ConfigurationSection gamesSection = plugin.getConfig().getConfigurationSection("games");
+        
+        List<String> availableGames = new ArrayList<>();
+        availableGames.add("ALL");
+        
+        if (gamesSection != null) {
+            availableGames.addAll(gamesSection.getKeys(false));
+        }
+        
+        int currentIndex = availableGames.indexOf(gameFilter);
+        if (currentIndex == -1 || currentIndex == availableGames.size() - 1) {
+            gameFilter = "ALL";
+        } else {
+            gameFilter = availableGames.get(currentIndex + 1);
+        }
+    }
+    
+    private void cycleStatusFilter() {
+        if (statusFilter == null) {
+            statusFilter = HostStatus.WAITING;
+        } else if (statusFilter == HostStatus.WAITING) {
+            statusFilter = HostStatus.STARTING;
+        } else if (statusFilter == HostStatus.STARTING) {
+            statusFilter = HostStatus.PLAYING;
+        } else {
+            statusFilter = null;
         }
     }
 }

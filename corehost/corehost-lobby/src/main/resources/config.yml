@@ -4,3 +4,27 @@ redis:
   host: "127.0.0.1"
   port: 6379
   password: ""
+
+games:
+  Sumo:
+    name: "&e&lCréer un Mini-Jeu (Sumo)"
+    material: "SLIME_BALL"
+    slot: 11
+    lore:
+      - ""
+      - "&7Démarrez un serveur Sumo"
+      - "&7pour expulser vos adversaires"
+      - "&7de l'arène !"
+      - ""
+      - "&a► Cliquez pour héberger"
+  CTF:
+    name: "&c&lCréer un Mini-Jeu (CTF)"
+    material: "RED_BANNER"
+    slot: 15
+    lore:
+      - ""
+      - "&7Capture the Flag !"
+      - "&7Volez le drapeau adverse"
+      - "&7pour gagner la partie."
+      - ""
+      - "&a► Cliquez pour héberger"

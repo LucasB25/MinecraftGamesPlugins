@@ -69,7 +69,9 @@ public class CloudNetServiceManager {
                             20 // Default max players
                     );
 
-                    plugin.getHostManager().saveHost(hostData);
+                    if (plugin.getHostManager() != null) {
+                        plugin.getHostManager().saveHost(hostData);
+                    }
 
                     player.sendMessage(ChatColor.GREEN + "Votre serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " a été créé ! Il est en cours de démarrage...");
                     

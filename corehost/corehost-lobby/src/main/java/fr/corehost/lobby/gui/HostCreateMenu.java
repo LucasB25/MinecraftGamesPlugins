@@ -8,8 +8,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.configuration.ConfigurationSection;
 import fr.corehost.lobby.CoreHostLobby;
+
+import java.util.List;
+import java.util.ArrayList;
 
 public class HostCreateMenu implements CustomMenu {
 
@@ -34,39 +40,43 @@ public class HostCreateMenu implements CustomMenu {
             }
         }
 
-        // Sumo Item
-        ItemStack sumoItem = new ItemStack(Material.SLIME_BALL);
-        ItemMeta sumoMeta = sumoItem.getItemMeta();
-        if (sumoMeta != null) {
-            sumoMeta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Créer un Mini-Jeu (Sumo)");
-            sumoMeta.setLore(java.util.Arrays.asList(
-                "",
-                ChatColor.GRAY + "Démarrez un serveur Sumo",
-                ChatColor.GRAY + "pour expulser vos adversaires",
-                ChatColor.GRAY + "de l'arène !",
-                "",
-                ChatColor.GREEN + "► Cliquez pour héberger"
-            ));
-            sumoItem.setItemMeta(sumoMeta);
+        CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
+        ConfigurationSection gamesSection = plugin.getConfig().getConfigurationSection("games");
+        
+        if (gamesSection != null) {
+            NamespacedKey gameKey = new NamespacedKey(plugin, "game_id");
+            
+            for (String gameId : gamesSection.getKeys(false)) {
+                String name = gamesSection.getString(gameId + ".name", "&e" + gameId);
+                String materialName = gamesSection.getString(gameId + ".material", "BEDROCK");
+                int slot = gamesSection.getInt(gameId + ".slot", 0);
+                List<String> configLore = gamesSection.getStringList(gameId + ".lore");
+                
+                Material mat = Material.matchMaterial(materialName);
+                if (mat == null) mat = Material.BEDROCK;
+                
+                ItemStack gameItem = new ItemStack(mat);
+                ItemMeta meta = gameItem.getItemMeta();
+                if (meta != null) {
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+                    
+                    if (configLore != null) {
+                        List<String> lore = new ArrayList<>();
+                        for (String line : configLore) {
+                            lore.add(ChatColor.translateAlternateColorCodes('&', line));
+                        }
+                        meta.setLore(lore);
+                    }
+                    
+                    meta.getPersistentDataContainer().set(gameKey, PersistentDataType.STRING, gameId);
+                    gameItem.setItemMeta(meta);
+                }
+                
+                if (slot >= 0 && slot < inventory.getSize()) {
+                    inventory.setItem(slot, gameItem);
+                }
+            }
         }
-        inventory.setItem(11, sumoItem);
-
-        // CTF Item
-        ItemStack ctfItem = new ItemStack(Material.RED_BANNER);
-        ItemMeta ctfMeta = ctfItem.getItemMeta();
-        if (ctfMeta != null) {
-            ctfMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Créer un Mini-Jeu (CTF)");
-            ctfMeta.setLore(java.util.Arrays.asList(
-                "",
-                ChatColor.GRAY + "Capture the Flag !",
-                ChatColor.GRAY + "Volez le drapeau adverse",
-                ChatColor.GRAY + "pour gagner la partie.",
-                "",
-                ChatColor.GREEN + "► Cliquez pour héberger"
-            ));
-            ctfItem.setItemMeta(ctfMeta);
-        }
-        inventory.setItem(15, ctfItem);
     }
 
     public void open(Player player) {
@@ -83,12 +93,16 @@ public class HostCreateMenu implements CustomMenu {
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
-        if (clicked.getType() == Material.SLIME_BALL) {
-            player.closeInventory();
-            JavaPlugin.getPlugin(CoreHostLobby.class).getCloudNetServiceManager().createHost(player, "Sumo");
-        } else if (clicked.getType() == Material.RED_BANNER) {
-            player.closeInventory();
-            JavaPlugin.getPlugin(CoreHostLobby.class).getCloudNetServiceManager().createHost(player, "CTF");
+        CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
+        NamespacedKey gameKey = new NamespacedKey(plugin, "game_id");
+        ItemMeta meta = clicked.getItemMeta();
+        
+        if (meta != null && meta.getPersistentDataContainer().has(gameKey, PersistentDataType.STRING)) {
+            String gameId = meta.getPersistentDataContainer().get(gameKey, PersistentDataType.STRING);
+            if (gameId != null) {
+                player.closeInventory();
+                plugin.getCloudNetServiceManager().createHost(player, gameId);
+            }
         }
     }
 }

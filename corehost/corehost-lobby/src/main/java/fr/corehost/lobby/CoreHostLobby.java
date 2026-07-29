@@ -55,8 +55,8 @@ public class CoreHostLobby extends JavaPlugin {
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();
         if (getCommand("spawn") != null) getCommand("spawn").setExecutor(spawnCommand);
         
-        // Setup Worlds Security
-        setupWorlds();
+        // Setup Worlds Security (Delayed by 1 tick to ensure worlds are fully loaded)
+        getServer().getScheduler().runTask(this, this::setupWorlds);
     }
 
     private void setupWorlds() {
@@ -78,8 +78,14 @@ public class CoreHostLobby extends JavaPlugin {
             world.setGameRule(GameRule.DO_MOB_LOOT, false);
             world.setGameRule(GameRule.DO_INSOMNIA, false);
             
-            world.setTime(6000L); // Noon
-            world.setStorm(false);
+            try {
+                if (world.getEnvironment() == World.Environment.NORMAL) {
+                    world.setTime(6000L); // Noon
+                    world.setStorm(false);
+                }
+            } catch (Exception e) {
+                getLogger().warning("Impossible de définir l'heure/météo pour le monde " + world.getName() + " : " + e.getMessage());
+            }
         }
     }
 

@@ -74,6 +74,7 @@ public class CoreHostLobby extends JavaPlugin {
             world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
             world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
             world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+            world.setGameRule(GameRule.LOCATOR_BAR, false);
             world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
             world.setGameRule(GameRule.DO_TILE_DROPS, false);
             world.setGameRule(GameRule.DO_FIRE_TICK, false);

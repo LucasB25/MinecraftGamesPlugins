@@ -4,27 +4,89 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-public class HostCreateMenu {
+public class HostCreateMenu implements CustomMenu {
 
-    public void open(Player player) {
-        Inventory inventory = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Création de Host");
+    private final Inventory inventory;
 
-        // Example item
-        ItemStack createItem = new ItemStack(Material.DIAMOND_SWORD);
-        ItemMeta createMeta = createItem.getItemMeta();
-        if (createMeta != null) {
-            createMeta.setDisplayName(ChatColor.YELLOW + "Créer un Mini-Jeu (UHC)");
-            createItem.setItemMeta(createMeta);
+    public HostCreateMenu() {
+        this.inventory = Bukkit.createInventory(this, 27, ChatColor.GOLD + "Création de Host");
+        initializeItems();
+    }
+
+    private void initializeItems() {
+        // Border decoration
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        if (fillerMeta != null) {
+            fillerMeta.setDisplayName(" ");
+            filler.setItemMeta(fillerMeta);
+        }
+        for (int i = 0; i < inventory.getSize(); i++) {
+            if (i < 9 || i > 17 || i == 9 || i == 17) {
+                inventory.setItem(i, filler);
+            }
         }
 
-        inventory.setItem(13, createItem);
-        
-        // TODO: Handle click event to request CloudNet to start a specific task
-        
+        // Sumo Item
+        ItemStack sumoItem = new ItemStack(Material.SLIME_BALL);
+        ItemMeta sumoMeta = sumoItem.getItemMeta();
+        if (sumoMeta != null) {
+            sumoMeta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Créer un Mini-Jeu (Sumo)");
+            sumoMeta.setLore(java.util.Arrays.asList(
+                "",
+                ChatColor.GRAY + "Démarrez un serveur Sumo",
+                ChatColor.GRAY + "pour expulser vos adversaires",
+                ChatColor.GRAY + "de l'arène !",
+                "",
+                ChatColor.GREEN + "► Cliquez pour héberger"
+            ));
+            sumoItem.setItemMeta(sumoMeta);
+        }
+        inventory.setItem(11, sumoItem);
+
+        // CTF Item
+        ItemStack ctfItem = new ItemStack(Material.RED_BANNER);
+        ItemMeta ctfMeta = ctfItem.getItemMeta();
+        if (ctfMeta != null) {
+            ctfMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Créer un Mini-Jeu (CTF)");
+            ctfMeta.setLore(java.util.Arrays.asList(
+                "",
+                ChatColor.GRAY + "Capture the Flag !",
+                ChatColor.GRAY + "Volez le drapeau adverse",
+                ChatColor.GRAY + "pour gagner la partie.",
+                "",
+                ChatColor.GREEN + "► Cliquez pour héberger"
+            ));
+            ctfItem.setItemMeta(ctfMeta);
+        }
+        inventory.setItem(15, ctfItem);
+    }
+
+    public void open(Player player) {
         player.openInventory(inventory);
+    }
+
+    @Override
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    @Override
+    public void onClick(InventoryClickEvent event, Player player) {
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || clicked.getType() == Material.AIR) return;
+
+        if (clicked.getType() == Material.SLIME_BALL) {
+            player.sendMessage(ChatColor.GREEN + "Demande de création de serveur Sumo envoyée (Bientôt)...");
+            player.closeInventory();
+        } else if (clicked.getType() == Material.RED_BANNER) {
+            player.sendMessage(ChatColor.GREEN + "Demande de création de serveur CTF envoyée (Bientôt)...");
+            player.closeInventory();
+        }
     }
 }

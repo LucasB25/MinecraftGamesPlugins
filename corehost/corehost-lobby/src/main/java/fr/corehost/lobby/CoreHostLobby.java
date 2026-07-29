@@ -19,7 +19,9 @@ public class CoreHostLobby extends JavaPlugin {
             getLogger().severe("Failed to connect to Redis!");
         }
         
-        // TODO: Register Commands & Listeners
+        // Register Listeners
+        getServer().getPluginManager().registerEvents(new fr.corehost.lobby.listeners.LobbyListener(), this);
+        
         // TODO: CloudNet warm pool API usage (or it's handled on CloudNet side via Tasks)
     }
 

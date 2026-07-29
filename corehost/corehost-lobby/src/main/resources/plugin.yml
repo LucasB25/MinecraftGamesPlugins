@@ -4,5 +4,5 @@ main: fr.corehost.lobby.CoreHostLobby
 api-version: '1.21'
 authors: [ CoreHost ]
 description: Lobby plugin with AdvancedSlimePaper and CloudNet integration.
-depend:
+softdepend:
   - CloudNet-Bridge

@@ -45,12 +45,24 @@ public class FriendsMenu implements CustomMenu {
 
         this.inventory = Bukkit.createInventory(this, 54, "Liste d'Amis - Page " + (page + 1));
         
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+        
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Set<String> friendUuids = plugin.getFriendManager().getFriends(player.getUniqueId());
             List<String> friends = new ArrayList<>(friendUuids);
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!player.isOnline()) return;
+
+                ItemStack bg = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+                ItemMeta bgMeta = bg.getItemMeta();
+                if (bgMeta != null) {
+                    bgMeta.setDisplayName(" ");
+                    bg.setItemMeta(bgMeta);
+                }
+                for (int i = 45; i < 54; i++) {
+                    inventory.setItem(i, bg);
+                }
 
                 int slot = 0;
                 int startIndex = page * 45;
@@ -153,21 +165,25 @@ public class FriendsMenu implements CustomMenu {
         int slot = event.getSlot();
 
         if (slot == 45 && clickedItem.getType() == Material.ARROW) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             new FriendsMenu(plugin, page - 1).open(player);
             return;
         }
 
         if (slot == 53 && clickedItem.getType() == Material.ARROW) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             new FriendsMenu(plugin, page + 1).open(player);
             return;
         }
 
         if (slot == 49) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             new PlayerProfileMenu(plugin, player).open(player);
             return;
         }
         
         if (slot == 50) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.5f);
             player.closeInventory();
             fr.corehost.lobby.listeners.LobbyListener.pendingFriendAdd.add(player.getUniqueId());
             player.sendMessage(ChatColor.AQUA + "===============================");
@@ -182,6 +198,7 @@ public class FriendsMenu implements CustomMenu {
             ClickType clickType = event.getClick();
             
             if (clickType == ClickType.RIGHT) {
+                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     UUID targetUuid = plugin.getFriendManager().getUuidByName(friendName);
                     if (targetUuid != null) {
@@ -191,6 +208,7 @@ public class FriendsMenu implements CustomMenu {
                     }
                 });
             } else if (clickType == ClickType.LEFT) {
+                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 player.sendMessage(ChatColor.GRAY + "Système de Party bientôt disponible.");
             }
         }

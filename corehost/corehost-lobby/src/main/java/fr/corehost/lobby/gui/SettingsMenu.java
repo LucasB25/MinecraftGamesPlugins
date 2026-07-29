@@ -35,12 +35,24 @@ public class SettingsMenu implements CustomMenu {
             return;
         }
 
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             boolean isBlocked = plugin.getFriendManager().areFriendRequestsBlocked(player.getUniqueId());
             boolean notificationsEnabled = plugin.getFriendManager().areNotificationsEnabled(player.getUniqueId());
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!player.isOnline()) return;
+
+                ItemStack bg = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+                ItemMeta bgMeta = bg.getItemMeta();
+                if (bgMeta != null) {
+                    bgMeta.setDisplayName(" ");
+                    bg.setItemMeta(bgMeta);
+                }
+                for (int i = 0; i < inventory.getSize(); i++) {
+                    inventory.setItem(i, bg);
+                }
 
                 ItemStack friendRequestToggle = new ItemStack(isBlocked ? Material.RED_DYE : Material.LIME_DYE);
                 ItemMeta toggleMeta = friendRequestToggle.getItemMeta();
@@ -123,11 +135,13 @@ public class SettingsMenu implements CustomMenu {
         int slot = event.getSlot();
 
         if (slot == 22) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             new PlayerProfileMenu(plugin, player).open(player);
             return;
         }
 
         if (slot == 11) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 boolean isBlocked = plugin.getFriendManager().areFriendRequestsBlocked(player.getUniqueId());
                 plugin.getFriendManager().setFriendRequestsBlocked(player.getUniqueId(), !isBlocked);
@@ -141,6 +155,7 @@ public class SettingsMenu implements CustomMenu {
         }
 
         if (slot == 13) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 boolean enabled = plugin.getFriendManager().areNotificationsEnabled(player.getUniqueId());
                 plugin.getFriendManager().setNotificationsEnabled(player.getUniqueId(), !enabled);

@@ -28,6 +28,11 @@ public class FriendCommand implements SimpleCommand {
     }
 
     @Override
+    public boolean hasPermission(final Invocation invocation) {
+        return invocation.source().hasPermission("corehost.command.friend");
+    }
+
+    @Override
     public List<String> suggest(Invocation invocation) {
         String[] args = invocation.arguments();
         if (args.length == 0 || args.length == 1) {

@@ -10,6 +10,10 @@ commands:
   spawn:
     description: Téléporte au spawn du lobby.
     aliases: [hub, lobby]
+    permission: corehost.command.spawn
+    permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
   friend:
     description: Gérer vos amis.
     aliases: [f, ami, amis]
+    permission: corehost.command.friend
+    permission-message: §cVous n'avez pas la permission d'exécuter cette commande.

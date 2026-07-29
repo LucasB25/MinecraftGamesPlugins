@@ -18,6 +18,11 @@ public class HubCommand implements SimpleCommand {
     }
 
     @Override
+    public boolean hasPermission(final Invocation invocation) {
+        return invocation.source().hasPermission("corehost.command.hub");
+    }
+
+    @Override
     public void execute(Invocation invocation) {
         if (!(invocation.source() instanceof Player)) {
             invocation.source().sendMessage(Component.text("Seuls les joueurs peuvent utiliser cette commande.", NamedTextColor.RED));

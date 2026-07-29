@@ -95,7 +95,8 @@ public class PlayerProfileMenu implements CustomMenu {
         }
         inventory.setItem(12, friendsItem);
 
-        // Slot 13 is empty (glass pane)
+        // ── Slot 13: Empty (glass pane) ──
+        inventory.setItem(13, filler2);
 
         // ── Slot 14: Party (Cake) ──
         ItemStack partyItem = new ItemStack(Material.CAKE);

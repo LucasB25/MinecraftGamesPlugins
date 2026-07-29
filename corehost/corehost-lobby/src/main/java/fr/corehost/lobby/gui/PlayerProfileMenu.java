@@ -18,16 +18,16 @@ import fr.corehost.lobby.CoreHostLobby;
 
 public class PlayerProfileMenu implements CustomMenu {
 
-    private final Inventory inventory;
+    private Inventory inventory;
     private final CoreHostLobby plugin;
+    private final Player player;
 
     public PlayerProfileMenu(CoreHostLobby plugin, Player player) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Profil de " + player.getName());
-        initializeItems(player);
+        this.player = player;
     }
 
-    private void initializeItems(Player player) {
+    private void initializeItems(boolean isLinked) {
         // Border decoration (Pink + Purple alternating)
         ItemStack filler1 = new ItemStack(Material.PINK_STAINED_GLASS_PANE);
         ItemMeta meta1 = filler1.getItemMeta();
@@ -133,12 +133,6 @@ public class PlayerProfileMenu implements CustomMenu {
                 ));
             } else {
                 // Cracked Account
-                boolean isLinked = false;
-                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
-                    String discordId = plugin.getRedisManager().get("corehost:discord_link:player:" + player.getUniqueId().toString());
-                    if (discordId != null) isLinked = true;
-                }
-                
                 if (isLinked) {
                     discordMeta.setLore(Arrays.asList(
                         "",
@@ -177,7 +171,20 @@ public class PlayerProfileMenu implements CustomMenu {
     }
 
     public void open(Player player) {
-        player.openInventory(inventory);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            boolean linked = false;
+            if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                String discordId = plugin.getRedisManager().get("corehost:discord_link:player:" + player.getUniqueId().toString());
+                if (discordId != null) linked = true;
+            }
+            
+            final boolean isLinked = linked;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Profil de " + player.getName());
+                initializeItems(isLinked);
+                player.openInventory(inventory);
+            });
+        });
     }
 
     @Override
@@ -193,8 +200,6 @@ public class PlayerProfileMenu implements CustomMenu {
         // Play a small click sound for any interactive item
         Material type = clicked.getType();
         if (type == Material.DIAMOND_SWORD || type == Material.NAME_TAG || type == Material.CAKE || type == Material.REDSTONE_TORCH) {
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-            
             if (type == Material.NAME_TAG) {
                 new FriendsMenu(plugin).open(player);
             } else if (type == Material.CAKE) {
@@ -202,6 +207,7 @@ public class PlayerProfileMenu implements CustomMenu {
             } else if (type == Material.REDSTONE_TORCH) {
                 new SettingsMenu(plugin).open(player);
             } else {
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY + "Cette fonctionnalité arrive bientôt !");
             }
         }

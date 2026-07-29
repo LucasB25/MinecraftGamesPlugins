@@ -63,9 +63,9 @@ public class LobbyListener implements Listener {
         
         // Cache player for friends system if bypassing Proxy
         if (plugin.getFriendManager() != null) {
-            plugin.getFriendManager().cachePlayer(player.getName(), player.getUniqueId());
-            
-
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                plugin.getFriendManager().cachePlayer(player.getName(), player.getUniqueId());
+            });
         }
 
         // Slot 4: Play Menu (Compass)
@@ -176,6 +176,8 @@ public class LobbyListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         event.setQuitMessage(null); // Hide vanilla quit message
         Player player = event.getPlayer();
+        pendingFriendAdd.remove(player.getUniqueId());
+        
         if (plugin.getFriendManager() != null) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 plugin.getFriendManager().updateLastSeen(player.getUniqueId());
@@ -257,10 +259,11 @@ public class LobbyListener implements Listener {
             if (message.equalsIgnoreCase("annuler") || message.equalsIgnoreCase("cancel")) {
                 player.sendMessage(ChatColor.YELLOW + "Ajout d'ami annulé.");
             } else {
-                // Execute the command synchronously
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    player.chat("/friend add " + message);
-                });
+                String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour envoyer une demande d'ami à " + net.md_5.bungee.api.ChatColor.YELLOW + message + net.md_5.bungee.api.ChatColor.GRAY + " !");
+                msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/friend add " + message));
+                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour ajouter")));
+                player.spigot().sendMessage(msg);
             }
         }
     }

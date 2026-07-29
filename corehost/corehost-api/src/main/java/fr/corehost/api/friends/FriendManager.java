@@ -146,4 +146,21 @@ public class FriendManager {
             return val == null || !val.equals("true"); // Default to true if key does not exist
         }
     }
+
+    public void setOnline(UUID uuid, boolean online) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            String key = "corehost:online:" + uuid.toString();
+            if (online) {
+                jedis.set(key, "true");
+            } else {
+                jedis.del(key);
+            }
+        }
+    }
+
+    public boolean isOnline(UUID uuid) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            return jedis.exists("corehost:online:" + uuid.toString());
+        }
+    }
 }

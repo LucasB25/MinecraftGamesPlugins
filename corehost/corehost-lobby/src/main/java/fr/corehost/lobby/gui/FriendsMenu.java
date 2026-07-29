@@ -54,6 +54,25 @@ public class FriendsMenu implements CustomMenu {
             Set<String> friendUuids = plugin.getFriendManager().getFriends(player.getUniqueId());
             List<String> friends = new ArrayList<>(friendUuids);
 
+            // Preload data asynchronously to avoid lag spikes
+            java.util.Map<UUID, String> friendNames = new java.util.HashMap<>();
+            java.util.Map<UUID, Long> friendLastSeen = new java.util.HashMap<>();
+            java.util.Map<UUID, Boolean> friendOnline = new java.util.HashMap<>();
+
+            int asyncStart = page * 45;
+            int asyncEnd = Math.min(asyncStart + 45, friends.size());
+
+            for (int i = asyncStart; i < asyncEnd; i++) {
+                UUID friendId = UUID.fromString(friends.get(i));
+                String name = plugin.getFriendManager().getNameByUuid(friendId);
+                friendNames.put(friendId, name != null ? name : "Inconnu");
+                boolean online = plugin.getFriendManager().isOnline(friendId);
+                friendOnline.put(friendId, online);
+                if (!online) {
+                    friendLastSeen.put(friendId, plugin.getFriendManager().getLastSeen(friendId));
+                }
+            }
+
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!player.isOnline()) return;
 
@@ -94,10 +113,9 @@ public class FriendsMenu implements CustomMenu {
                 for (int i = startIndex; i < endIndex; i++) {
                     String fUuid = friends.get(i);
                     UUID friendId = UUID.fromString(fUuid);
-                    String friendName = plugin.getFriendManager().getNameByUuid(friendId);
-                    if (friendName == null) friendName = "Inconnu";
+                    String friendName = friendNames.getOrDefault(friendId, "Inconnu");
 
-                    boolean isOnlineLocally = Bukkit.getPlayer(friendId) != null;
+                    boolean isOnlineNetwork = friendOnline.getOrDefault(friendId, false);
 
                     String rank = ChatColor.GRAY + "Joueur";
                     String accountType = (friendId.version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
@@ -105,17 +123,17 @@ public class FriendsMenu implements CustomMenu {
                     ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
                     if (meta != null) {
-                        meta.setDisplayName((isOnlineLocally ? ChatColor.GREEN : ChatColor.GRAY) + "" + ChatColor.BOLD + friendName);
+                        meta.setDisplayName((isOnlineNetwork ? ChatColor.GREEN : ChatColor.GRAY) + "" + ChatColor.BOLD + friendName);
                         meta.setOwningPlayer(Bukkit.getOfflinePlayer(friendId));
 
                         List<String> lore = new ArrayList<>();
                         lore.add("");
                         lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + rank);
                         lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType);
-                        if (isOnlineLocally) {
+                        if (isOnlineNetwork) {
                             lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + ChatColor.GREEN + "En ligne");
                         } else {
-                            long lastSeen = plugin.getFriendManager().getLastSeen(friendId);
+                            long lastSeen = friendLastSeen.getOrDefault(friendId, 0L);
                             String lastSeenStr;
                             if (lastSeen > 0) {
                                 lastSeenStr = ChatColor.YELLOW + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date(lastSeen));
@@ -268,12 +286,20 @@ public class FriendsMenu implements CustomMenu {
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.closeInventory();
                 
-                String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
-                net.md_5.bungee.api.chat.TextComponent message = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour inviter " + net.md_5.bungee.api.ChatColor.YELLOW + friendName + net.md_5.bungee.api.ChatColor.GRAY + " dans votre groupe !");
-                message.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party invite " + friendName));
-                message.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour inviter")));
-                
-                player.spigot().sendMessage(message);
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    if (!plugin.getFriendManager().isOnline(targetUuid)) {
+                        String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                        player.sendMessage(prefix + net.md_5.bungee.api.ChatColor.RED + "Ce joueur est hors ligne.");
+                        return;
+                    }
+                    
+                    String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                    net.md_5.bungee.api.chat.TextComponent message = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour inviter " + net.md_5.bungee.api.ChatColor.YELLOW + friendName + net.md_5.bungee.api.ChatColor.GRAY + " dans votre groupe !");
+                    message.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party invite " + friendName));
+                    message.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour inviter")));
+                    
+                    player.spigot().sendMessage(message);
+                });
             }
         }
     }

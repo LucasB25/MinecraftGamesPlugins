@@ -49,10 +49,17 @@ public class PartyMenu implements CustomMenu {
             UUID leaderUuid = plugin.getPartyManager().getPartyLeader(playerUuid);
             
             List<String> members = new ArrayList<>();
+            java.util.Map<UUID, String> memberNames = new java.util.HashMap<>();
+
             if (leaderUuid != null) {
                 Set<UUID> memberUuids = plugin.getPartyManager().getPartyMembers(leaderUuid);
                 for (UUID uuid : memberUuids) {
                     members.add(uuid.toString());
+                    String name = Bukkit.getOfflinePlayer(uuid).getName();
+                    if (name == null) {
+                        name = plugin.getFriendManager().getNameByUuid(uuid);
+                    }
+                    memberNames.put(uuid, name != null ? name : "Inconnu");
                 }
             }
 
@@ -93,12 +100,7 @@ public class PartyMenu implements CustomMenu {
 
                     for (String mUuidStr : members) {
                         UUID memberId = UUID.fromString(mUuidStr);
-                        // Récupérer le nom du joueur, s'il est en ligne ou s'il est ami
-                        String memberName = Bukkit.getOfflinePlayer(memberId).getName();
-                        if (memberName == null) {
-                            memberName = plugin.getFriendManager().getNameByUuid(memberId);
-                        }
-                        if (memberName == null) memberName = "Inconnu";
+                        String memberName = memberNames.getOrDefault(memberId, "Inconnu");
 
                         boolean isMemberLeader = memberId.equals(leaderUuid);
 
@@ -177,11 +179,18 @@ public class PartyMenu implements CustomMenu {
         if (slot == 50 && clickedItem.getType() == Material.BARRIER) {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             player.closeInventory();
+            String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
             UUID leaderUuid = plugin.getPartyManager().getPartyLeader(player.getUniqueId());
             if (leaderUuid != null && leaderUuid.equals(player.getUniqueId())) {
-                player.chat("/party disband");
+                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour " + net.md_5.bungee.api.ChatColor.RED + "dissoudre le groupe" + net.md_5.bungee.api.ChatColor.GRAY + " !");
+                msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party disband"));
+                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.RED + "Cliquez pour dissoudre")));
+                player.spigot().sendMessage(msg);
             } else {
-                player.chat("/party leave");
+                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour " + net.md_5.bungee.api.ChatColor.RED + "quitter le groupe" + net.md_5.bungee.api.ChatColor.GRAY + " !");
+                msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party leave"));
+                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.RED + "Cliquez pour quitter")));
+                player.spigot().sendMessage(msg);
             }
             return;
         }
@@ -203,7 +212,11 @@ public class PartyMenu implements CustomMenu {
                 if (leaderUuid != null && leaderUuid.equals(player.getUniqueId()) && !player.getUniqueId().equals(targetUuid)) {
                     player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                     player.closeInventory();
-                    player.chat("/party kick " + targetName);
+                    String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                    net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour expulser " + net.md_5.bungee.api.ChatColor.YELLOW + targetName + net.md_5.bungee.api.ChatColor.GRAY + " du groupe !");
+                    msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party kick " + targetName));
+                    msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.RED + "Cliquez pour expulser")));
+                    player.spigot().sendMessage(msg);
                 }
             }
         }

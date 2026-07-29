@@ -26,6 +26,7 @@ public class PlayerConnectionListener {
         if (plugin.getFriendManager() != null) {
             // Cache player name/UUID for the friends system
             plugin.getFriendManager().cachePlayer(player.getUsername(), player.getUniqueId());
+            plugin.getFriendManager().setOnline(player.getUniqueId(), true);
             
             // Notify friends that the player has joined
             plugin.getServer().getScheduler().buildTask(plugin, () -> {
@@ -52,9 +53,10 @@ public class PlayerConnectionListener {
     public void onDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
         if (plugin.getFriendManager() != null) {
-            // Update last seen timestamp asynchronously
+            // Update last seen timestamp and set offline status asynchronously
             plugin.getServer().getScheduler().buildTask(plugin, () -> {
                 plugin.getFriendManager().updateLastSeen(player.getUniqueId());
+                plugin.getFriendManager().setOnline(player.getUniqueId(), false);
             }).schedule();
         }
     }

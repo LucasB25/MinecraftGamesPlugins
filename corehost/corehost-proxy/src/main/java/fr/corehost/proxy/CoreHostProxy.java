@@ -37,6 +37,8 @@ public class CoreHostProxy {
     private RedisManager redisManager;
     private HostManager hostManager;
     private FriendManager friendManager;
+    private fr.corehost.proxy.auth.AuthManager authManager;
+    private fr.corehost.proxy.discord.DiscordManager discordManager;
 
     @Inject
     public CoreHostProxy(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -60,6 +62,13 @@ public class CoreHostProxy {
             // Register Listener
             server.getEventManager().register(this, new PlayerConnectionListener(this));
             
+            // Register Auth & Discord
+            this.authManager = new fr.corehost.proxy.auth.AuthManager(this);
+            server.getEventManager().register(this, authManager);
+            
+            this.discordManager = new fr.corehost.proxy.discord.DiscordManager(this);
+            discordManager.start();
+            
             // Register Command
             server.getCommandManager().register("friend", new FriendCommand(this, server), "f", "amie", "amis");
             
@@ -74,22 +83,39 @@ public class CoreHostProxy {
             dataFolder.mkdirs();
         }
 
-        File configFile = new File(dataFolder, "config.json");
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        File configFile = new File(dataFolder, "config.yml");
+        org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
 
         if (!configFile.exists()) {
             try (FileWriter writer = new FileWriter(configFile)) {
-                ProxyConfig defaultConfig = new ProxyConfig();
-                gson.toJson(defaultConfig, writer);
-                return defaultConfig;
+                java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+                data.put("redis", java.util.Map.of("host", "127.0.0.1", "port", 6379, "password", ""));
+                data.put("discord", java.util.Map.of("bot-token", "", "bot-id", ""));
+                yaml.dump(data, writer);
             } catch (IOException e) {
-                logger.error("Could not create default config.json", e);
+                logger.error("Could not create default config.yml", e);
             }
+            return new ProxyConfig();
         } else {
             try (FileReader reader = new FileReader(configFile)) {
-                return gson.fromJson(reader, ProxyConfig.class);
-            } catch (IOException e) {
-                logger.error("Could not read config.json", e);
+                java.util.Map<String, Object> data = yaml.load(reader);
+                ProxyConfig config = new ProxyConfig();
+                
+                if (data.containsKey("redis")) {
+                    java.util.Map<String, Object> redisData = (java.util.Map<String, Object>) data.get("redis");
+                    if (redisData.containsKey("host")) config.setRedisHost(String.valueOf(redisData.get("host")));
+                    if (redisData.containsKey("port")) config.setRedisPort(Integer.parseInt(String.valueOf(redisData.get("port"))));
+                    if (redisData.containsKey("password")) config.setRedisPassword(String.valueOf(redisData.get("password")));
+                }
+                
+                if (data.containsKey("discord")) {
+                    java.util.Map<String, Object> discordData = (java.util.Map<String, Object>) data.get("discord");
+                    if (discordData.containsKey("bot-token")) config.setDiscordBotToken(String.valueOf(discordData.get("bot-token")));
+                    if (discordData.containsKey("bot-id")) config.setDiscordBotId(String.valueOf(discordData.get("bot-id")));
+                }
+                return config;
+            } catch (Exception e) {
+                logger.error("Could not read config.yml", e);
             }
         }
         return new ProxyConfig();
@@ -107,7 +133,33 @@ public class CoreHostProxy {
         return friendManager;
     }
 
+    public fr.corehost.proxy.auth.AuthManager getAuthManager() {
+        return authManager;
+    }
+
+    public fr.corehost.proxy.discord.DiscordManager getDiscordManager() {
+        return discordManager;
+    }
+
     public ProxyServer getServer() {
         return server;
+    }
+
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public ProxyConfig getProxyConfig() {
+        return loadConfig();
+    }
+
+    @Subscribe
+    public void onProxyShutdown(com.velocitypowered.api.event.proxy.ProxyShutdownEvent event) {
+        if (discordManager != null) {
+            discordManager.stop();
+        }
+        if (redisManager != null) {
+            redisManager.close();
+        }
     }
 }

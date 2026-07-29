@@ -1,0 +1,10 @@
+{
+  "id": "corehost-proxy",
+  "name": "CoreHostProxy",
+  "version": "1.0-SNAPSHOT",
+  "description": "CoreHost Proxy Plugin",
+  "authors": [
+    "CoreHost"
+  ],
+  "main": "fr.corehost.proxy.CoreHostProxy"
+}

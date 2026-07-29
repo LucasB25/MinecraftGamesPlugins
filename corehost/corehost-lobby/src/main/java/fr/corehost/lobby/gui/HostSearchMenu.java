@@ -190,14 +190,20 @@ public class HostSearchMenu implements CustomMenu {
         return inventory;
     }
 
+    private long lastActionTime = 0;
+
     @Override
     public void onClick(InventoryClickEvent event, Player player) {
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
         String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+        long currentTime = System.currentTimeMillis();
 
         if (clicked.getType() == Material.EMERALD) {
+            if (currentTime - lastActionTime < 500) return;
+            lastActionTime = currentTime;
+            
             player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
             player.sendMessage(prefix + "Rafraîchissement de la liste des serveurs...");
             drawHosts();
@@ -205,12 +211,18 @@ public class HostSearchMenu implements CustomMenu {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             new HostCreateMenu().open(player);
         } else if (clicked.getType() == Material.HOPPER && event.getSlot() == 45) {
+            if (currentTime - lastActionTime < 500) return;
+            lastActionTime = currentTime;
+            
             // Cycle Game Filter
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             cycleGameFilter(event.getClick().isLeftClick());
             drawBottomBar();
             drawHosts();
         } else if (clicked.getType() == Material.COMPARATOR && event.getSlot() == 46) {
+            if (currentTime - lastActionTime < 500) return;
+            lastActionTime = currentTime;
+            
             // Cycle Status Filter
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             cycleStatusFilter(event.getClick().isLeftClick());

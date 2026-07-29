@@ -5,6 +5,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.GameRule;
+import org.bukkit.plugin.PluginManager;
+import fr.corehost.lobby.listeners.*;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.api.friends.FriendManager;
@@ -52,7 +54,9 @@ public class CoreHostLobby extends JavaPlugin {
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 
         // Register Listeners
-        getServer().getPluginManager().registerEvents(new fr.corehost.lobby.listeners.LobbyListener(this), this);
+        PluginManager pm = getServer().getPluginManager();
+        pm.registerEvents(new fr.corehost.lobby.listeners.LobbyListener(this), this);
+        pm.registerEvents(new AuthListener(this), this);
 
         // Register Commands
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();

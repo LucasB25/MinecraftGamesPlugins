@@ -42,7 +42,6 @@ import java.util.UUID;
 
 public class LobbyListener implements Listener {
 
-    private final Map<UUID, Long> clickCooldowns = new HashMap<>();
     public static final java.util.Set<UUID> pendingFriendAdd = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
     private final CoreHostLobby plugin;
 
@@ -108,6 +107,12 @@ public class LobbyListener implements Listener {
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
+        
+        if (AuthListener.isBlocked(player.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
+
         ItemStack item = event.getItem();
 
         if (item == null || item.getType() == Material.AIR || !event.getAction().name().contains("RIGHT")) {
@@ -118,13 +123,6 @@ public class LobbyListener implements Listener {
             return;
         }
         
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - clickCooldowns.getOrDefault(player.getUniqueId(), 0L) < 500) {
-            event.setCancelled(true);
-            return;
-        }
-        clickCooldowns.put(player.getUniqueId(), currentTime);
-
         if (item.getType() == Material.COMPASS || item.getType() == Material.PLAYER_HEAD) {
             event.setCancelled(true);
         }
@@ -142,18 +140,17 @@ public class LobbyListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
         Player player = (Player) event.getWhoClicked();
+        
+        if (AuthListener.isBlocked(player.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
 
         // Always cancel clicks in lobby to prevent moving hotbar items
         event.setCancelled(true);
 
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - clickCooldowns.getOrDefault(player.getUniqueId(), 0L) < 500) {
-            return; // Spam protection
-        }
-
         // If clicking a custom menu, let it handle the logic
         if (event.getInventory().getHolder() instanceof CustomMenu) {
-            clickCooldowns.put(player.getUniqueId(), currentTime);
             CustomMenu customMenu = (CustomMenu) event.getInventory().getHolder();
             customMenu.onClick(event, player);
         }

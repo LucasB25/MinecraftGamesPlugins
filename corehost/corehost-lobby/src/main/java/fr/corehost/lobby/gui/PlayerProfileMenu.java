@@ -52,10 +52,13 @@ public class PlayerProfileMenu implements CustomMenu {
 
             long firstPlayed = player.getFirstPlayed();
             String firstPlayedDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(firstPlayed));
+            
+            String accountType = (player.getUniqueId().version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
 
             headMeta.setLore(Arrays.asList(
                 "",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + ChatColor.GREEN + "Joueur",
+                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Première connexion : " + ChatColor.WHITE + firstPlayedDate,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Ping : " + ChatColor.YELLOW + player.getPing() + "ms",
                 ""
@@ -112,16 +115,44 @@ public class PlayerProfileMenu implements CustomMenu {
         }
         inventory.setItem(14, partyItem);
 
-        // ── Slot 15: Discord (Lapis Lazuli) ──
         ItemStack discordItem = new ItemStack(Material.LAPIS_LAZULI);
         ItemMeta discordMeta = discordItem.getItemMeta();
         if (discordMeta != null) {
-            discordMeta.setDisplayName(ChatColor.BLUE + "" + ChatColor.BOLD + "Discord");
-            discordMeta.setLore(Arrays.asList(
-                "",
-                ChatColor.GRAY + "Bientôt disponible...",
-                ""
-            ));
+            discordMeta.setDisplayName(ChatColor.BLUE + "" + ChatColor.BOLD + "Sécurité du Compte");
+            
+            if (player.getUniqueId().version() == 4) {
+                // Premium Account
+                discordMeta.setLore(Arrays.asList(
+                    "",
+                    ChatColor.GREEN + "✔ Compte Premium",
+                    ChatColor.GRAY + "Sécurisé par Mojang",
+                    ""
+                ));
+            } else {
+                // Cracked Account
+                boolean isLinked = false;
+                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    String discordId = plugin.getRedisManager().get("corehost:discord_link:player:" + player.getUniqueId().toString());
+                    if (discordId != null) isLinked = true;
+                }
+                
+                if (isLinked) {
+                    discordMeta.setLore(Arrays.asList(
+                        "",
+                        ChatColor.GREEN + "✔ Compte Lié",
+                        ChatColor.GRAY + "Sécurisé par Discord",
+                        ""
+                    ));
+                } else {
+                    discordMeta.setLore(Arrays.asList(
+                        "",
+                        ChatColor.RED + "✖ Compte Non Lié",
+                        ChatColor.GRAY + "Liez votre compte Discord",
+                        ChatColor.GRAY + "pour sécuriser ce profil.",
+                        ""
+                    ));
+                }
+            }
             discordItem.setItemMeta(discordMeta);
         }
         inventory.setItem(15, discordItem);
@@ -158,7 +189,7 @@ public class PlayerProfileMenu implements CustomMenu {
 
         // Play a small click sound for any interactive item
         Material type = clicked.getType();
-        if (type == Material.DIAMOND_SWORD || type == Material.NAME_TAG || type == Material.CAKE || type == Material.LAPIS_LAZULI || type == Material.REDSTONE_TORCH) {
+        if (type == Material.DIAMOND_SWORD || type == Material.NAME_TAG || type == Material.CAKE || type == Material.REDSTONE_TORCH) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             
             if (type == Material.NAME_TAG) {

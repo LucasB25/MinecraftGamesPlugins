@@ -14,6 +14,7 @@ commands:
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
   friend:
     description: Gérer vos amis.
+    usage: /<command> [args...]
     aliases: [f, ami, amis]
     permission: corehost.command.friend
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.

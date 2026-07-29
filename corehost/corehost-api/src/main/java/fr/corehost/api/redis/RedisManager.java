@@ -42,4 +42,30 @@ public class RedisManager {
             jedisPool.close();
         }
     }
+
+    public String get(String key) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.get(key);
+        } catch (JedisException e) {
+            return null;
+        }
+    }
+
+    public void set(String key, String value) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.set(key, value);
+        } catch (JedisException ignored) {}
+    }
+
+    public void setEx(String key, String value, int seconds) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.setex(key, seconds, value);
+        } catch (JedisException ignored) {}
+    }
+
+    public void del(String key) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.del(key);
+        } catch (JedisException ignored) {}
+    }
 }

@@ -99,8 +99,8 @@ public class FriendsMenu implements CustomMenu {
 
                     boolean isOnlineLocally = Bukkit.getPlayer(friendId) != null;
 
-                    // Default Rank for now (could be hooked into LuckPerms later)
                     String rank = ChatColor.GRAY + "Joueur";
+                    String accountType = (friendId.version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
 
                     ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
@@ -111,6 +111,7 @@ public class FriendsMenu implements CustomMenu {
                         List<String> lore = new ArrayList<>();
                         lore.add("");
                         lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + rank);
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType);
                         if (isOnlineLocally) {
                             lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + ChatColor.GREEN + "En ligne");
                         } else {
@@ -127,6 +128,10 @@ public class FriendsMenu implements CustomMenu {
                         lore.add(ChatColor.GREEN + "► Clic-Gauche " + ChatColor.GRAY + "Inviter en Party");
                         lore.add(ChatColor.RED + "► Clic-Droit " + ChatColor.GRAY + "Retirer des amis");
                         meta.setLore(lore);
+                        
+                        org.bukkit.NamespacedKey uuidKey = new org.bukkit.NamespacedKey(plugin, "friend_uuid");
+                        meta.getPersistentDataContainer().set(uuidKey, org.bukkit.persistence.PersistentDataType.STRING, friendId.toString());
+                        
                         head.setItemMeta(meta);
                     }
                     inventory.setItem(slot++, head);
@@ -244,17 +249,20 @@ public class FriendsMenu implements CustomMenu {
         if (clickedItem.getType() == Material.PLAYER_HEAD && slot < 45) {
             String friendName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
             ClickType clickType = event.getClick();
+            
+            org.bukkit.NamespacedKey uuidKey = new org.bukkit.NamespacedKey(plugin, "friend_uuid");
+            String uuidStr = clickedItem.getItemMeta().getPersistentDataContainer().get(uuidKey, org.bukkit.persistence.PersistentDataType.STRING);
+            
+            if (uuidStr == null) return;
+            UUID targetUuid = UUID.fromString(uuidStr);
 
             if (clickType == ClickType.RIGHT) {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                    UUID targetUuid = plugin.getFriendManager().getUuidByName(friendName);
-                    if (targetUuid != null) {
-                        plugin.getFriendManager().removeFriend(player.getUniqueId(), targetUuid);
-                        String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
-                        player.sendMessage(prefix + "Vous n'êtes plus ami avec " + ChatColor.YELLOW + friendName + ChatColor.GRAY + ".");
-                        Bukkit.getScheduler().runTask(plugin, () -> new FriendsMenu(plugin, page).open(player));
-                    }
+                    plugin.getFriendManager().removeFriend(player.getUniqueId(), targetUuid);
+                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                    player.sendMessage(prefix + "Vous n'êtes plus ami avec " + ChatColor.YELLOW + friendName + ChatColor.GRAY + ".");
+                    Bukkit.getScheduler().runTask(plugin, () -> new FriendsMenu(plugin, page).open(player));
                 });
             } else if (clickType == ClickType.LEFT) {
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);

@@ -8,6 +8,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
+import fr.corehost.lobby.CoreHostLobby;
 
 public class HostCreateMenu implements CustomMenu {
 
@@ -82,11 +84,11 @@ public class HostCreateMenu implements CustomMenu {
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
         if (clicked.getType() == Material.SLIME_BALL) {
-            player.sendMessage(ChatColor.GREEN + "Demande de création de serveur Sumo envoyée (Bientôt)...");
             player.closeInventory();
+            JavaPlugin.getPlugin(CoreHostLobby.class).getCloudNetServiceManager().createHost(player, "Sumo");
         } else if (clicked.getType() == Material.RED_BANNER) {
-            player.sendMessage(ChatColor.GREEN + "Demande de création de serveur CTF envoyée (Bientôt)...");
             player.closeInventory();
+            JavaPlugin.getPlugin(CoreHostLobby.class).getCloudNetServiceManager().createHost(player, "CTF");
         }
     }
 }

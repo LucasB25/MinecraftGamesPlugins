@@ -57,6 +57,13 @@
                 <version>${cloudnet.version}</version>
             </dependency>
             
+            <!-- Gson -->
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.10.1</version>
+            </dependency>
+            
             <!-- Velocity API -->
             <dependency>
                 <groupId>com.velocitypowered</groupId>

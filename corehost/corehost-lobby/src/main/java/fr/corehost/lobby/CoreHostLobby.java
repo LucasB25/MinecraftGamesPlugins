@@ -1,9 +1,12 @@
 package fr.corehost.lobby;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.entity.Player;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.lobby.cloudnet.CloudNetServiceManager;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 
 public class CoreHostLobby extends JavaPlugin {
 
@@ -33,6 +36,9 @@ public class CoreHostLobby extends JavaPlugin {
         // Initialize CloudNet Manager
         this.cloudNetServiceManager = new CloudNetServiceManager(this);
 
+        // Register BungeeCord channel for server switching
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
         // Register Listeners
         getServer().getPluginManager().registerEvents(new fr.corehost.lobby.listeners.LobbyListener(), this);
     }
@@ -55,5 +61,12 @@ public class CoreHostLobby extends JavaPlugin {
 
     public CloudNetServiceManager getCloudNetServiceManager() {
         return cloudNetServiceManager;
+    }
+
+    public void connectToServer(Player player, String serverName) {
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.writeUTF("Connect");
+        out.writeUTF(serverName);
+        player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
     }
 }

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fr.corehost.api.redis.RedisManager;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,8 @@ public class HostManager {
             jedis.set(HOST_PREFIX + hostData.getHostId().toString(), json);
             // Expire after 24 hours just in case of ghost servers
             jedis.expire(HOST_PREFIX + hostData.getHostId().toString(), 86400); 
+        } catch (JedisException e) {
+            // Log silently or ignore to prevent crashing the server
         }
     }
 
@@ -36,6 +39,8 @@ public class HostManager {
             if (json != null) {
                 return gson.fromJson(json, HostData.class);
             }
+        } catch (JedisException e) {
+            // Ignored if Redis is down
         }
         return null;
     }
@@ -50,6 +55,8 @@ public class HostManager {
                     hosts.add(gson.fromJson(json, HostData.class));
                 }
             }
+        } catch (JedisException e) {
+            // Ignored if Redis is down
         }
         return hosts;
     }
@@ -57,6 +64,8 @@ public class HostManager {
     public void deleteHost(UUID hostId) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             jedis.del(HOST_PREFIX + hostId.toString());
+        } catch (JedisException e) {
+            // Ignored if Redis is down
         }
     }
 

@@ -8,6 +8,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
+import fr.corehost.lobby.CoreHostLobby;
+import fr.corehost.api.host.HostData;
+import fr.corehost.api.host.HostStatus;
+
+import java.util.List;
 
 public class HostSearchMenu implements CustomMenu {
 
@@ -57,7 +65,43 @@ public class HostSearchMenu implements CustomMenu {
         }
         inventory.setItem(50, refreshItem);
         
-        // TODO: Fetch running CloudNet instances for minigames and display them here
+        // Fetch running hosts from Redis
+        CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
+        List<HostData> hosts = plugin.getHostManager().getAllHosts();
+        
+        int slot = 0;
+        NamespacedKey serverKey = new NamespacedKey(plugin, "server_name");
+
+        for (HostData host : hosts) {
+            if (slot >= 45) break; // Maximum capacity in this page
+
+            Material mat = host.getGameType().equalsIgnoreCase("Sumo") ? Material.SLIME_BALL : Material.RED_BANNER;
+            ItemStack hostItem = new ItemStack(mat);
+            ItemMeta hostMeta = hostItem.getItemMeta();
+            
+            if (hostMeta != null) {
+                hostMeta.setDisplayName(ChatColor.AQUA + "Serveur " + host.getGameType());
+                
+                String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
+                
+                hostMeta.setLore(java.util.Arrays.asList(
+                    "",
+                    ChatColor.GRAY + "Hôte : " + ChatColor.YELLOW + host.getOwnerName(),
+                    ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + "/" + host.getMaxPlayers(),
+                    ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name(),
+                    "",
+                    ChatColor.GREEN + "► Cliquez pour rejoindre"
+                ));
+                
+                // Store the server name in the item's persistent data
+                hostMeta.getPersistentDataContainer().set(serverKey, PersistentDataType.STRING, host.getServerName());
+                
+                hostItem.setItemMeta(hostMeta);
+            }
+            
+            inventory.setItem(slot, hostItem);
+            slot++;
+        }
     }
 
     public void open(Player player) {
@@ -76,9 +120,27 @@ public class HostSearchMenu implements CustomMenu {
 
         if (clicked.getType() == Material.EMERALD) {
             player.sendMessage(ChatColor.YELLOW + "Rafraîchissement de la liste des serveurs...");
-            // TODO: refresh logic
+            // Clear items and re-initialize
+            for(int i = 0; i < 45; i++) {
+                inventory.setItem(i, new ItemStack(Material.AIR));
+            }
+            initializeItems();
         } else if (clicked.getType() == Material.NETHER_STAR) {
             new HostCreateMenu().open(player);
+        } else {
+            // Check if it's a server item
+            CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
+            NamespacedKey serverKey = new NamespacedKey(plugin, "server_name");
+            ItemMeta meta = clicked.getItemMeta();
+            
+            if (meta != null && meta.getPersistentDataContainer().has(serverKey, PersistentDataType.STRING)) {
+                String serverName = meta.getPersistentDataContainer().get(serverKey, PersistentDataType.STRING);
+                if (serverName != null) {
+                    player.sendMessage(ChatColor.GREEN + "Connexion au serveur " + serverName + "...");
+                    plugin.connectToServer(player, serverName);
+                    player.closeInventory();
+                }
+            }
         }
     }
 }

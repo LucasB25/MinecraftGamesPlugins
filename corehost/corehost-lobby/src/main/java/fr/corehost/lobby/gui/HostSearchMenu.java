@@ -85,7 +85,8 @@ public class HostSearchMenu implements CustomMenu {
             gameFilterMeta.setLore(java.util.Arrays.asList(
                 ChatColor.GRAY + "Actuel : " + ChatColor.YELLOW + (gameFilter.equals("ALL") ? "Tous" : gameFilter),
                 "",
-                ChatColor.GREEN + "► Cliquez pour changer"
+                ChatColor.GREEN + "► Clic-Gauche : Suivant",
+                ChatColor.RED + "► Clic-Droit : Précédent"
             ));
             gameFilterItem.setItemMeta(gameFilterMeta);
         }
@@ -99,7 +100,8 @@ public class HostSearchMenu implements CustomMenu {
             statusFilterMeta.setLore(java.util.Arrays.asList(
                 ChatColor.GRAY + "Actuel : " + ChatColor.YELLOW + (statusFilter == null ? "Tous" : statusFilter.name()),
                 "",
-                ChatColor.GREEN + "► Cliquez pour changer"
+                ChatColor.GREEN + "► Clic-Gauche : Suivant",
+                ChatColor.RED + "► Clic-Droit : Précédent"
             ));
             statusFilterItem.setItemMeta(statusFilterMeta);
         }
@@ -205,13 +207,13 @@ public class HostSearchMenu implements CustomMenu {
         } else if (clicked.getType() == Material.HOPPER && event.getSlot() == 45) {
             // Cycle Game Filter
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-            cycleGameFilter();
+            cycleGameFilter(event.getClick().isLeftClick());
             drawBottomBar();
             drawHosts();
         } else if (clicked.getType() == Material.COMPARATOR && event.getSlot() == 46) {
             // Cycle Status Filter
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-            cycleStatusFilter();
+            cycleStatusFilter(event.getClick().isLeftClick());
             drawBottomBar();
             drawHosts();
         } else {
@@ -232,7 +234,7 @@ public class HostSearchMenu implements CustomMenu {
         }
     }
     
-    private void cycleGameFilter() {
+    private void cycleGameFilter(boolean forward) {
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
         ConfigurationSection gamesSection = plugin.getConfig().getConfigurationSection("games");
         
@@ -244,22 +246,43 @@ public class HostSearchMenu implements CustomMenu {
         }
         
         int currentIndex = availableGames.indexOf(gameFilter);
-        if (currentIndex == -1 || currentIndex == availableGames.size() - 1) {
-            gameFilter = "ALL";
+        
+        if (forward) {
+            if (currentIndex == -1 || currentIndex == availableGames.size() - 1) {
+                gameFilter = "ALL";
+            } else {
+                gameFilter = availableGames.get(currentIndex + 1);
+            }
         } else {
-            gameFilter = availableGames.get(currentIndex + 1);
+            if (currentIndex <= 0) {
+                gameFilter = availableGames.get(availableGames.size() - 1);
+            } else {
+                gameFilter = availableGames.get(currentIndex - 1);
+            }
         }
     }
     
-    private void cycleStatusFilter() {
-        if (statusFilter == null) {
-            statusFilter = HostStatus.WAITING;
-        } else if (statusFilter == HostStatus.WAITING) {
-            statusFilter = HostStatus.STARTING;
-        } else if (statusFilter == HostStatus.STARTING) {
-            statusFilter = HostStatus.PLAYING;
+    private void cycleStatusFilter(boolean forward) {
+        if (forward) {
+            if (statusFilter == null) {
+                statusFilter = HostStatus.WAITING;
+            } else if (statusFilter == HostStatus.WAITING) {
+                statusFilter = HostStatus.STARTING;
+            } else if (statusFilter == HostStatus.STARTING) {
+                statusFilter = HostStatus.PLAYING;
+            } else {
+                statusFilter = null;
+            }
         } else {
-            statusFilter = null;
+            if (statusFilter == null) {
+                statusFilter = HostStatus.PLAYING;
+            } else if (statusFilter == HostStatus.PLAYING) {
+                statusFilter = HostStatus.STARTING;
+            } else if (statusFilter == HostStatus.STARTING) {
+                statusFilter = HostStatus.WAITING;
+            } else {
+                statusFilter = null;
+            }
         }
     }
 }

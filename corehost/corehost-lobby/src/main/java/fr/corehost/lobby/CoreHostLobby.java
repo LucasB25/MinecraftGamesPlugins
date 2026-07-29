@@ -72,6 +72,7 @@ public class CoreHostLobby extends JavaPlugin {
         getServer().getScheduler().runTask(this, this::setupWorlds);
     }
 
+    @SuppressWarnings("deprecation")
     private void setupWorlds() {
         for (World world : Bukkit.getWorlds()) {
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);

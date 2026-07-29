@@ -91,7 +91,8 @@ public class PlayerProfileMenu implements CustomMenu {
             friendsMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Amis");
             friendsMeta.setLore(Arrays.asList(
                 "",
-                ChatColor.GRAY + "(Cliquez pour ouvrir)",
+                ChatColor.GRAY + "Gérez votre liste d'amis",
+                ChatColor.GRAY + "et voyez qui est en ligne.",
                 ""
             ));
             friendsItem.setItemMeta(friendsMeta);

@@ -29,6 +29,7 @@ public class CloudNetServiceManager {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void createHost(Player player, String gameType) {
         String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
         

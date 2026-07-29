@@ -106,10 +106,12 @@ public class PlayerProfileMenu implements CustomMenu {
         ItemStack partyItem = new ItemStack(Material.CAKE);
         ItemMeta partyMeta = partyItem.getItemMeta();
         if (partyMeta != null) {
-            partyMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Party");
+            partyMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Groupe (Party)");
             partyMeta.setLore(Arrays.asList(
                 "",
-                ChatColor.GRAY + "Bientôt disponible...",
+                ChatColor.GRAY + "Gérez votre groupe,",
+                ChatColor.GRAY + "invitez des joueurs et",
+                ChatColor.GRAY + "jouez ensemble !",
                 ""
             ));
             partyItem.setItemMeta(partyMeta);
@@ -195,6 +197,8 @@ public class PlayerProfileMenu implements CustomMenu {
             
             if (type == Material.NAME_TAG) {
                 new FriendsMenu(plugin).open(player);
+            } else if (type == Material.CAKE) {
+                new PartyMenu(plugin).open(player);
             } else if (type == Material.REDSTONE_TORCH) {
                 new SettingsMenu(plugin).open(player);
             } else {

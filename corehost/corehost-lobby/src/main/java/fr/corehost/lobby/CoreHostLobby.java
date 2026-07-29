@@ -10,6 +10,7 @@ import fr.corehost.lobby.listeners.*;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.api.friends.FriendManager;
+import fr.corehost.api.party.PartyManager;
 import fr.corehost.lobby.cloudnet.CloudNetServiceManager;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -19,6 +20,7 @@ public class CoreHostLobby extends JavaPlugin {
     private RedisManager redisManager;
     private HostManager hostManager;
     private FriendManager friendManager;
+    private PartyManager partyManager;
     private CloudNetServiceManager cloudNetServiceManager;
 
     @Override
@@ -37,6 +39,7 @@ public class CoreHostLobby extends JavaPlugin {
             if (this.redisManager.isConnected()) {
                 this.hostManager = new HostManager(this.redisManager);
                 this.friendManager = new FriendManager(this.redisManager);
+                this.partyManager = new PartyManager(this.redisManager);
                 getLogger().info("Connected to Redis successfully.");
             } else {
                 getLogger().warning("Redis is not reachable at " + redisHost + ":" + redisPort + ". Host features are disabled.");
@@ -122,6 +125,10 @@ public class CoreHostLobby extends JavaPlugin {
 
     public FriendManager getFriendManager() {
         return friendManager;
+    }
+
+    public PartyManager getPartyManager() {
+        return partyManager;
     }
 
     public CloudNetServiceManager getCloudNetServiceManager() {

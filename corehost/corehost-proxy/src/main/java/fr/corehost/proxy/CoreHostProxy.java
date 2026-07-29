@@ -10,10 +10,13 @@ import org.slf4j.Logger;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.api.friends.FriendManager;
+import fr.corehost.api.party.PartyManager;
 import fr.corehost.proxy.config.ProxyConfig;
 import fr.corehost.proxy.commands.HubCommand;
 import fr.corehost.proxy.commands.FriendCommand;
+import fr.corehost.proxy.commands.PartyCommand;
 import fr.corehost.proxy.listeners.PlayerConnectionListener;
+import fr.corehost.proxy.listeners.PartyListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -37,6 +40,7 @@ public class CoreHostProxy {
     private RedisManager redisManager;
     private HostManager hostManager;
     private FriendManager friendManager;
+    private PartyManager partyManager;
     private fr.corehost.proxy.auth.AuthManager authManager;
     private fr.corehost.proxy.discord.DiscordManager discordManager;
 
@@ -57,10 +61,12 @@ public class CoreHostProxy {
             this.redisManager = new RedisManager(config.getRedisHost(), config.getRedisPort(), config.getRedisPassword());
             this.hostManager = new HostManager(this.redisManager);
             this.friendManager = new FriendManager(this.redisManager);
+            this.partyManager = new PartyManager(this.redisManager);
             logger.info("Connected to Redis successfully.");
             
             // Register Listener
             server.getEventManager().register(this, new PlayerConnectionListener(this));
+            server.getEventManager().register(this, new PartyListener(this));
             
             // Register Auth & Discord
             this.authManager = new fr.corehost.proxy.auth.AuthManager(this);
@@ -71,6 +77,7 @@ public class CoreHostProxy {
             
             // Register Command
             server.getCommandManager().register("friend", new FriendCommand(this, server), "f", "amie", "amis");
+            server.getCommandManager().register("party", new PartyCommand(this, server), "p", "groupe");
             
         } catch (Exception e) {
             logger.error("Could not connect to Redis", e);
@@ -131,6 +138,10 @@ public class CoreHostProxy {
 
     public FriendManager getFriendManager() {
         return friendManager;
+    }
+
+    public PartyManager getPartyManager() {
+        return partyManager;
     }
 
     public fr.corehost.proxy.auth.AuthManager getAuthManager() {

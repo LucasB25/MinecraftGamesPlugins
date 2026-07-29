@@ -65,23 +65,7 @@ public class LobbyListener implements Listener {
         if (plugin.getFriendManager() != null) {
             plugin.getFriendManager().cachePlayer(player.getName(), player.getUniqueId());
             
-            // Notify friends that the player has joined
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                java.util.Set<String> friends = plugin.getFriendManager().getFriends(player.getUniqueId());
-                for (String friendUuidStr : friends) {
-                    try {
-                        UUID friendUuid = UUID.fromString(friendUuidStr);
-                        Player onlineFriend = Bukkit.getPlayer(friendUuid);
-                        if (onlineFriend != null && onlineFriend.isOnline()) {
-                            if (plugin.getFriendManager().areNotificationsEnabled(friendUuid)) {
-                                Bukkit.getScheduler().runTask(plugin, () -> {
-                                    onlineFriend.sendMessage(ChatColor.DARK_GRAY + "► " + ChatColor.YELLOW + "Votre ami " + ChatColor.GOLD + player.getName() + ChatColor.YELLOW + " vient de se connecter !");
-                                });
-                            }
-                        }
-                    } catch (Exception ignored) {}
-                }
-            });
+
         }
 
         // Slot 4: Play Menu (Compass)

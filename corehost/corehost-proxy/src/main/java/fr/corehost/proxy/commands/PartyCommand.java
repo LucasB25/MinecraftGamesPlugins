@@ -1,0 +1,353 @@
+package fr.corehost.proxy.commands;
+
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
+import fr.corehost.proxy.CoreHostProxy;
+import fr.corehost.api.party.PartyManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class PartyCommand implements SimpleCommand {
+
+    private final CoreHostProxy plugin;
+    private final ProxyServer server;
+    private final PartyManager partyManager;
+
+    public PartyCommand(CoreHostProxy plugin, ProxyServer server) {
+        this.plugin = plugin;
+        this.server = server;
+        this.partyManager = plugin.getPartyManager();
+    }
+
+    @Override
+    public List<String> suggest(Invocation invocation) {
+        String[] args = invocation.arguments();
+        if (args.length == 0 || args.length == 1) {
+            String current = args.length == 0 ? "" : args[0].toLowerCase();
+            return Stream.of("invite", "accept", "deny", "leave", "kick", "disband", "list", "chat", "c")
+                    .filter(cmd -> cmd.startsWith(current))
+                    .collect(Collectors.toList());
+        } else if (args.length == 2) {
+            String sub = args[0].toLowerCase();
+            if (sub.equals("invite") || sub.equals("accept") || sub.equals("deny") || sub.equals("kick")) {
+                String current = args[1].toLowerCase();
+                return server.getAllPlayers().stream()
+                        .map(Player::getUsername)
+                        .filter(name -> name.toLowerCase().startsWith(current))
+                        .collect(Collectors.toList());
+            }
+        }
+        return List.of();
+    }
+
+    @Override
+    public void execute(Invocation invocation) {
+        CommandSource source = invocation.source();
+        if (!(source instanceof Player)) {
+            source.sendMessage(Component.text("Cette commande est réservée aux joueurs.", NamedTextColor.RED));
+            return;
+        }
+
+        Player player = (Player) source;
+        String[] args = invocation.arguments();
+
+        if (args.length == 0) {
+            sendHelp(player);
+            return;
+        }
+
+        String subCommand = args[0].toLowerCase();
+        UUID playerUuid = player.getUniqueId();
+        UUID leaderUuid = partyManager.getPartyLeader(playerUuid);
+
+        switch (subCommand) {
+            case "invite":
+                handleInvite(player, args);
+                break;
+            case "accept":
+                handleAccept(player, args);
+                break;
+            case "deny":
+                handleDeny(player, args);
+                break;
+            case "leave":
+                handleLeave(player, leaderUuid);
+                break;
+            case "kick":
+                handleKick(player, leaderUuid, args);
+                break;
+            case "disband":
+                handleDisband(player, leaderUuid);
+                break;
+            case "list":
+                handleList(player, leaderUuid);
+                break;
+            case "chat":
+            case "c":
+                handleChat(player, leaderUuid, args);
+                break;
+            default:
+                sendHelp(player);
+                break;
+        }
+    }
+
+    private void handleInvite(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Usage: /party invite <joueur>", NamedTextColor.RED));
+            return;
+        }
+        
+        UUID playerUuid = player.getUniqueId();
+        UUID leaderUuid = partyManager.getPartyLeader(playerUuid);
+        
+        if (leaderUuid != null && !leaderUuid.equals(playerUuid)) {
+            player.sendMessage(Component.text("Seul le chef de groupe peut inviter des joueurs.", NamedTextColor.RED));
+            return;
+        }
+        
+        String targetName = args[1];
+        Optional<Player> targetOpt = server.getPlayer(targetName);
+        
+        if (targetOpt.isEmpty()) {
+            player.sendMessage(Component.text("Joueur introuvable ou hors ligne.", NamedTextColor.RED));
+            return;
+        }
+        
+        Player target = targetOpt.get();
+        UUID targetUuid = target.getUniqueId();
+        
+        if (playerUuid.equals(targetUuid)) {
+            player.sendMessage(Component.text("Vous ne pouvez pas vous inviter vous-même.", NamedTextColor.RED));
+            return;
+        }
+        
+        if (partyManager.getPartyLeader(targetUuid) != null) {
+            player.sendMessage(Component.text("Ce joueur est déjà dans un groupe.", NamedTextColor.RED));
+            return;
+        }
+        
+        partyManager.sendInvite(playerUuid, targetUuid);
+        player.sendMessage(Component.text("Invitation envoyée à " + target.getUsername() + ".", NamedTextColor.GREEN));
+        
+        target.sendMessage(Component.text("Vous avez reçu une invitation de groupe de " + player.getUsername() + ".", NamedTextColor.YELLOW));
+        
+        Component acceptButton = Component.text("[ACCEPTER]")
+            .color(NamedTextColor.GREEN)
+            .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/party accept " + player.getUsername()))
+            .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text("Accepter")));
+            
+        Component denyButton = Component.text(" [REFUSER]")
+            .color(NamedTextColor.RED)
+            .clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/party deny " + player.getUsername()))
+            .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(Component.text("Refuser")));
+            
+        target.sendMessage(acceptButton.append(denyButton));
+    }
+
+    private void handleAccept(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Usage: /party accept <joueur>", NamedTextColor.RED));
+            return;
+        }
+        
+        UUID playerUuid = player.getUniqueId();
+        
+        if (partyManager.getPartyLeader(playerUuid) != null) {
+            player.sendMessage(Component.text("Vous êtes déjà dans un groupe.", NamedTextColor.RED));
+            return;
+        }
+        
+        String senderName = args[1];
+        Optional<Player> senderOpt = server.getPlayer(senderName);
+        
+        if (senderOpt.isEmpty()) {
+            player.sendMessage(Component.text("Le joueur qui vous a invité est hors ligne.", NamedTextColor.RED));
+            return;
+        }
+        
+        Player sender = senderOpt.get();
+        UUID senderUuid = sender.getUniqueId();
+        
+        if (!partyManager.hasInvite(playerUuid, senderUuid)) {
+            player.sendMessage(Component.text("Vous n'avez pas d'invitation de ce joueur ou elle a expiré.", NamedTextColor.RED));
+            return;
+        }
+        
+        partyManager.removeInvite(playerUuid, senderUuid);
+        
+        UUID senderLeader = partyManager.getPartyLeader(senderUuid);
+        if (senderLeader == null) {
+            partyManager.createParty(senderUuid);
+            senderLeader = senderUuid;
+        }
+        
+        partyManager.addMember(senderLeader, playerUuid);
+        
+        Component joinMessage = Component.text(player.getUsername() + " a rejoint le groupe !", NamedTextColor.GREEN);
+        sendMessageToParty(senderLeader, joinMessage);
+    }
+
+    private void handleDeny(Player player, String[] args) {
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Usage: /party deny <joueur>", NamedTextColor.RED));
+            return;
+        }
+        
+        UUID playerUuid = player.getUniqueId();
+        String senderName = args[1];
+        Optional<Player> senderOpt = server.getPlayer(senderName);
+        
+        if (senderOpt.isEmpty()) {
+            player.sendMessage(Component.text("Le joueur est hors ligne.", NamedTextColor.RED));
+            return;
+        }
+        
+        Player sender = senderOpt.get();
+        UUID senderUuid = sender.getUniqueId();
+        
+        if (!partyManager.hasInvite(playerUuid, senderUuid)) {
+            player.sendMessage(Component.text("Vous n'avez pas d'invitation de ce joueur ou elle a expiré.", NamedTextColor.RED));
+            return;
+        }
+        
+        partyManager.removeInvite(playerUuid, senderUuid);
+        player.sendMessage(Component.text("Vous avez refusé l'invitation.", NamedTextColor.YELLOW));
+        sender.sendMessage(Component.text(player.getUsername() + " a refusé votre invitation.", NamedTextColor.RED));
+    }
+
+    private void handleLeave(Player player, UUID leaderUuid) {
+        if (leaderUuid == null) {
+            player.sendMessage(Component.text("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
+            return;
+        }
+        
+        UUID playerUuid = player.getUniqueId();
+        
+        if (leaderUuid.equals(playerUuid)) {
+            handleDisband(player, leaderUuid);
+        } else {
+            partyManager.removeMember(playerUuid);
+            player.sendMessage(Component.text("Vous avez quitté le groupe.", NamedTextColor.YELLOW));
+            sendMessageToParty(leaderUuid, Component.text(player.getUsername() + " a quitté le groupe.", NamedTextColor.YELLOW));
+        }
+    }
+
+    private void handleKick(Player player, UUID leaderUuid, String[] args) {
+        if (leaderUuid == null || !leaderUuid.equals(player.getUniqueId())) {
+            player.sendMessage(Component.text("Vous devez être le chef de groupe pour expulser un joueur.", NamedTextColor.RED));
+            return;
+        }
+        
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Usage: /party kick <joueur>", NamedTextColor.RED));
+            return;
+        }
+        
+        String targetName = args[1];
+        Optional<Player> targetOpt = server.getPlayer(targetName);
+        
+        if (targetOpt.isEmpty()) {
+            player.sendMessage(Component.text("Joueur introuvable.", NamedTextColor.RED));
+            return;
+        }
+        
+        Player target = targetOpt.get();
+        UUID targetUuid = target.getUniqueId();
+        
+        if (leaderUuid.equals(targetUuid)) {
+            player.sendMessage(Component.text("Vous ne pouvez pas vous expulser vous-même.", NamedTextColor.RED));
+            return;
+        }
+        
+        UUID targetLeader = partyManager.getPartyLeader(targetUuid);
+        if (targetLeader == null || !targetLeader.equals(leaderUuid)) {
+            player.sendMessage(Component.text("Ce joueur n'est pas dans votre groupe.", NamedTextColor.RED));
+            return;
+        }
+        
+        partyManager.removeMember(targetUuid);
+        target.sendMessage(Component.text("Vous avez été expulsé du groupe.", NamedTextColor.RED));
+        sendMessageToParty(leaderUuid, Component.text(target.getUsername() + " a été expulsé du groupe.", NamedTextColor.YELLOW));
+    }
+
+    private void handleDisband(Player player, UUID leaderUuid) {
+        if (leaderUuid == null || !leaderUuid.equals(player.getUniqueId())) {
+            player.sendMessage(Component.text("Vous devez être le chef de groupe pour dissoudre le groupe.", NamedTextColor.RED));
+            return;
+        }
+        
+        sendMessageToParty(leaderUuid, Component.text("Le groupe a été dissous.", NamedTextColor.RED));
+        partyManager.disbandParty(leaderUuid);
+    }
+
+    private void handleList(Player player, UUID leaderUuid) {
+        if (leaderUuid == null) {
+            player.sendMessage(Component.text("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
+            return;
+        }
+        
+        Set<UUID> members = partyManager.getPartyMembers(leaderUuid);
+        player.sendMessage(Component.text("--- Membres du groupe ---", NamedTextColor.GOLD));
+        for (UUID memberUuid : members) {
+            Optional<Player> memberOpt = server.getPlayer(memberUuid);
+            if (memberOpt.isPresent()) {
+                Player member = memberOpt.get();
+                if (memberUuid.equals(leaderUuid)) {
+                    player.sendMessage(Component.text("- " + member.getUsername() + " (Chef)", NamedTextColor.YELLOW));
+                } else {
+                    player.sendMessage(Component.text("- " + member.getUsername(), NamedTextColor.GRAY));
+                }
+            }
+        }
+        player.sendMessage(Component.text("-------------------------", NamedTextColor.GOLD));
+    }
+
+    private void handleChat(Player player, UUID leaderUuid, String[] args) {
+        if (leaderUuid == null) {
+            player.sendMessage(Component.text("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
+            return;
+        }
+        
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Usage: /party chat <message>", NamedTextColor.RED));
+            return;
+        }
+        
+        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        Component chatMessage = Component.text("[Party] ", NamedTextColor.BLUE)
+            .append(Component.text(player.getUsername() + ": ", NamedTextColor.WHITE))
+            .append(Component.text(message, NamedTextColor.GRAY));
+            
+        sendMessageToParty(leaderUuid, chatMessage);
+    }
+
+    private void sendMessageToParty(UUID leaderUuid, Component message) {
+        Set<UUID> members = partyManager.getPartyMembers(leaderUuid);
+        for (UUID memberUuid : members) {
+            server.getPlayer(memberUuid).ifPresent(member -> member.sendMessage(message));
+        }
+    }
+
+    private void sendHelp(Player player) {
+        player.sendMessage(Component.text("--- Aide Groupe ---", NamedTextColor.GOLD));
+        player.sendMessage(Component.text("/party invite <joueur> - Inviter un joueur", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/party accept <joueur> - Accepter une invitation", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/party deny <joueur> - Refuser une invitation", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/party leave - Quitter le groupe", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/party kick <joueur> - Expulser un joueur", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/party disband - Dissoudre le groupe", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/party list - Voir les membres", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("/party chat <message> - Parler au groupe", NamedTextColor.YELLOW));
+    }
+}

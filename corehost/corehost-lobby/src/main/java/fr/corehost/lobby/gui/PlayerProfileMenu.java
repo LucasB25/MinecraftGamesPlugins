@@ -14,11 +14,15 @@ import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.Arrays;
 
+import fr.corehost.lobby.CoreHostLobby;
+
 public class PlayerProfileMenu implements CustomMenu {
 
     private final Inventory inventory;
+    private final CoreHostLobby plugin;
 
-    public PlayerProfileMenu(Player player) {
+    public PlayerProfileMenu(CoreHostLobby plugin, Player player) {
+        this.plugin = plugin;
         this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Profil de " + player.getName());
         initializeItems(player);
     }
@@ -84,7 +88,7 @@ public class PlayerProfileMenu implements CustomMenu {
             friendsMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Amis");
             friendsMeta.setLore(Arrays.asList(
                 "",
-                ChatColor.GRAY + "Bientôt disponible...",
+                ChatColor.GRAY + "(Cliquez pour ouvrir)",
                 ""
             ));
             friendsItem.setItemMeta(friendsMeta);
@@ -155,7 +159,9 @@ public class PlayerProfileMenu implements CustomMenu {
         if (type == Material.DIAMOND_SWORD || type == Material.NAME_TAG || type == Material.CAKE || type == Material.LAPIS_LAZULI || type == Material.REDSTONE_TORCH) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             
-            if (type != Material.PLAYER_HEAD) {
+            if (type == Material.NAME_TAG) {
+                new FriendsMenu(plugin).open(player);
+            } else {
                 player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY + "Cette fonctionnalité arrive bientôt !");
             }
         }

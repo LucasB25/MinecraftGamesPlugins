@@ -10,3 +10,6 @@ commands:
   spawn:
     description: Téléporte au spawn du lobby.
     aliases: [hub, lobby]
+  friend:
+    description: Gérer vos amis.
+    aliases: [f, ami, amis]

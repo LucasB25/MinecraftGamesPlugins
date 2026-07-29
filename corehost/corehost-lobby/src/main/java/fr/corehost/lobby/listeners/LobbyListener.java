@@ -33,7 +33,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.plugin.java.JavaPlugin;
+import fr.corehost.lobby.CoreHostLobby;
 import org.bukkit.Bukkit;
 
 import java.util.HashMap;
@@ -43,9 +43,10 @@ import java.util.UUID;
 public class LobbyListener implements Listener {
 
     private final Map<UUID, Long> clickCooldowns = new HashMap<>();
-    private final JavaPlugin plugin;
+    public static final java.util.Set<UUID> pendingFriendAdd = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
+    private final CoreHostLobby plugin;
 
-    public LobbyListener(JavaPlugin plugin) {
+    public LobbyListener(CoreHostLobby plugin) {
         this.plugin = plugin;
     }
 
@@ -60,6 +61,11 @@ public class LobbyListener implements Listener {
         player.getInventory().clear();
         player.setAllowFlight(false);
         player.setCollidable(false); // Disable player collision
+        
+        // Cache player for friends system if bypassing Proxy
+        if (plugin.getFriendManager() != null) {
+            plugin.getFriendManager().cachePlayer(player.getName(), player.getUniqueId());
+        }
 
         // Slot 4: Play Menu (Compass)
         ItemStack searchHost = new ItemStack(Material.COMPASS);
@@ -110,7 +116,7 @@ public class LobbyListener implements Listener {
             new HostSearchMenu().open(player);
         } else if (item.getType() == Material.PLAYER_HEAD) {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
-            new PlayerProfileMenu(player).open(player);
+            new PlayerProfileMenu(plugin, player).open(player);
         }
     }
 
@@ -233,6 +239,24 @@ public class LobbyListener implements Listener {
         Player player = event.getPlayer();
         if (player.getLocation().getY() < 0) {
             player.teleport(player.getWorld().getSpawnLocation());
+        }
+    }
+
+    @EventHandler
+    public void onPlayerChat(org.bukkit.event.player.AsyncPlayerChatEvent event) {
+        Player player = event.getPlayer();
+        if (pendingFriendAdd.contains(player.getUniqueId())) {
+            event.setCancelled(true);
+            pendingFriendAdd.remove(player.getUniqueId());
+            String message = event.getMessage().trim();
+            if (message.equalsIgnoreCase("annuler") || message.equalsIgnoreCase("cancel")) {
+                player.sendMessage(ChatColor.YELLOW + "Ajout d'ami annulé.");
+            } else {
+                // Execute the command synchronously
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    player.chat("/friend add " + message);
+                });
+            }
         }
     }
 }

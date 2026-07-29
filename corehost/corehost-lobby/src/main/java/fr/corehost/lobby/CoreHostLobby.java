@@ -7,6 +7,7 @@ import org.bukkit.World;
 import org.bukkit.GameRule;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.api.host.HostManager;
+import fr.corehost.api.friends.FriendManager;
 import fr.corehost.lobby.cloudnet.CloudNetServiceManager;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -15,6 +16,7 @@ public class CoreHostLobby extends JavaPlugin {
 
     private RedisManager redisManager;
     private HostManager hostManager;
+    private FriendManager friendManager;
     private CloudNetServiceManager cloudNetServiceManager;
 
     @Override
@@ -32,6 +34,7 @@ public class CoreHostLobby extends JavaPlugin {
             this.redisManager = new RedisManager(redisHost, redisPort, redisPassword);
             if (this.redisManager.isConnected()) {
                 this.hostManager = new HostManager(this.redisManager);
+                this.friendManager = new FriendManager(this.redisManager);
                 getLogger().info("Connected to Redis successfully.");
             } else {
                 getLogger().warning("Redis is not reachable at " + redisHost + ":" + redisPort + ". Host features are disabled.");
@@ -54,6 +57,9 @@ public class CoreHostLobby extends JavaPlugin {
         // Register Commands
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();
         if (getCommand("spawn") != null) getCommand("spawn").setExecutor(spawnCommand);
+
+        fr.corehost.lobby.commands.FriendCommand friendCommand = new fr.corehost.lobby.commands.FriendCommand(this);
+        if (getCommand("friend") != null) getCommand("friend").setExecutor(friendCommand);
         
         // Setup Worlds Security (Delayed by 1 tick to ensure worlds are fully loaded)
         getServer().getScheduler().runTask(this, this::setupWorlds);
@@ -103,6 +109,10 @@ public class CoreHostLobby extends JavaPlugin {
 
     public HostManager getHostManager() {
         return hostManager;
+    }
+
+    public FriendManager getFriendManager() {
+        return friendManager;
     }
 
     public CloudNetServiceManager getCloudNetServiceManager() {

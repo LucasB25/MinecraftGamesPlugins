@@ -9,8 +9,11 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import org.slf4j.Logger;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.api.host.HostManager;
+import fr.corehost.api.friends.FriendManager;
 import fr.corehost.proxy.config.ProxyConfig;
 import fr.corehost.proxy.commands.HubCommand;
+import fr.corehost.proxy.commands.FriendCommand;
+import fr.corehost.proxy.listeners.PlayerConnectionListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -33,6 +36,7 @@ public class CoreHostProxy {
     private final Path dataDirectory;
     private RedisManager redisManager;
     private HostManager hostManager;
+    private FriendManager friendManager;
 
     @Inject
     public CoreHostProxy(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -50,13 +54,18 @@ public class CoreHostProxy {
         try {
             this.redisManager = new RedisManager(config.getRedisHost(), config.getRedisPort(), config.getRedisPassword());
             this.hostManager = new HostManager(this.redisManager);
+            this.friendManager = new FriendManager(this.redisManager);
             logger.info("Connected to Redis successfully.");
+            
+            // Register Listener
+            server.getEventManager().register(this, new PlayerConnectionListener(this));
+            
+            // Register Command
+            server.getCommandManager().register("friend", new FriendCommand(this, server), "f", "amie", "amis");
+            
         } catch (Exception e) {
             logger.error("Could not connect to Redis", e);
         }
-
-        // Commands will be handled by the backend Spigot servers
-        // so that /spawn in the lobby can teleport the player to the lobby spawn.
     }
 
     private ProxyConfig loadConfig() {
@@ -92,5 +101,9 @@ public class CoreHostProxy {
 
     public HostManager getHostManager() {
         return hostManager;
+    }
+
+    public FriendManager getFriendManager() {
+        return friendManager;
     }
 }

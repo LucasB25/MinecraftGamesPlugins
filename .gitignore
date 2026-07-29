@@ -1,0 +1,6 @@
+# Compiled output
+/target/
+/corehost/target/
+/corehost/corehost-proxy/target/
+/corehost/corehost-lobby/target/
+/corehost/corehost-api/target/

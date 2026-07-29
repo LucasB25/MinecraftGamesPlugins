@@ -146,7 +146,8 @@ public class PlayerProfileMenu implements CustomMenu {
                         ChatColor.RED + "✖ Compte Non Lié",
                         ChatColor.GRAY + "Liez votre compte Discord",
                         ChatColor.GRAY + "pour sécuriser ce profil.",
-                        ""
+                        "",
+                        ChatColor.GREEN + "► Cliquez pour lier"
                     ));
                 }
             }
@@ -210,6 +211,76 @@ public class PlayerProfileMenu implements CustomMenu {
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY + "Cette fonctionnalité arrive bientôt !");
             }
+        }
+
+        // ── Link Crack (Sécurité du Compte — slot 15) ──
+        if (type == Material.LAPIS_LAZULI && event.getSlot() == 15) {
+
+            // Premium account — no link needed
+            if (player.getUniqueId().version() == 4) {
+                return;
+            }
+
+            player.closeInventory();
+
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                // Check if already linked
+                boolean linked = false;
+                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    String discordId = plugin.getRedisManager().get("corehost:discord_link:player:" + player.getUniqueId().toString());
+                    if (discordId != null) linked = true;
+                }
+
+                if (linked) {
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + "Votre compte est déjà lié à Discord !");
+                    });
+                    return;
+                }
+
+                // Generate a 6-digit link code
+                String code = String.format("%06d", new java.util.Random().nextInt(1000000));
+
+                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    plugin.getRedisManager().setEx("corehost:discord_link:code:" + code, player.getUniqueId().toString(), 900);
+                }
+
+                // Retrieve Discord bot ID for the link
+                String botId = null;
+                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    botId = plugin.getRedisManager().get("corehost:discord_bot_id");
+                }
+                String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : "https://discord.gg/";
+
+                final String finalDiscordUrl = discordUrl;
+                final String finalCode = code;
+
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (!player.isOnline()) return;
+
+                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+
+                    player.sendMessage("");
+                    player.sendMessage(prefix + ChatColor.YELLOW + "Liaison de compte Discord");
+                    player.sendMessage("");
+                    player.sendMessage(prefix + "Votre code de liaison : " + ChatColor.GOLD + "" + ChatColor.BOLD + finalCode);
+                    player.sendMessage(prefix + ChatColor.GRAY + "Ce code expire dans " + ChatColor.YELLOW + "15 minutes" + ChatColor.GRAY + ".");
+                    player.sendMessage("");
+
+                    net.md_5.bungee.api.chat.TextComponent clickMsg = new net.md_5.bungee.api.chat.TextComponent(
+                        net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " +
+                        net.md_5.bungee.api.ChatColor.AQUA + "" + net.md_5.bungee.api.ChatColor.BOLD + "👉 Cliquez ici pour ouvrir le profil du Bot 👈"
+                    );
+                    clickMsg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.OPEN_URL, finalDiscordUrl));
+                    clickMsg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
+                        new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.YELLOW + "Ouvrir Discord pour envoyer un MP")));
+                    player.spigot().sendMessage(clickMsg);
+
+                    player.sendMessage("");
+                    player.sendMessage(prefix + "Envoyez le code " + ChatColor.GOLD + finalCode + ChatColor.GRAY + " en MP au Bot Discord !");
+                    player.sendMessage("");
+                });
+            });
         }
     }
 }

@@ -29,7 +29,7 @@ public class FriendCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("corehost.command.friend");
+        return true;
     }
 
     @Override

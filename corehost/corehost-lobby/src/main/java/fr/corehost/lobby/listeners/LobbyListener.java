@@ -43,6 +43,7 @@ import java.util.UUID;
 public class LobbyListener implements Listener {
 
     public static final java.util.Set<UUID> pendingFriendAdd = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
+    public static final java.util.Set<UUID> pendingPartyInvite = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
     private final CoreHostLobby plugin;
 
     public LobbyListener(CoreHostLobby plugin) {
@@ -177,6 +178,7 @@ public class LobbyListener implements Listener {
         event.setQuitMessage(null); // Hide vanilla quit message
         Player player = event.getPlayer();
         pendingFriendAdd.remove(player.getUniqueId());
+        pendingPartyInvite.remove(player.getUniqueId());
         
         if (plugin.getFriendManager() != null) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -263,6 +265,22 @@ public class LobbyListener implements Listener {
                 net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour envoyer une demande d'ami à " + net.md_5.bungee.api.ChatColor.YELLOW + message + net.md_5.bungee.api.ChatColor.GRAY + " !");
                 msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/friend add " + message));
                 msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour ajouter")));
+                player.spigot().sendMessage(msg);
+            }
+            return;
+        }
+
+        if (pendingPartyInvite.contains(player.getUniqueId())) {
+            event.setCancelled(true);
+            pendingPartyInvite.remove(player.getUniqueId());
+            String message = event.getMessage().trim();
+            if (message.equalsIgnoreCase("annuler") || message.equalsIgnoreCase("cancel")) {
+                player.sendMessage(ChatColor.YELLOW + "Invitation annulée.");
+            } else {
+                String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour inviter " + net.md_5.bungee.api.ChatColor.YELLOW + message + net.md_5.bungee.api.ChatColor.GRAY + " dans votre groupe !");
+                msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party invite " + message));
+                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour inviter")));
                 player.spigot().sendMessage(msg);
             }
         }

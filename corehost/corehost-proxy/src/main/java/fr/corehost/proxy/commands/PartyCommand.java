@@ -298,19 +298,27 @@ public class PartyCommand implements SimpleCommand {
         }
         
         Set<UUID> members = partyManager.getPartyMembers(leaderUuid);
-        player.sendMessage(Component.text("--- Membres du groupe ---", NamedTextColor.GOLD));
+        player.sendMessage(Component.text("")
+                .append(Component.text("====== ").color(NamedTextColor.LIGHT_PURPLE))
+                .append(Component.text("Membres du Groupe (" + members.size() + ")").color(NamedTextColor.GOLD))
+                .append(Component.text(" ======").color(NamedTextColor.LIGHT_PURPLE)));
         for (UUID memberUuid : members) {
             Optional<Player> memberOpt = server.getPlayer(memberUuid);
             if (memberOpt.isPresent()) {
                 Player member = memberOpt.get();
-                if (memberUuid.equals(leaderUuid)) {
-                    player.sendMessage(Component.text("- " + member.getUsername() + " (Chef)", NamedTextColor.YELLOW));
-                } else {
-                    player.sendMessage(Component.text("- " + member.getUsername(), NamedTextColor.GRAY));
-                }
+                Component role = memberUuid.equals(leaderUuid) 
+                    ? Component.text(" [Chef]", NamedTextColor.GOLD) 
+                    : Component.text(" [Membre]", NamedTextColor.GREEN);
+                player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY)
+                    .append(Component.text(member.getUsername()).color(NamedTextColor.WHITE))
+                    .append(role));
+            } else {
+                player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY)
+                    .append(Component.text(memberUuid.toString().substring(0, 8) + "...").color(NamedTextColor.GRAY))
+                    .append(Component.text(" [Hors ligne]", NamedTextColor.RED)));
             }
         }
-        player.sendMessage(Component.text("-------------------------", NamedTextColor.GOLD));
+        player.sendMessage(Component.text("============================").color(NamedTextColor.LIGHT_PURPLE));
     }
 
     private void handleChat(Player player, UUID leaderUuid, String[] args) {
@@ -340,14 +348,20 @@ public class PartyCommand implements SimpleCommand {
     }
 
     private void sendHelp(Player player) {
-        player.sendMessage(Component.text("--- Aide Groupe ---", NamedTextColor.GOLD));
-        player.sendMessage(Component.text("/party invite <joueur> - Inviter un joueur", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/party accept <joueur> - Accepter une invitation", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/party deny <joueur> - Refuser une invitation", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/party leave - Quitter le groupe", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/party kick <joueur> - Expulser un joueur", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/party disband - Dissoudre le groupe", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/party list - Voir les membres", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/party chat <message> - Parler au groupe", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("").color(NamedTextColor.DARK_GRAY)
+                .append(Component.text("====== ").color(NamedTextColor.LIGHT_PURPLE))
+                .append(Component.text("Système de Groupe").color(NamedTextColor.GOLD))
+                .append(Component.text(" ======").color(NamedTextColor.LIGHT_PURPLE)));
+        
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party invite <joueur>").color(NamedTextColor.YELLOW)).append(Component.text(" - Inviter un joueur").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party accept <joueur>").color(NamedTextColor.YELLOW)).append(Component.text(" - Accepter une invitation").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party deny <joueur>").color(NamedTextColor.YELLOW)).append(Component.text(" - Refuser une invitation").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party leave").color(NamedTextColor.YELLOW)).append(Component.text(" - Quitter le groupe").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party kick <joueur>").color(NamedTextColor.YELLOW)).append(Component.text(" - Expulser un joueur").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party disband").color(NamedTextColor.YELLOW)).append(Component.text(" - Dissoudre le groupe").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party list").color(NamedTextColor.YELLOW)).append(Component.text(" - Voir les membres").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party chat <message>").color(NamedTextColor.YELLOW)).append(Component.text(" - Parler au groupe").color(NamedTextColor.GRAY)));
+        
+        player.sendMessage(Component.text("============================").color(NamedTextColor.LIGHT_PURPLE));
     }
 }

@@ -79,6 +79,8 @@ public class PartyMenu implements CustomMenu {
                     inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
                 }
 
+                boolean isLeader = leaderUuid != null && leaderUuid.equals(playerUuid);
+
                 if (leaderUuid == null) {
                     ItemStack noParty = new ItemStack(Material.COBWEB);
                     ItemMeta noMeta = noParty.getItemMeta();
@@ -96,7 +98,6 @@ public class PartyMenu implements CustomMenu {
                     inventory.setItem(22, noParty);
                 } else {
                     int slot = 0;
-                    boolean isLeader = leaderUuid.equals(playerUuid);
 
                     for (String mUuidStr : members) {
                         UUID memberId = UUID.fromString(mUuidStr);
@@ -128,8 +129,57 @@ public class PartyMenu implements CustomMenu {
                         }
                         inventory.setItem(slot++, head);
                     }
-                    
-                    // ── Leave / Disband Party (slot 50) ──
+                }
+
+                // ── Info: Party Info (slot 48) — matches FriendsMenu ──
+                ItemStack info = new ItemStack(Material.BOOK);
+                ItemMeta infoMeta = info.getItemMeta();
+                if (infoMeta != null) {
+                    infoMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Informations");
+                    List<String> infoLore = new ArrayList<>();
+                    infoLore.add("");
+                    if (leaderUuid == null) {
+                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Groupe : " + ChatColor.RED + "Aucun");
+                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + ChatColor.GRAY + "—");
+                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Membres : " + ChatColor.WHITE + "0");
+                    } else {
+                        String leaderName = memberNames.getOrDefault(leaderUuid, "Inconnu");
+                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Chef : " + ChatColor.GOLD + leaderName);
+                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + (isLeader ? ChatColor.GOLD + "Chef" : ChatColor.GREEN + "Membre"));
+                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Membres : " + ChatColor.WHITE + members.size());
+                    }
+                    infoLore.add("");
+                    infoMeta.setLore(infoLore);
+                    info.setItemMeta(infoMeta);
+                }
+                inventory.setItem(48, info);
+
+                // ── Back to Profile (slot 49) — matches FriendsMenu ──
+                ItemStack back = new ItemStack(Material.ARROW);
+                ItemMeta backMeta = back.getItemMeta();
+                if (backMeta != null) {
+                    backMeta.setDisplayName(ChatColor.RED + "◄ Retour au Profil");
+                    back.setItemMeta(backMeta);
+                }
+                inventory.setItem(49, back);
+
+                // ── Invite Player (slot 50) — matches FriendsMenu "Ajouter un ami" ──
+                ItemStack inviteItem = new ItemStack(Material.EMERALD);
+                ItemMeta inviteMeta = inviteItem.getItemMeta();
+                if (inviteMeta != null) {
+                    inviteMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Inviter un joueur");
+                    inviteMeta.setLore(Arrays.asList(
+                        "",
+                        ChatColor.GRAY + "Cliquez pour inviter un",
+                        ChatColor.GRAY + "joueur dans votre groupe.",
+                        ""
+                    ));
+                    inviteItem.setItemMeta(inviteMeta);
+                }
+                inventory.setItem(50, inviteItem);
+
+                // ── Leave / Disband Party (slot 51) ──
+                if (leaderUuid != null) {
                     ItemStack leaveItem = new ItemStack(Material.BARRIER);
                     ItemMeta leaveMeta = leaveItem.getItemMeta();
                     if (leaveMeta != null) {
@@ -142,17 +192,8 @@ public class PartyMenu implements CustomMenu {
                         }
                         leaveItem.setItemMeta(leaveMeta);
                     }
-                    inventory.setItem(50, leaveItem);
+                    inventory.setItem(51, leaveItem);
                 }
-
-                // ── Back to Profile (slot 49) ──
-                ItemStack back = new ItemStack(Material.ARROW);
-                ItemMeta backMeta = back.getItemMeta();
-                if (backMeta != null) {
-                    backMeta.setDisplayName(ChatColor.RED + "◄ Retour au Profil");
-                    back.setItemMeta(backMeta);
-                }
-                inventory.setItem(49, back);
 
                 player.openInventory(inventory);
             });
@@ -175,8 +216,19 @@ public class PartyMenu implements CustomMenu {
             return;
         }
 
+        // ── Invite Player ──
+        if (slot == 50 && clickedItem.getType() == Material.EMERALD) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
+            player.closeInventory();
+            fr.corehost.lobby.listeners.LobbyListener.pendingPartyInvite.add(player.getUniqueId());
+            String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+            player.sendMessage(prefix + "Tapez le " + ChatColor.GREEN + "pseudo" + ChatColor.GRAY + " du joueur à inviter dans le chat.");
+            player.sendMessage(prefix + "Tapez " + ChatColor.YELLOW + "'annuler'" + ChatColor.GRAY + " pour annuler.");
+            return;
+        }
+
         // ── Leave / Disband ──
-        if (slot == 50 && clickedItem.getType() == Material.BARRIER) {
+        if (slot == 51 && clickedItem.getType() == Material.BARRIER) {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             player.closeInventory();
             String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;

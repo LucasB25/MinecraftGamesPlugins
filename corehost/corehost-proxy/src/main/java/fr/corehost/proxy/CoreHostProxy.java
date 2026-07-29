@@ -68,6 +68,15 @@ public class CoreHostProxy {
             server.getEventManager().register(this, new PlayerConnectionListener(this));
             server.getEventManager().register(this, new PartyListener(this));
             
+            // Register CloudNet
+            try {
+                Class.forName("eu.cloudnetservice.driver.inject.InjectionLayer");
+                registerCloudNet();
+            } catch (Throwable t) {
+                logger.warn("CloudNet is not present or could not register CloudNetListener. Hosts will not auto-teleport.");
+            }
+
+            
             // Register Auth & Discord
             this.authManager = new fr.corehost.proxy.auth.AuthManager(this);
             server.getEventManager().register(this, authManager);
@@ -150,6 +159,11 @@ public class CoreHostProxy {
 
     public fr.corehost.proxy.discord.DiscordManager getDiscordManager() {
         return discordManager;
+    }
+
+    private void registerCloudNet() {
+        eu.cloudnetservice.driver.inject.InjectionLayer.ext().instance(eu.cloudnetservice.driver.event.EventManager.class).registerListener(new fr.corehost.proxy.cloudnet.CloudNetListener(this, server));
+        logger.info("CloudNetListener successfully registered.");
     }
 
     public ProxyServer getServer() {

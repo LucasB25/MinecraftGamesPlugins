@@ -14,6 +14,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import eu.cloudnetservice.driver.provider.CloudServiceProvider;
+import eu.cloudnetservice.driver.service.ServiceLifeCycle;
+
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public class CloudNetServiceManager {
@@ -50,18 +55,27 @@ public class CloudNetServiceManager {
                     player.sendMessage(ChatColor.RED + "Erreur: La tâche CloudNet '" + gameType + "' n'existe pas !");
                     return;
                 }
-
-                ServiceConfiguration configuration = ServiceConfiguration.builder(task).build();
                 
-                CloudServiceFactory serviceFactory = InjectionLayer.ext().instance(CloudServiceFactory.class);
-                ServiceCreateResult createResult = serviceFactory.createCloudService(configuration);
+                CloudServiceProvider serviceProvider = InjectionLayer.ext().instance(CloudServiceProvider.class);
+                Collection<ServiceInfoSnapshot> runningServices = serviceProvider.servicesByTask(gameType);
+                ServiceInfoSnapshot warmService = null;
                 
-                if (createResult.state() == ServiceCreateResult.State.CREATED || createResult.state() == ServiceCreateResult.State.DEFERRED) {
-                    ServiceInfoSnapshot serviceInfo = createResult.serviceInfo();
-                    
-                    // Host created, register in Redis
+                List<HostData> allHosts = plugin.getHostManager().getAllHosts();
+                
+                for (ServiceInfoSnapshot service : runningServices) {
+                    if (service.lifeCycle() == ServiceLifeCycle.RUNNING) {
+                        boolean isClaimed = allHosts.stream().anyMatch(h -> h.getServerName().equalsIgnoreCase(service.name()));
+                        if (!isClaimed) {
+                            warmService = service;
+                            break;
+                        }
+                    }
+                }
+                
+                if (warmService != null) {
+                    // Warm pool service found!
                     UUID hostId = UUID.randomUUID();
-                    String serverName = serviceInfo.name();
+                    String serverName = warmService.name();
                     int maxPlayers = plugin.getConfig().getInt("games." + gameType + ".max-players", 20);
                     
                     HostData hostData = new HostData(
@@ -72,20 +86,54 @@ public class CloudNetServiceManager {
                             serverName,
                             maxPlayers
                     );
-
-                    if (plugin.getHostManager() != null) {
-                        plugin.getHostManager().saveHost(hostData);
-                    }
-
-                    if (player.isOnline()) {
-                        player.sendMessage(prefix + ChatColor.GREEN + "Le serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " est prêt et démarre !");
-                    }
                     
-                    // Actually start the process
-                    serviceInfo.provider().start();
-                } else {
+                    // We set it directly to WAITING so the Proxy can teleport them if needed, or they can be teleported now
+                    hostData.setStatus(fr.corehost.api.host.HostStatus.WAITING);
+                    plugin.getHostManager().saveHost(hostData);
+                    
                     if (player.isOnline()) {
-                        player.sendMessage(prefix + ChatColor.RED + "Erreur: Impossible de créer l'instance de serveur. (" + createResult.state().name() + ")");
+                        player.sendMessage(prefix + ChatColor.GREEN + "Serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " trouvé (Warm Pool) ! Téléportation immédiate...");
+                    }
+                    // Velocity will handle the teleportation via its own logic if they use a command, or they need to connect.
+                    // To force connect them from Lobby, we use BungeeCord channel
+                    sendPlayerToServer(player, serverName);
+                    
+                } else {
+                    // Fallback: Create new service
+                    ServiceConfiguration configuration = ServiceConfiguration.builder(task).build();
+                    
+                    CloudServiceFactory serviceFactory = InjectionLayer.ext().instance(CloudServiceFactory.class);
+                    ServiceCreateResult createResult = serviceFactory.createCloudService(configuration);
+                    
+                    if (createResult.state() == ServiceCreateResult.State.CREATED || createResult.state() == ServiceCreateResult.State.DEFERRED) {
+                        ServiceInfoSnapshot serviceInfo = createResult.serviceInfo();
+                        
+                        // Host created, register in Redis
+                        UUID hostId = UUID.randomUUID();
+                        String serverName = serviceInfo.name();
+                        int maxPlayers = plugin.getConfig().getInt("games." + gameType + ".max-players", 20);
+                        
+                        HostData hostData = new HostData(
+                                hostId,
+                                player.getUniqueId(),
+                                player.getName(),
+                                gameType,
+                                serverName,
+                                maxPlayers
+                        );
+
+                        plugin.getHostManager().saveHost(hostData);
+
+                        if (player.isOnline()) {
+                            player.sendMessage(prefix + ChatColor.GREEN + "Le serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " est prêt et démarre !");
+                        }
+                        
+                        // Actually start the process
+                        serviceInfo.provider().start();
+                    } else {
+                        if (player.isOnline()) {
+                            player.sendMessage(prefix + ChatColor.RED + "Erreur: Impossible de créer l'instance de serveur. (" + createResult.state().name() + ")");
+                        }
                     }
                 }
 
@@ -94,6 +142,20 @@ public class CloudNetServiceManager {
                 if (player.isOnline()) {
                     player.sendMessage(prefix + ChatColor.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");
                 }
+            }
+        });
+    }
+    
+    private void sendPlayerToServer(Player player, String serverName) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            try {
+                java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
+                java.io.DataOutputStream out = new java.io.DataOutputStream(b);
+                out.writeUTF("Connect");
+                out.writeUTF(serverName);
+                player.sendPluginMessage(plugin, "BungeeCord", b.toByteArray());
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         });
     }

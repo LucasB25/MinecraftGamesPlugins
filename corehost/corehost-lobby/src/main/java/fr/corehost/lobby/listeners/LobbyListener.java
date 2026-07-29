@@ -18,12 +18,18 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class LobbyListener implements Listener {
+
+    private final Map<UUID, Long> clickCooldowns = new HashMap<>();
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -62,6 +68,13 @@ public class LobbyListener implements Listener {
         if (item == null || item.getType() == Material.AIR || !event.getAction().name().contains("RIGHT")) {
             return;
         }
+        
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - clickCooldowns.getOrDefault(player.getUniqueId(), 0L) < 500) {
+            event.setCancelled(true);
+            return;
+        }
+        clickCooldowns.put(player.getUniqueId(), currentTime);
 
         if (item.getType() == Material.COMPASS || item.getType() == Material.PLAYER_HEAD) {
             event.setCancelled(true);
@@ -84,8 +97,14 @@ public class LobbyListener implements Listener {
         // Always cancel clicks in lobby to prevent moving hotbar items
         event.setCancelled(true);
 
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - clickCooldowns.getOrDefault(player.getUniqueId(), 0L) < 500) {
+            return; // Spam protection
+        }
+
         // If clicking a custom menu, let it handle the logic
         if (event.getInventory().getHolder() instanceof CustomMenu) {
+            clickCooldowns.put(player.getUniqueId(), currentTime);
             CustomMenu customMenu = (CustomMenu) event.getInventory().getHolder();
             customMenu.onClick(event, player);
         }

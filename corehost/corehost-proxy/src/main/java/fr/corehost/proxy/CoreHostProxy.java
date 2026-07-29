@@ -106,4 +106,8 @@ public class CoreHostProxy {
     public FriendManager getFriendManager() {
         return friendManager;
     }
+
+    public ProxyServer getServer() {
+        return server;
+    }
 }

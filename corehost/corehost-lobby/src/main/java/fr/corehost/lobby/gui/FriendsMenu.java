@@ -21,9 +21,15 @@ public class FriendsMenu implements CustomMenu {
 
     private final CoreHostLobby plugin;
     private Inventory inventory;
+    private int page;
 
     public FriendsMenu(CoreHostLobby plugin) {
+        this(plugin, 0);
+    }
+
+    public FriendsMenu(CoreHostLobby plugin, int page) {
         this.plugin = plugin;
+        this.page = page;
     }
 
     @Override
@@ -37,9 +43,8 @@ public class FriendsMenu implements CustomMenu {
             return;
         }
 
-        this.inventory = Bukkit.createInventory(this, 54, "Liste d'Amis");
+        this.inventory = Bukkit.createInventory(this, 54, "Liste d'Amis - Page " + (page + 1));
         
-        // Asynchronously fetch friends to not lag the main thread with Redis
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Set<String> friendUuids = plugin.getFriendManager().getFriends(player.getUniqueId());
             List<String> friends = new ArrayList<>(friendUuids);
@@ -48,15 +53,29 @@ public class FriendsMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 int slot = 0;
-                for (String fUuid : friends) {
-                    if (slot >= 45) break; // Max 45 items per page for now
-                    
+                int startIndex = page * 45;
+                int endIndex = Math.min(startIndex + 45, friends.size());
+
+                for (int i = startIndex; i < endIndex; i++) {
+                    String fUuid = friends.get(i);
                     UUID friendId = UUID.fromString(fUuid);
                     String friendName = plugin.getFriendManager().getNameByUuid(friendId);
                     if (friendName == null) friendName = "Inconnu";
 
                     boolean isOnlineLocally = Bukkit.getPlayer(friendId) != null;
                     
+                    // Default Rank for now (could be hooked into LuckPerms later)
+                    String rank = ChatColor.GRAY + "Joueur";
+                    long lastSeen = plugin.getFriendManager().getLastSeen(friendId);
+                    String lastSeenStr;
+                    if (isOnlineLocally) {
+                        lastSeenStr = ChatColor.GREEN + "Maintenant";
+                    } else if (lastSeen > 0) {
+                        lastSeenStr = ChatColor.YELLOW + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date(lastSeen));
+                    } else {
+                        lastSeenStr = ChatColor.RED + "Inconnue";
+                    }
+
                     ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
                     if (meta != null) {
@@ -64,11 +83,13 @@ public class FriendsMenu implements CustomMenu {
                         meta.setOwningPlayer(Bukkit.getOfflinePlayer(friendId));
                         
                         List<String> lore = new ArrayList<>();
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + rank);
                         if (isOnlineLocally) {
-                            lore.add(ChatColor.GREEN + "En ligne (Ici)");
+                            lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + ChatColor.GREEN + "En ligne (Ici)");
                         } else {
-                            lore.add(ChatColor.RED + "Hors ligne ou autre serveur");
+                            lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + ChatColor.RED + "Hors ligne ou autre serveur");
                         }
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Dernière connexion : " + lastSeenStr);
                         lore.add("");
                         lore.add(ChatColor.GRAY + "Clic-Gauche pour inviter en Party");
                         lore.add(ChatColor.GRAY + "Clic-Droit pour retirer des amis");
@@ -76,6 +97,27 @@ public class FriendsMenu implements CustomMenu {
                         head.setItemMeta(meta);
                     }
                     inventory.setItem(slot++, head);
+                }
+
+                // Pagination Controls
+                if (page > 0) {
+                    ItemStack prev = new ItemStack(Material.ARROW);
+                    ItemMeta prevMeta = prev.getItemMeta();
+                    if (prevMeta != null) {
+                        prevMeta.setDisplayName(ChatColor.YELLOW + "Page Précédente");
+                        prev.setItemMeta(prevMeta);
+                    }
+                    inventory.setItem(45, prev);
+                }
+
+                if (endIndex < friends.size()) {
+                    ItemStack next = new ItemStack(Material.ARROW);
+                    ItemMeta nextMeta = next.getItemMeta();
+                    if (nextMeta != null) {
+                        nextMeta.setDisplayName(ChatColor.YELLOW + "Page Suivante");
+                        next.setItemMeta(nextMeta);
+                    }
+                    inventory.setItem(53, next);
                 }
 
                 ItemStack back = new ItemStack(Material.BARRIER);
@@ -110,6 +152,16 @@ public class FriendsMenu implements CustomMenu {
         
         int slot = event.getSlot();
 
+        if (slot == 45 && clickedItem.getType() == Material.ARROW) {
+            new FriendsMenu(plugin, page - 1).open(player);
+            return;
+        }
+
+        if (slot == 53 && clickedItem.getType() == Material.ARROW) {
+            new FriendsMenu(plugin, page + 1).open(player);
+            return;
+        }
+
         if (slot == 49) {
             new PlayerProfileMenu(plugin, player).open(player);
             return;
@@ -135,7 +187,7 @@ public class FriendsMenu implements CustomMenu {
                     if (targetUuid != null) {
                         plugin.getFriendManager().removeFriend(player.getUniqueId(), targetUuid);
                         player.sendMessage(ChatColor.YELLOW + "Vous n'êtes plus ami avec " + friendName + ".");
-                        Bukkit.getScheduler().runTask(plugin, () -> open(player)); // Refresh
+                        Bukkit.getScheduler().runTask(plugin, () -> new FriendsMenu(plugin, page).open(player)); // Refresh
                     }
                 });
             } else if (clickType == ClickType.LEFT) {

@@ -59,7 +59,10 @@ public class CoreHostLobby extends JavaPlugin {
         if (getCommand("spawn") != null) getCommand("spawn").setExecutor(spawnCommand);
 
         fr.corehost.lobby.commands.FriendCommand friendCommand = new fr.corehost.lobby.commands.FriendCommand(this);
-        if (getCommand("friend") != null) getCommand("friend").setExecutor(friendCommand);
+        if (getCommand("friend") != null) {
+            getCommand("friend").setExecutor(friendCommand);
+            getCommand("friend").setTabCompleter(friendCommand);
+        }
         
         // Setup Worlds Security (Delayed by 1 tick to ensure worlds are fully loaded)
         getServer().getScheduler().runTask(this, this::setupWorlds);

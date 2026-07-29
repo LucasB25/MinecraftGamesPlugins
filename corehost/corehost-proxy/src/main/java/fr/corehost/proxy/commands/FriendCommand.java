@@ -7,10 +7,15 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import fr.corehost.proxy.CoreHostProxy;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 
 import java.util.Set;
 import java.util.UUID;
 import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FriendCommand implements SimpleCommand {
 
@@ -20,6 +25,27 @@ public class FriendCommand implements SimpleCommand {
     public FriendCommand(CoreHostProxy plugin, ProxyServer proxy) {
         this.plugin = plugin;
         this.proxy = proxy;
+    }
+
+    @Override
+    public List<String> suggest(Invocation invocation) {
+        String[] args = invocation.arguments();
+        if (args.length == 0 || args.length == 1) {
+            String current = args.length == 0 ? "" : args[0].toLowerCase();
+            return Stream.of("add", "remove", "accept", "deny", "list", "notifications", "help")
+                    .filter(cmd -> cmd.startsWith(current))
+                    .collect(Collectors.toList());
+        } else if (args.length == 2) {
+            String sub = args[0].toLowerCase();
+            if (sub.equals("add") || sub.equals("remove") || sub.equals("accept") || sub.equals("deny")) {
+                String current = args[1].toLowerCase();
+                return proxy.getAllPlayers().stream()
+                        .map(Player::getUsername)
+                        .filter(name -> name.toLowerCase().startsWith(current))
+                        .collect(Collectors.toList());
+            }
+        }
+        return List.of();
     }
 
     @Override
@@ -46,6 +72,16 @@ public class FriendCommand implements SimpleCommand {
         String sub = args[0].toLowerCase();
         if (sub.equals("list")) {
             handleList(player);
+            return;
+        }
+        
+        if (sub.equals("notifications")) {
+            handleNotifications(player);
+            return;
+        }
+        
+        if (sub.equals("help")) {
+            sendHelp(player);
             return;
         }
 
@@ -96,19 +132,35 @@ public class FriendCommand implements SimpleCommand {
             return;
         }
         if (plugin.getFriendManager().hasFriendRequest(player.getUniqueId(), targetUuid)) {
-            player.sendMessage(Component.text("Ce joueur vous a déjà envoyé une demande. Faites /friend accept " + targetName, NamedTextColor.YELLOW));
+            player.sendMessage(Component.text("Ce joueur vous a déjà envoyé une demande. Faites /friend accept " + targetName).color(NamedTextColor.YELLOW));
+            return;
+        }
+
+        if (plugin.getFriendManager().areFriendRequestsBlocked(targetUuid)) {
+            player.sendMessage(Component.text("Ce joueur n'accepte pas les demandes d'amis.").color(NamedTextColor.RED));
             return;
         }
 
         plugin.getFriendManager().sendFriendRequest(player.getUniqueId(), targetUuid);
-        player.sendMessage(Component.text("Demande d'ami envoyée à " + targetName + ".", NamedTextColor.GREEN));
+        player.sendMessage(Component.text("Demande d'ami envoyée à " + targetName + ".").color(NamedTextColor.GREEN));
 
         // Notify target if online
         Optional<Player> targetPlayer = proxy.getPlayer(targetUuid);
-        targetPlayer.ifPresent(p -> {
-            p.sendMessage(Component.text("Vous avez reçu une demande d'ami de " + player.getUsername() + ".", NamedTextColor.YELLOW));
-            p.sendMessage(Component.text("Faites /friend accept " + player.getUsername() + " pour accepter.", NamedTextColor.YELLOW));
-        });
+        if (targetPlayer.isPresent()) {
+            targetPlayer.get().sendMessage(Component.text("Vous avez reçu une demande d'ami de " + player.getUsername() + ".").color(NamedTextColor.YELLOW));
+            
+            Component acceptButton = Component.text("[ACCEPTER]")
+                .color(NamedTextColor.GREEN)
+                .clickEvent(ClickEvent.runCommand("/friend accept " + player.getUsername()))
+                .hoverEvent(HoverEvent.showText(Component.text("Accepter")));
+                
+            Component denyButton = Component.text(" [REFUSER]")
+                .color(NamedTextColor.RED)
+                .clickEvent(ClickEvent.runCommand("/friend deny " + player.getUsername()))
+                .hoverEvent(HoverEvent.showText(Component.text("Refuser")));
+                
+            targetPlayer.get().sendMessage(acceptButton.append(denyButton));
+        }
     }
 
     private void handleAccept(Player player, UUID targetUuid, String targetName) {
@@ -153,6 +205,17 @@ public class FriendCommand implements SimpleCommand {
         player.sendMessage(Component.text("Vous n'êtes plus ami avec " + targetName + ".", NamedTextColor.YELLOW));
     }
 
+    private void handleNotifications(Player player) {
+        boolean enabled = plugin.getFriendManager().areNotificationsEnabled(player.getUniqueId());
+        plugin.getFriendManager().setNotificationsEnabled(player.getUniqueId(), !enabled);
+        
+        if (!enabled) {
+            player.sendMessage(Component.text("Vous avez activé les notifications de connexion de vos amis.", NamedTextColor.GREEN));
+        } else {
+            player.sendMessage(Component.text("Vous avez désactivé les notifications de connexion de vos amis.", NamedTextColor.YELLOW));
+        }
+    }
+
     private void handleList(Player player) {
         Set<String> friends = plugin.getFriendManager().getFriends(player.getUniqueId());
         if (friends.isEmpty()) {
@@ -173,11 +236,18 @@ public class FriendCommand implements SimpleCommand {
     }
 
     private void sendHelp(Player player) {
-        player.sendMessage(Component.text("--- Commandes d'Amis ---", NamedTextColor.GOLD));
-        player.sendMessage(Component.text("/friend add <pseudo> - Ajouter un ami", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/friend accept <pseudo> - Accepter une demande", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/friend deny <pseudo> - Refuser une demande", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/friend remove <pseudo> - Supprimer un ami", NamedTextColor.YELLOW));
-        player.sendMessage(Component.text("/friend list - Voir vos amis", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("").color(NamedTextColor.DARK_GRAY)
+                .append(Component.text("====== ").color(NamedTextColor.AQUA))
+                .append(Component.text("Système d'Amis").color(NamedTextColor.GOLD))
+                .append(Component.text(" ======").color(NamedTextColor.AQUA)));
+        
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/friend add <pseudo>").color(NamedTextColor.YELLOW)).append(Component.text(" - Ajouter un ami").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/friend remove <pseudo>").color(NamedTextColor.YELLOW)).append(Component.text(" - Supprimer un ami").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/friend list").color(NamedTextColor.YELLOW)).append(Component.text(" - Voir vos amis").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/friend accept <pseudo>").color(NamedTextColor.YELLOW)).append(Component.text(" - Accepter une demande").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/friend deny <pseudo>").color(NamedTextColor.YELLOW)).append(Component.text(" - Refuser une demande").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/friend notifications").color(NamedTextColor.YELLOW)).append(Component.text(" - Activer/Désactiver les notifications").color(NamedTextColor.GRAY)));
+        
+        player.sendMessage(Component.text("============================").color(NamedTextColor.AQUA));
     }
 }

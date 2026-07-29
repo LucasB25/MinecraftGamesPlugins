@@ -90,4 +90,60 @@ public class FriendManager {
             jedis.srem("corehost:friends:" + player2.toString(), player1.toString());
         }
     }
+
+    public void setFriendRequestsBlocked(UUID uuid, boolean blocked) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            String key = "corehost:settings:requests_blocked:" + uuid.toString();
+            if (blocked) {
+                jedis.set(key, "true");
+            } else {
+                jedis.del(key);
+            }
+        }
+    }
+
+    public boolean areFriendRequestsBlocked(UUID uuid) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            String val = jedis.get("corehost:settings:requests_blocked:" + uuid.toString());
+            return val != null && val.equals("true");
+        }
+    }
+
+    public void updateLastSeen(UUID uuid) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            jedis.set("corehost:lastseen:" + uuid.toString(), String.valueOf(System.currentTimeMillis()));
+        }
+    }
+
+    public long getLastSeen(UUID uuid) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            String val = jedis.get("corehost:lastseen:" + uuid.toString());
+            if (val != null) {
+                try {
+                    return Long.parseLong(val);
+                } catch (NumberFormatException e) {
+                    return 0;
+                }
+            }
+            return 0;
+        }
+    }
+
+    public void setNotificationsEnabled(UUID uuid, boolean enabled) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            String key = "corehost:settings:notifications_disabled:" + uuid.toString();
+            if (!enabled) {
+                jedis.set(key, "true");
+            } else {
+                jedis.del(key);
+            }
+        }
+    }
+
+    public boolean areNotificationsEnabled(UUID uuid) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            String val = jedis.get("corehost:settings:notifications_disabled:" + uuid.toString());
+            return val == null || !val.equals("true"); // Default to true if key does not exist
+        }
+    }
 }

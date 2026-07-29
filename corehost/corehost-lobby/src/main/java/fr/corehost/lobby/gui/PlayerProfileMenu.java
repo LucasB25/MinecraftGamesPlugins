@@ -132,7 +132,8 @@ public class PlayerProfileMenu implements CustomMenu {
             settingsMeta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Paramètres");
             settingsMeta.setLore(Arrays.asList(
                 "",
-                ChatColor.GRAY + "Bientôt disponible...",
+                ChatColor.GRAY + "Gérez vos préférences",
+                ChatColor.GRAY + "et votre confidentialité.",
                 ""
             ));
             settingsItem.setItemMeta(settingsMeta);
@@ -161,6 +162,8 @@ public class PlayerProfileMenu implements CustomMenu {
             
             if (type == Material.NAME_TAG) {
                 new FriendsMenu(plugin).open(player);
+            } else if (type == Material.REDSTONE_TORCH) {
+                new SettingsMenu(plugin).open(player);
             } else {
                 player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY + "Cette fonctionnalité arrive bientôt !");
             }

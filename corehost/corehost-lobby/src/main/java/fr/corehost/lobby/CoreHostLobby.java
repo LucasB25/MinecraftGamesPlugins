@@ -2,6 +2,9 @@ package fr.corehost.lobby;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.Player;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
+import org.bukkit.GameRule;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.lobby.cloudnet.CloudNetServiceManager;
@@ -46,11 +49,38 @@ public class CoreHostLobby extends JavaPlugin {
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 
         // Register Listeners
-        getServer().getPluginManager().registerEvents(new fr.corehost.lobby.listeners.LobbyListener(), this);
+        getServer().getPluginManager().registerEvents(new fr.corehost.lobby.listeners.LobbyListener(this), this);
 
         // Register Commands
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();
         if (getCommand("spawn") != null) getCommand("spawn").setExecutor(spawnCommand);
+        
+        // Setup Worlds Security
+        setupWorlds();
+    }
+
+    private void setupWorlds() {
+        for (World world : Bukkit.getWorlds()) {
+            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+            world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+            world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+            world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+            world.setGameRule(GameRule.DO_ENTITY_DROPS, false);
+            world.setGameRule(GameRule.DO_TILE_DROPS, false);
+            world.setGameRule(GameRule.DO_FIRE_TICK, false);
+            world.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
+            world.setGameRule(GameRule.SPAWN_RADIUS, 0);
+            world.setGameRule(GameRule.DISABLE_RAIDS, true);
+            world.setGameRule(GameRule.DO_TRADER_SPAWNING, false);
+            world.setGameRule(GameRule.DO_PATROL_SPAWNING, false);
+            world.setGameRule(GameRule.MOB_GRIEFING, false);
+            world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+            world.setGameRule(GameRule.DO_MOB_LOOT, false);
+            world.setGameRule(GameRule.DO_INSOMNIA, false);
+            
+            world.setTime(6000L); // Noon
+            world.setStorm(false);
+        }
     }
 
     @Override

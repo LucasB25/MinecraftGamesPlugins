@@ -11,17 +11,30 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.LeavesDecayEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.weather.WeatherChangeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.Bukkit;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,15 +43,23 @@ import java.util.UUID;
 public class LobbyListener implements Listener {
 
     private final Map<UUID, Long> clickCooldowns = new HashMap<>();
+    private final JavaPlugin plugin;
+
+    public LobbyListener(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        event.setJoinMessage(null); // Hide vanilla join message
+        
         Player player = event.getPlayer();
         player.setGameMode(GameMode.ADVENTURE);
         player.setHealth(20.0);
         player.setFoodLevel(20);
         player.getInventory().clear();
         player.setAllowFlight(false);
+        player.setCollidable(false); // Disable player collision
 
         // Slot 4: Play Menu (Compass)
         ItemStack searchHost = new ItemStack(Material.COMPASS);
@@ -66,6 +87,10 @@ public class LobbyListener implements Listener {
         ItemStack item = event.getItem();
 
         if (item == null || item.getType() == Material.AIR || !event.getAction().name().contains("RIGHT")) {
+            // Cancel physical block interactions (doors, trapdoors, farming, etc) if they right/left click a block
+            if (event.getClickedBlock() != null) {
+                event.setCancelled(true);
+            }
             return;
         }
         
@@ -140,5 +165,74 @@ public class LobbyListener implements Listener {
     @EventHandler
     public void onPlayerSwapHandItems(PlayerSwapHandItemsEvent event) {
         event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        event.setQuitMessage(null); // Hide vanilla quit message
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        event.getDrops().clear();
+        event.setDroppedExp(0);
+        // Instant respawn on next tick
+        Bukkit.getScheduler().runTask(plugin, () -> event.getEntity().spigot().respawn());
+    }
+
+    // --- NEW SECURITIES ---
+
+    @EventHandler
+    public void onWeatherChange(WeatherChangeEvent event) {
+        if (event.toWeatherState()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onLeavesDecay(LeavesDecayEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockIgnite(BlockIgniteEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockFade(BlockFadeEvent event) {
+        event.setCancelled(true); // Prevents ice melting, coral dying
+    }
+
+    @EventHandler
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.CUSTOM) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onEntityPickupItem(EntityPickupItemEvent event) {
+        if (event.getEntity() instanceof Player) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        if (player.getLocation().getY() < 0) {
+            player.teleport(player.getWorld().getSpawnLocation());
+        }
     }
 }

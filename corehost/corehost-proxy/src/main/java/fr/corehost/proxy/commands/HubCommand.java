@@ -39,10 +39,10 @@ public class HubCommand implements SimpleCommand {
                 .findFirst();
 
         if (lobbyServer.isPresent()) {
-            player.sendMessage(Component.text("Connexion au Lobby...", NamedTextColor.GREEN));
+            player.sendMessage(Component.text("Redirection vers le Hub...", NamedTextColor.GREEN));
             player.createConnectionRequest(lobbyServer.get()).fireAndForget();
         } else {
-            player.sendMessage(Component.text("Aucun serveur Lobby n'est disponible actuellement.", NamedTextColor.RED));
+            player.sendMessage(Component.text("Aucun Hub n'est disponible pour le moment.", NamedTextColor.RED));
         }
     }
 }

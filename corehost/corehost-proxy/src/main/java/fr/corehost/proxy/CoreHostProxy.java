@@ -55,8 +55,8 @@ public class CoreHostProxy {
             logger.error("Could not connect to Redis", e);
         }
 
-        // Register Commands
-        server.getCommandManager().register("hub", new HubCommand(server), "lobby");
+        // Commands will be handled by the backend Spigot servers
+        // so that /spawn in the lobby can teleport the player to the lobby spawn.
     }
 
     private ProxyConfig loadConfig() {

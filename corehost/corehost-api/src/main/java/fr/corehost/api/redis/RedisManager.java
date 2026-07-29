@@ -1,7 +1,9 @@
 package fr.corehost.api.redis;
 
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisException;
 
 public class RedisManager {
     
@@ -25,6 +27,14 @@ public class RedisManager {
 
     public JedisPool getPool() {
         return jedisPool;
+    }
+
+    public boolean isConnected() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return "PONG".equals(jedis.ping());
+        } catch (JedisException e) {
+            return false;
+        }
     }
 
     public void close() {

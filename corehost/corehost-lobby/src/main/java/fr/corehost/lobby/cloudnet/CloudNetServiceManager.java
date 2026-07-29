@@ -30,12 +30,14 @@ public class CloudNetServiceManager {
     }
 
     public void createHost(Player player, String gameType) {
-        if (!isCloudNetEnabled) {
-            player.sendMessage(ChatColor.RED + "CloudNet n'est pas disponible sur ce serveur de test. Impossible de démarrer un vrai sous-serveur.");
+        String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+        
+        if (!isCloudNetEnabled || plugin.getHostManager() == null) {
+            player.sendMessage(prefix + ChatColor.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");
             return;
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Préparation de votre serveur " + gameType + " en cours...");
+        player.sendMessage(prefix + "Préparation de votre serveur " + ChatColor.YELLOW + gameType + ChatColor.GRAY + " en cours...");
 
         // Start async to avoid blocking main thread during API calls
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -57,8 +59,9 @@ public class CloudNetServiceManager {
                     ServiceInfoSnapshot serviceInfo = createResult.serviceInfo();
                     
                     // Host created, register in Redis
-                    UUID hostId = UUID.randomUUID(); // Optional: use serviceInfo.serviceId().uniqueId()
+                    UUID hostId = UUID.randomUUID();
                     String serverName = serviceInfo.name();
+                    int maxPlayers = plugin.getConfig().getInt("games." + gameType + ".max-players", 20);
                     
                     HostData hostData = new HostData(
                             hostId,
@@ -66,24 +69,30 @@ public class CloudNetServiceManager {
                             player.getName(),
                             gameType,
                             serverName,
-                            20 // Default max players
+                            maxPlayers
                     );
 
                     if (plugin.getHostManager() != null) {
                         plugin.getHostManager().saveHost(hostData);
                     }
 
-                    player.sendMessage(ChatColor.GREEN + "Votre serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " a été créé ! Il est en cours de démarrage...");
+                    if (player.isOnline()) {
+                        player.sendMessage(prefix + ChatColor.GREEN + "Le serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " est prêt et démarre !");
+                    }
                     
                     // Actually start the process
                     serviceInfo.provider().start();
                 } else {
-                    player.sendMessage(ChatColor.RED + "Erreur: Impossible de créer l'instance de serveur. (" + createResult.state().name() + ")");
+                    if (player.isOnline()) {
+                        player.sendMessage(prefix + ChatColor.RED + "Erreur: Impossible de créer l'instance de serveur. (" + createResult.state().name() + ")");
+                    }
                 }
 
             } catch (Exception e) {
                 e.printStackTrace();
-                player.sendMessage(ChatColor.RED + "Une erreur inattendue est survenue lors de la communication avec CloudNet.");
+                if (player.isOnline()) {
+                    player.sendMessage(prefix + ChatColor.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");
+                }
             }
         });
     }

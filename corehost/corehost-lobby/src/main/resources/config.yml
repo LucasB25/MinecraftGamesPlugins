@@ -10,6 +10,7 @@ games:
     name: "&e&lCréer un Mini-Jeu (Sumo)"
     material: "SLIME_BALL"
     slot: 11
+    max-players: 2
     lore:
       - ""
       - "&7Démarrez un serveur Sumo"
@@ -21,6 +22,7 @@ games:
     name: "&c&lCréer un Mini-Jeu (CTF)"
     material: "RED_BANNER"
     slot: 15
+    max-players: 20
     lore:
       - ""
       - "&7Capture the Flag !"

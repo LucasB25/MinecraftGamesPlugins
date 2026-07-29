@@ -27,10 +27,16 @@ public class CoreHostLobby extends JavaPlugin {
         // Connect to Redis
         try {
             this.redisManager = new RedisManager(redisHost, redisPort, redisPassword);
-            this.hostManager = new HostManager(this.redisManager);
-            getLogger().info("Connected to Redis.");
+            if (this.redisManager.isConnected()) {
+                this.hostManager = new HostManager(this.redisManager);
+                getLogger().info("Connected to Redis successfully.");
+            } else {
+                getLogger().warning("Redis is not reachable at " + redisHost + ":" + redisPort + ". Host features are disabled.");
+                this.redisManager = null;
+            }
         } catch (Exception e) {
-            getLogger().severe("Failed to connect to Redis!");
+            getLogger().severe("Failed to initialize Redis: " + e.getMessage());
+            this.redisManager = null;
         }
         
         // Initialize CloudNet Manager
@@ -41,6 +47,10 @@ public class CoreHostLobby extends JavaPlugin {
 
         // Register Listeners
         getServer().getPluginManager().registerEvents(new fr.corehost.lobby.listeners.LobbyListener(), this);
+
+        // Register Commands
+        fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();
+        if (getCommand("spawn") != null) getCommand("spawn").setExecutor(spawnCommand);
     }
 
     @Override

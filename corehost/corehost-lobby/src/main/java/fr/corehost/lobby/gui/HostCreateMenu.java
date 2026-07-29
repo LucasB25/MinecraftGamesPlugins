@@ -3,6 +3,7 @@ package fr.corehost.lobby.gui;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -22,21 +23,23 @@ public class HostCreateMenu implements CustomMenu {
     private final Inventory inventory;
 
     public HostCreateMenu() {
-        this.inventory = Bukkit.createInventory(this, 27, ChatColor.GOLD + "Création de Host");
+        this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.GOLD + "Créer un Serveur");
         initializeItems();
     }
 
     private void initializeItems() {
         // Border decoration
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = filler.getItemMeta();
-        if (fillerMeta != null) {
-            fillerMeta.setDisplayName(" ");
-            filler.setItemMeta(fillerMeta);
-        }
+        ItemStack filler1 = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta1 = filler1.getItemMeta();
+        if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
+        
+        ItemStack filler2 = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
+        ItemMeta meta2 = filler2.getItemMeta();
+        if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
+        
         for (int i = 0; i < inventory.getSize(); i++) {
             if (i < 9 || i > 17 || i == 9 || i == 17) {
-                inventory.setItem(i, filler);
+                inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
             }
         }
 
@@ -100,6 +103,7 @@ public class HostCreateMenu implements CustomMenu {
         if (meta != null && meta.getPersistentDataContainer().has(gameKey, PersistentDataType.STRING)) {
             String gameId = meta.getPersistentDataContainer().get(gameKey, PersistentDataType.STRING);
             if (gameId != null) {
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.5f);
                 player.closeInventory();
                 plugin.getCloudNetServiceManager().createHost(player, gameId);
             }

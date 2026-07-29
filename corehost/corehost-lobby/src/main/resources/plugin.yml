@@ -6,3 +6,7 @@ authors: [ CoreHost ]
 description: Lobby plugin with AdvancedSlimePaper and CloudNet integration.
 softdepend:
   - CloudNet-Bridge
+commands:
+  spawn:
+    description: Téléporte au spawn du lobby.
+    aliases: [hub, lobby]

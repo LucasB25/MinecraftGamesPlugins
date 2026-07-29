@@ -3,6 +3,7 @@ package fr.corehost.lobby.gui;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -17,7 +18,6 @@ import fr.corehost.api.host.HostStatus;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
 import org.bukkit.configuration.ConfigurationSection;
 
 public class HostSearchMenu implements CustomMenu {
@@ -27,7 +27,7 @@ public class HostSearchMenu implements CustomMenu {
     private HostStatus statusFilter = null;
 
     public HostSearchMenu() {
-        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_AQUA + "Recherche de Host");
+        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.DARK_AQUA + "Recherche de Serveurs");
         initializeItems();
     }
 
@@ -38,14 +38,16 @@ public class HostSearchMenu implements CustomMenu {
     }
     
     private void drawBottomBar() {
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = filler.getItemMeta();
-        if (fillerMeta != null) {
-            fillerMeta.setDisplayName(" ");
-            filler.setItemMeta(fillerMeta);
-        }
+        ItemStack filler1 = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta1 = filler1.getItemMeta();
+        if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
+        
+        ItemStack filler2 = new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS_PANE);
+        ItemMeta meta2 = filler2.getItemMeta();
+        if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
+        
         for (int i = 45; i < 54; i++) {
-            inventory.setItem(i, filler);
+            inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
         }
 
         // Create Host item (Centered on last line: slot 49)
@@ -114,7 +116,19 @@ public class HostSearchMenu implements CustomMenu {
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
         
         if (plugin.getHostManager() == null) {
-            return; // Redis is not configured or failed to initialize
+            ItemStack maintenanceItem = new ItemStack(Material.BARRIER);
+            ItemMeta maintenanceMeta = maintenanceItem.getItemMeta();
+            if (maintenanceMeta != null) {
+                maintenanceMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Système en Maintenance");
+                maintenanceMeta.setLore(java.util.Arrays.asList(
+                    ChatColor.GRAY + "Le système de Host est actuellement",
+                    ChatColor.GRAY + "en cours de maintenance ou de",
+                    ChatColor.GRAY + "mise à jour. Réessayez plus tard."
+                ));
+                maintenanceItem.setItemMeta(maintenanceMeta);
+            }
+            inventory.setItem(22, maintenanceItem); // Center of the inventory
+            return;
         }
         
         List<HostData> hosts = plugin.getHostManager().getAllHosts();
@@ -141,17 +155,17 @@ public class HostSearchMenu implements CustomMenu {
             ItemMeta hostMeta = hostItem.getItemMeta();
             
             if (hostMeta != null) {
-                hostMeta.setDisplayName(ChatColor.AQUA + "Serveur " + host.getGameType());
+                hostMeta.setDisplayName(ChatColor.YELLOW + "Serveur " + host.getGameType());
                 
                 String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
                 
                 hostMeta.setLore(java.util.Arrays.asList(
                     "",
-                    ChatColor.GRAY + "Hôte : " + ChatColor.YELLOW + host.getOwnerName(),
-                    ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + "/" + host.getMaxPlayers(),
-                    ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name(),
+                    ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Hôte : " + ChatColor.WHITE + host.getOwnerName(),
+                    ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name(),
+                    ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + host.getMaxPlayers(),
                     "",
-                    ChatColor.GREEN + "► Cliquez pour rejoindre"
+                    ChatColor.GREEN + "► Cliquez pour rejoindre !"
                 ));
                 
                 // Store the server name in the item's persistent data
@@ -179,18 +193,24 @@ public class HostSearchMenu implements CustomMenu {
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
+        String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+
         if (clicked.getType() == Material.EMERALD) {
-            player.sendMessage(ChatColor.YELLOW + "Rafraîchissement de la liste des serveurs...");
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.2f);
+            player.sendMessage(prefix + "Rafraîchissement de la liste des serveurs...");
             drawHosts();
         } else if (clicked.getType() == Material.NETHER_STAR) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             new HostCreateMenu().open(player);
         } else if (clicked.getType() == Material.HOPPER && event.getSlot() == 45) {
             // Cycle Game Filter
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             cycleGameFilter();
             drawBottomBar();
             drawHosts();
         } else if (clicked.getType() == Material.COMPARATOR && event.getSlot() == 46) {
             // Cycle Status Filter
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             cycleStatusFilter();
             drawBottomBar();
             drawHosts();
@@ -203,7 +223,8 @@ public class HostSearchMenu implements CustomMenu {
             if (meta != null && meta.getPersistentDataContainer().has(serverKey, PersistentDataType.STRING)) {
                 String serverName = meta.getPersistentDataContainer().get(serverKey, PersistentDataType.STRING);
                 if (serverName != null) {
-                    player.sendMessage(ChatColor.GREEN + "Connexion au serveur " + serverName + "...");
+                    player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+                    player.sendMessage(prefix + "Connexion au serveur " + ChatColor.GREEN + serverName + ChatColor.GRAY + "...");
                     plugin.connectToServer(player, serverName);
                     player.closeInventory();
                 }

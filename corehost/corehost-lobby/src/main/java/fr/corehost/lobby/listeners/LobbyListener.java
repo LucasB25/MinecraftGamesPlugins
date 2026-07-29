@@ -7,6 +7,7 @@ import fr.corehost.lobby.gui.PlayerProfileMenu;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -37,7 +38,7 @@ public class LobbyListener implements Listener {
         ItemStack searchHost = new ItemStack(Material.COMPASS);
         ItemMeta searchMeta = searchHost.getItemMeta();
         if (searchMeta != null) {
-            searchMeta.setDisplayName(ChatColor.AQUA + "Menu des Jeux");
+            searchMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Jouer " + ChatColor.GRAY + "(Clic-Droit)");
             searchHost.setItemMeta(searchMeta);
         }
         player.getInventory().setItem(4, searchHost);
@@ -47,7 +48,7 @@ public class LobbyListener implements Listener {
         SkullMeta profileMeta = (SkullMeta) profile.getItemMeta();
         if (profileMeta != null) {
             profileMeta.setOwningPlayer(player);
-            profileMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "Profil");
+            profileMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Mon Profil " + ChatColor.GRAY + "(Clic-Droit)");
             profile.setItemMeta(profileMeta);
         }
         player.getInventory().setItem(8, profile);
@@ -67,8 +68,10 @@ public class LobbyListener implements Listener {
         }
 
         if (item.getType() == Material.COMPASS) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             new HostSearchMenu().open(player);
         } else if (item.getType() == Material.PLAYER_HEAD) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
             new PlayerProfileMenu(player).open(player);
         }
     }

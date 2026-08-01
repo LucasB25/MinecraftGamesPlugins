@@ -12,7 +12,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.Arrays;
-
+import fr.corehost.lobby.utils.Constants;
 import fr.corehost.lobby.CoreHostLobby;
 
 public class PlayerProfileMenu implements CustomMenu {
@@ -28,19 +28,7 @@ public class PlayerProfileMenu implements CustomMenu {
 
     private void initializeItems(boolean isLinked) {
         // Border decoration (Pink + Purple alternating)
-        ItemStack filler1 = new ItemStack(Material.PINK_STAINED_GLASS_PANE);
-        ItemMeta meta1 = filler1.getItemMeta();
-        if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
-
-        ItemStack filler2 = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
-        ItemMeta meta2 = filler2.getItemMeta();
-        if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
-
-        for (int i = 0; i < inventory.getSize(); i++) {
-            if (i < 9 || i > 17 || i == 9 || i == 17) {
-                inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
-            }
-        }
+        MenuUtils.fillBorder(inventory);
 
         // ── Slot 10: Player Head (General Info) ──
         ItemStack headItem = new ItemStack(Material.PLAYER_HEAD);
@@ -99,7 +87,7 @@ public class PlayerProfileMenu implements CustomMenu {
         inventory.setItem(12, friendsItem);
 
         // ── Slot 13: Empty (glass pane) ──
-        inventory.setItem(13, filler2);
+        inventory.setItem(13, MenuUtils.getPurpleFiller());
 
         // ── Slot 14: Party (Cake) ──
         ItemStack partyItem = new ItemStack(Material.CAKE);
@@ -208,7 +196,7 @@ public class PlayerProfileMenu implements CustomMenu {
                 new SettingsMenu(plugin).open(player);
             } else {
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-                player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY + "Cette fonctionnalité arrive bientôt !");
+                player.sendMessage(Constants.PREFIX + "Cette fonctionnalité arrive bientôt !");
             }
         }
 
@@ -232,7 +220,7 @@ public class PlayerProfileMenu implements CustomMenu {
 
                 if (linked) {
                     Bukkit.getScheduler().runTask(plugin, () -> {
-                        player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + "Votre compte est déjà lié à Discord !");
+                        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Votre compte est déjà lié à Discord !");
                     });
                     return;
                 }
@@ -249,7 +237,7 @@ public class PlayerProfileMenu implements CustomMenu {
                 if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
                     botId = plugin.getRedisManager().get("corehost:discord_bot_id");
                 }
-                String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : "https://discord.gg/";
+                String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : plugin.getConfig().getString("settings.discord-url", "https://discord.gg/corehost");
 
                 final String finalDiscordUrl = discordUrl;
                 final String finalCode = code;
@@ -257,17 +245,15 @@ public class PlayerProfileMenu implements CustomMenu {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     if (!player.isOnline()) return;
 
-                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                    String prefix = Constants.PREFIX;
 
                     player.sendMessage("");
                     player.sendMessage(prefix + ChatColor.YELLOW + "Liaison de compte Discord");
                     player.sendMessage("");
                     player.sendMessage(prefix + "Votre code de liaison : " + ChatColor.GOLD + "" + ChatColor.BOLD + finalCode);
                     player.sendMessage(prefix + ChatColor.GRAY + "Ce code expire dans " + ChatColor.YELLOW + "15 minutes" + ChatColor.GRAY + ".");
-                    player.sendMessage("");
-
                     net.md_5.bungee.api.chat.TextComponent clickMsg = new net.md_5.bungee.api.chat.TextComponent(
-                        net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " +
+                        Constants.BUNGEE_PREFIX +
                         net.md_5.bungee.api.ChatColor.AQUA + "" + net.md_5.bungee.api.ChatColor.BOLD + "👉 Cliquez ici pour ouvrir le profil du Bot 👈"
                     );
                     clickMsg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.OPEN_URL, finalDiscordUrl));

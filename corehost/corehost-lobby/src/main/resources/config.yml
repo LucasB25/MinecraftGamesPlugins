@@ -1,5 +1,9 @@
 # Configuration de CoreHostLobby
 
+settings:
+  prefix: "&8[&6CoreHost&8] &7"
+  discord-url: "https://discord.gg/aqQM4B7jxH"
+
 redis:
   host: "127.0.0.1"
   port: 6379

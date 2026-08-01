@@ -1,5 +1,6 @@
 package fr.corehost.lobby.gui;
 
+import fr.corehost.lobby.utils.Constants;
 import fr.corehost.lobby.CoreHostLobby;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -158,7 +159,7 @@ public class IgnoreMenu implements CustomMenu {
                 }
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + "Vous n'ignorez plus " + name + ".");
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Vous n'ignorez plus " + name + ".");
                     open(player); // Refresh current menu
                 });
             });

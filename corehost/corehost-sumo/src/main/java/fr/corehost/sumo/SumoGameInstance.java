@@ -116,7 +116,7 @@ public class SumoGameInstance {
             state = GameState.STARTING;
             
             new BukkitRunnable() {
-                int countdown = 5;
+                int countdown = plugin.getConfig().getInt("gameplay.countdown-seconds", 5);
 
                 @Override
                 public void run() {

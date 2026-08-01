@@ -29,6 +29,7 @@ public class CoreHostLobby extends JavaPlugin {
 
         // Load configuration
         saveDefaultConfig();
+        fr.corehost.lobby.utils.Constants.load(getConfig());
         String redisHost = getConfig().getString("redis.host", "127.0.0.1");
         int redisPort = getConfig().getInt("redis.port", 6379);
         String redisPassword = getConfig().getString("redis.password", "");

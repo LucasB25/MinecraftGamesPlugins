@@ -7,6 +7,7 @@ public class ProxyConfig {
     private String redisPassword;
     private String discordBotToken;
     private String discordBotId;
+    private String prefix;
 
     public ProxyConfig() {
         this.redisHost = "127.0.0.1";
@@ -14,6 +15,7 @@ public class ProxyConfig {
         this.redisPassword = "";
         this.discordBotToken = "";
         this.discordBotId = "";
+        this.prefix = "&8[&6CoreHost&8] &7";
     }
 
     public String getRedisHost() { return redisHost; }
@@ -30,4 +32,7 @@ public class ProxyConfig {
 
     public String getDiscordBotId() { return discordBotId; }
     public void setDiscordBotId(String discordBotId) { this.discordBotId = discordBotId; }
+
+    public String getPrefix() { return prefix; }
+    public void setPrefix(String prefix) { this.prefix = prefix; }
 }

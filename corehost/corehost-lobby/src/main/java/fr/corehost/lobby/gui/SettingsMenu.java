@@ -10,6 +10,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import fr.corehost.lobby.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,19 +61,7 @@ public class SettingsMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 // ── Border decoration: Pink + Purple alternating (matches Profile) ──
-                ItemStack filler1 = new ItemStack(Material.PINK_STAINED_GLASS_PANE);
-                ItemMeta meta1 = filler1.getItemMeta();
-                if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
-
-                ItemStack filler2 = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
-                ItemMeta meta2 = filler2.getItemMeta();
-                if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
-
-                for (int i = 0; i < inventory.getSize(); i++) {
-                    if (i < 9 || i > 17 || i == 9 || i == 17) {
-                        inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
-                    }
-                }
+                MenuUtils.fillBorder(inventory);
 
                 // ── Slot 11: Friend Requests Toggle ──
                 ItemStack friendRequestToggle = new ItemStack(isBlocked ? Material.RED_DYE : Material.LIME_DYE);
@@ -199,13 +188,7 @@ public class SettingsMenu implements CustomMenu {
                 inventory.setItem(15, ignoredPlayers);
 
                 // ── Slot 22: Back to Profile ──
-                ItemStack back = new ItemStack(Material.ARROW);
-                ItemMeta backMeta = back.getItemMeta();
-                if (backMeta != null) {
-                    backMeta.setDisplayName(ChatColor.RED + "◄ Retour au Profil");
-                    back.setItemMeta(backMeta);
-                }
-                inventory.setItem(22, back);
+                inventory.setItem(22, MenuUtils.getBackButton());
 
                 player.openInventory(inventory);
             });
@@ -237,7 +220,7 @@ public class SettingsMenu implements CustomMenu {
                 plugin.getFriendManager().setFriendRequestsBlocked(player.getUniqueId(), !isBlocked);
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                    String prefix = Constants.PREFIX;
                     if (isBlocked) {
                         player.sendMessage(prefix + "Demandes d'amis " + ChatColor.GREEN + "autorisées" + ChatColor.GRAY + ".");
                     } else {
@@ -257,7 +240,7 @@ public class SettingsMenu implements CustomMenu {
                 plugin.getFriendManager().setNotificationsEnabled(player.getUniqueId(), !enabled);
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                    String prefix = Constants.PREFIX;
                     if (enabled) {
                         player.sendMessage(prefix + "Notifications " + ChatColor.RED + "désactivées" + ChatColor.GRAY + ".");
                     } else {
@@ -277,7 +260,7 @@ public class SettingsMenu implements CustomMenu {
                 plugin.getPartyManager().setPartyInvitesBlocked(player.getUniqueId(), !partyBlocked);
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                    String prefix = Constants.PREFIX;
                     if (partyBlocked) {
                         player.sendMessage(prefix + "Invitations de groupe " + ChatColor.GREEN + "autorisées" + ChatColor.GRAY + ".");
                     } else {
@@ -301,7 +284,7 @@ public class SettingsMenu implements CustomMenu {
                         plugin.getRedisManager().set("corehost:messages:blocked:" + player.getUniqueId().toString(), "true");
                     }
                     Bukkit.getScheduler().runTask(plugin, () -> {
-                        String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                        String prefix = Constants.PREFIX;
                         if (pmsBlocked) {
                             player.sendMessage(prefix + "Messages privés " + ChatColor.GREEN + "autorisés" + ChatColor.GRAY + ".");
                         } else {

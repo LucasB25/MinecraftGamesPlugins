@@ -115,6 +115,7 @@ public class CoreHostProxy {
         if (!configFile.exists()) {
             try (FileWriter writer = new FileWriter(configFile)) {
                 java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
+                data.put("settings", java.util.Map.of("prefix", "&8[&6CoreHost&8] &7"));
                 data.put("redis", java.util.Map.of("host", "127.0.0.1", "port", 6379, "password", ""));
                 data.put("discord", java.util.Map.of("bot-token", "", "bot-id", ""));
                 yaml.dump(data, writer);
@@ -138,6 +139,11 @@ public class CoreHostProxy {
                     java.util.Map<String, Object> discordData = (java.util.Map<String, Object>) data.get("discord");
                     if (discordData.containsKey("bot-token")) config.setDiscordBotToken(String.valueOf(discordData.get("bot-token")));
                     if (discordData.containsKey("bot-id")) config.setDiscordBotId(String.valueOf(discordData.get("bot-id")));
+                }
+                
+                if (data.containsKey("settings")) {
+                    java.util.Map<String, Object> settingsData = (java.util.Map<String, Object>) data.get("settings");
+                    if (settingsData.containsKey("prefix")) config.setPrefix(String.valueOf(settingsData.get("prefix")));
                 }
                 return config;
             } catch (Exception e) {

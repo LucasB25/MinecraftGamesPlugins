@@ -1,6 +1,7 @@
 package fr.corehost.lobby.listeners;
 
 import fr.corehost.lobby.CoreHostLobby;
+import fr.corehost.lobby.utils.Constants;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -74,9 +75,9 @@ public class AuthListener implements Listener {
                 if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
                     botId = plugin.getRedisManager().get("corehost:discord_bot_id");
                 }
-                String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : "https://discord.gg/";
+                String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : plugin.getConfig().getString("settings.discord-url", "https://discord.gg/corehost");
                 
-                TextComponent msg1 = new TextComponent("\n[" + ChatColor.GOLD + "CoreHost" + ChatColor.RESET + "] " + ChatColor.RED + "Vous devez lier votre compte Discord !\n");
+                TextComponent msg1 = new TextComponent("\n" + Constants.BUNGEE_PREFIX + net.md_5.bungee.api.ChatColor.RED + "Vous devez lier votre compte Discord !\n");
                 TextComponent msg2 = new TextComponent("👉 Cliquez ici pour ouvrir le profil du Bot 👈");
                 msg2.setColor(net.md_5.bungee.api.ChatColor.AQUA);
                 msg2.setBold(true);
@@ -127,9 +128,9 @@ public class AuthListener implements Listener {
                 if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
                     botId = plugin.getRedisManager().get("corehost:discord_bot_id");
                 }
-                String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : "https://discord.gg/";
+                String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : plugin.getConfig().getString("settings.discord-url", "https://discord.gg/corehost");
                 
-                TextComponent msg1 = new TextComponent("\n[" + ChatColor.GOLD + "CoreHost" + ChatColor.RESET + "] " + ChatColor.GOLD + "Authentification 2FA requise !\n");
+                TextComponent msg1 = new TextComponent("\n" + Constants.BUNGEE_PREFIX + net.md_5.bungee.api.ChatColor.GOLD + "Authentification 2FA requise !\n");
                 TextComponent msg2 = new TextComponent("👉 Cliquez ici pour MP le Bot 👈");
                 msg2.setColor(net.md_5.bungee.api.ChatColor.AQUA);
                 msg2.setBold(true);

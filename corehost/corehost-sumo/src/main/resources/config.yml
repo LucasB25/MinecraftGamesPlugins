@@ -1,0 +1,6 @@
+settings:
+  prefix: "&8[&eSumo&8] &7"
+
+gameplay:
+  countdown-seconds: 5
+  void-level: 50

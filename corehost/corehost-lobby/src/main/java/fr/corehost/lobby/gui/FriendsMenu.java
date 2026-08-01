@@ -12,6 +12,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import fr.corehost.lobby.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -88,17 +89,7 @@ public class FriendsMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 // ── Bottom bar: Pink + Purple alternating (matches Profile) ──
-                ItemStack filler1 = new ItemStack(Material.PINK_STAINED_GLASS_PANE);
-                ItemMeta meta1 = filler1.getItemMeta();
-                if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
-
-                ItemStack filler2 = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
-                ItemMeta meta2 = filler2.getItemMeta();
-                if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
-
-                for (int i = 45; i < 54; i++) {
-                    inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
-                }
+                MenuUtils.fillBottomRow(inventory);
 
                 // ── Friend heads ──
                 int slot = 0;
@@ -175,24 +166,12 @@ public class FriendsMenu implements CustomMenu {
 
                 // ── Pagination: Previous Page (slot 45) ──
                 if (page > 0) {
-                    ItemStack prev = new ItemStack(Material.ARROW);
-                    ItemMeta prevMeta = prev.getItemMeta();
-                    if (prevMeta != null) {
-                        prevMeta.setDisplayName(ChatColor.YELLOW + "◄ Page Précédente");
-                        prev.setItemMeta(prevMeta);
-                    }
-                    inventory.setItem(45, prev);
+                    inventory.setItem(45, MenuUtils.getPrevPageButton());
                 }
 
                 // ── Pagination: Next Page (slot 53) ──
                 if (endIndex < friends.size()) {
-                    ItemStack next = new ItemStack(Material.ARROW);
-                    ItemMeta nextMeta = next.getItemMeta();
-                    if (nextMeta != null) {
-                        nextMeta.setDisplayName(ChatColor.YELLOW + "Page Suivante ►");
-                        next.setItemMeta(nextMeta);
-                    }
-                    inventory.setItem(53, next);
+                    inventory.setItem(53, MenuUtils.getNextPageButton());
                 }
 
                 // ── Info: Friend Count (slot 48) ──
@@ -211,13 +190,7 @@ public class FriendsMenu implements CustomMenu {
                 inventory.setItem(48, info);
 
                 // ── Back to Profile (slot 49) ──
-                ItemStack back = new ItemStack(Material.ARROW);
-                ItemMeta backMeta = back.getItemMeta();
-                if (backMeta != null) {
-                    backMeta.setDisplayName(ChatColor.RED + "◄ Retour au Profil");
-                    back.setItemMeta(backMeta);
-                }
-                inventory.setItem(49, back);
+                inventory.setItem(49, MenuUtils.getBackButton());
 
                 // ── Add Friend (slot 50) ──
                 ItemStack addFriend = new ItemStack(Material.EMERALD);
@@ -275,7 +248,7 @@ public class FriendsMenu implements CustomMenu {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             player.closeInventory();
             fr.corehost.lobby.listeners.LobbyListener.pendingFriendAdd.add(player.getUniqueId());
-            String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+            String prefix = Constants.PREFIX;
             player.sendMessage(prefix + "Tapez le " + ChatColor.GREEN + "pseudo" + ChatColor.GRAY + " de votre ami dans le chat.");
             player.sendMessage(prefix + "Tapez " + ChatColor.YELLOW + "'annuler'" + ChatColor.GRAY + " pour annuler.");
             return;
@@ -296,7 +269,7 @@ public class FriendsMenu implements CustomMenu {
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     plugin.getFriendManager().removeFriend(player.getUniqueId(), targetUuid);
-                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                    String prefix = Constants.PREFIX;
                     player.sendMessage(prefix + "Vous n'êtes plus ami avec " + ChatColor.YELLOW + friendName + ChatColor.GRAY + ".");
                     Bukkit.getScheduler().runTask(plugin, () -> new FriendsMenu(plugin, page).open(player));
                 });
@@ -307,25 +280,25 @@ public class FriendsMenu implements CustomMenu {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                     UUID myLeader = plugin.getPartyManager().getPartyLeader(player.getUniqueId());
                     if (myLeader != null && !myLeader.equals(player.getUniqueId())) {
-                        String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                        String prefix = Constants.BUNGEE_PREFIX;
                         player.sendMessage(prefix + net.md_5.bungee.api.ChatColor.RED + "Seul le chef de groupe peut inviter des joueurs.");
                         return;
                     }
 
                     UUID targetLeader = plugin.getPartyManager().getPartyLeader(targetUuid);
                     if (targetLeader != null) {
-                        String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                        String prefix = Constants.BUNGEE_PREFIX;
                         player.sendMessage(prefix + net.md_5.bungee.api.ChatColor.RED + "Ce joueur est déjà dans un groupe.");
                         return;
                     }
 
                     if (!plugin.getFriendManager().isOnline(targetUuid)) {
-                        String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                        String prefix = Constants.BUNGEE_PREFIX;
                         player.sendMessage(prefix + net.md_5.bungee.api.ChatColor.RED + "Ce joueur est hors ligne.");
                         return;
                     }
                     
-                    String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                    String prefix = Constants.BUNGEE_PREFIX;
                     net.md_5.bungee.api.chat.TextComponent message = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour inviter " + net.md_5.bungee.api.ChatColor.YELLOW + friendName + net.md_5.bungee.api.ChatColor.GRAY + " dans votre groupe !");
                     message.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party invite " + friendName));
                     message.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour inviter")));

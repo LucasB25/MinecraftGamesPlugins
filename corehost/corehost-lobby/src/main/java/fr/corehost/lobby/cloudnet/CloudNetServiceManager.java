@@ -15,6 +15,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import eu.cloudnetservice.driver.provider.CloudServiceProvider;
+import fr.corehost.lobby.utils.Constants;
 import eu.cloudnetservice.driver.service.ServiceLifeCycle;
 
 import java.util.Collection;
@@ -36,7 +37,7 @@ public class CloudNetServiceManager {
 
     @SuppressWarnings("deprecation")
     public void createHost(Player player, String gameType, int bestOf) {
-        String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+        String prefix = Constants.PREFIX;
         
         if (!isCloudNetEnabled || plugin.getHostManager() == null) {
             player.sendMessage(prefix + ChatColor.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");

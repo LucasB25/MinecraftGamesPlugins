@@ -33,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import fr.corehost.lobby.CoreHostLobby;
+import fr.corehost.lobby.utils.Constants;
 import org.bukkit.Bukkit;
 
 import java.util.UUID;
@@ -282,7 +283,7 @@ public class LobbyListener implements Listener {
             if (message.equalsIgnoreCase("annuler") || message.equalsIgnoreCase("cancel")) {
                 player.sendMessage(ChatColor.YELLOW + "Ajout d'ami annulé.");
             } else {
-                String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                String prefix = Constants.BUNGEE_PREFIX;
                 net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour envoyer une demande d'ami à " + net.md_5.bungee.api.ChatColor.YELLOW + message + net.md_5.bungee.api.ChatColor.GRAY + " !");
                 msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/friend add " + message));
                 msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour ajouter")));
@@ -298,7 +299,7 @@ public class LobbyListener implements Listener {
             if (message.equalsIgnoreCase("annuler") || message.equalsIgnoreCase("cancel")) {
                 player.sendMessage(ChatColor.YELLOW + "Invitation annulée.");
             } else {
-                String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                String prefix = Constants.BUNGEE_PREFIX;
                 net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour inviter " + net.md_5.bungee.api.ChatColor.YELLOW + message + net.md_5.bungee.api.ChatColor.GRAY + " dans votre groupe !");
                 msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party invite " + message));
                 msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour inviter")));

@@ -10,6 +10,7 @@ public class CoreHostSumo extends JavaPlugin {
     @Override
     public void onEnable() {
         getLogger().info("CoreHostSumo activation...");
+        saveDefaultConfig();
 
         // Load map manager
         this.mapManager = new SumoMapManager(this);

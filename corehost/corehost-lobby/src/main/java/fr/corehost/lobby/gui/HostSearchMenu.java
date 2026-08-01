@@ -15,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import fr.corehost.lobby.CoreHostLobby;
 import fr.corehost.api.host.HostData;
 import fr.corehost.api.host.HostStatus;
+import fr.corehost.lobby.utils.Constants;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -197,7 +198,7 @@ public class HostSearchMenu implements CustomMenu {
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR) return;
 
-        String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+        String prefix = Constants.PREFIX;
         long currentTime = System.currentTimeMillis();
 
         if (clicked.getType() == Material.EMERALD) {

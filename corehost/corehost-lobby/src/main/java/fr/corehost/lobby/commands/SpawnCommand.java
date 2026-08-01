@@ -6,6 +6,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import fr.corehost.lobby.utils.Constants;
 
 public class SpawnCommand implements CommandExecutor {
 
@@ -25,7 +26,7 @@ public class SpawnCommand implements CommandExecutor {
         spawn.setYaw(spawn.getYaw() + 180f);
         player.teleport(spawn);
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-        player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + "Téléportation au spawn du Lobby !");
+        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Téléportation au spawn du Lobby !");
         
         return true;
     }

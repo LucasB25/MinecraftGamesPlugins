@@ -22,6 +22,7 @@ public class CoreHostLobby extends JavaPlugin {
     private FriendManager friendManager;
     private PartyManager partyManager;
     private CloudNetServiceManager cloudNetServiceManager;
+    private fr.corehost.api.database.DatabaseManager databaseManager;
 
     @Override
     public void onEnable() {
@@ -33,15 +34,22 @@ public class CoreHostLobby extends JavaPlugin {
         String redisHost = getConfig().getString("redis.host", "127.0.0.1");
         int redisPort = getConfig().getInt("redis.port", 6379);
         String redisPassword = getConfig().getString("redis.password", "");
+        
+        String dbHost = getConfig().getString("database.host", "127.0.0.1");
+        int dbPort = getConfig().getInt("database.port", 3306);
+        String dbName = getConfig().getString("database.database", "corehost");
+        String dbUser = getConfig().getString("database.user", "root");
+        String dbPassword = getConfig().getString("database.password", "");
 
-        // Connect to Redis
+        // Connect to Redis and Database
         try {
             this.redisManager = new RedisManager(redisHost, redisPort, redisPassword);
             if (this.redisManager.isConnected()) {
+                this.databaseManager = new fr.corehost.api.database.DatabaseManager(dbHost, dbPort, dbName, dbUser, dbPassword);
                 this.hostManager = new HostManager(this.redisManager);
-                this.friendManager = new FriendManager(this.redisManager);
+                this.friendManager = new FriendManager(this.redisManager, this.databaseManager);
                 this.partyManager = new PartyManager(this.redisManager);
-                getLogger().info("Connected to Redis successfully.");
+                getLogger().info("Connected to Redis and Database successfully.");
             } else {
                 getLogger().warning("Redis is not reachable at " + redisHost + ":" + redisPort + ". Host features are disabled.");
                 this.redisManager = null;

@@ -8,6 +8,12 @@ public class ProxyConfig {
     private String discordBotToken;
     private String discordBotId;
     private String prefix;
+    
+    private String dbHost;
+    private int dbPort;
+    private String dbDatabase;
+    private String dbUser;
+    private String dbPassword;
 
     public ProxyConfig() {
         this.redisHost = "127.0.0.1";
@@ -16,6 +22,12 @@ public class ProxyConfig {
         this.discordBotToken = "";
         this.discordBotId = "";
         this.prefix = "&8[&6CoreHost&8] &7";
+        
+        this.dbHost = "127.0.0.1";
+        this.dbPort = 3306;
+        this.dbDatabase = "corehost";
+        this.dbUser = "root";
+        this.dbPassword = "";
     }
 
     public String getRedisHost() { return redisHost; }
@@ -35,4 +47,19 @@ public class ProxyConfig {
 
     public String getPrefix() { return prefix; }
     public void setPrefix(String prefix) { this.prefix = prefix; }
+
+    public String getDbHost() { return dbHost; }
+    public void setDbHost(String dbHost) { this.dbHost = dbHost; }
+
+    public int getDbPort() { return dbPort; }
+    public void setDbPort(int dbPort) { this.dbPort = dbPort; }
+
+    public String getDbDatabase() { return dbDatabase; }
+    public void setDbDatabase(String dbDatabase) { this.dbDatabase = dbDatabase; }
+
+    public String getDbUser() { return dbUser; }
+    public void setDbUser(String dbUser) { this.dbUser = dbUser; }
+
+    public String getDbPassword() { return dbPassword; }
+    public void setDbPassword(String dbPassword) { this.dbPassword = dbPassword; }
 }

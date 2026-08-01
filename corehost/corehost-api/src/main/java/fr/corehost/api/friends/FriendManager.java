@@ -1,62 +1,124 @@
 package fr.corehost.api.friends;
 
+import fr.corehost.api.database.DatabaseManager;
 import fr.corehost.api.redis.RedisManager;
 import redis.clients.jedis.Jedis;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 public class FriendManager {
 
     private final RedisManager redisManager;
+    private final DatabaseManager databaseManager;
 
+    public FriendManager(RedisManager redisManager, DatabaseManager databaseManager) {
+        this.redisManager = redisManager;
+        this.databaseManager = databaseManager;
+    }
+
+    // For backwards compatibility when DatabaseManager is not yet fully initialized
     public FriendManager(RedisManager redisManager) {
         this.redisManager = redisManager;
+        this.databaseManager = null;
     }
 
     /**
-     * Cache le joueur avec son pseudo en minuscules (pour la recherche) et son UUID.
+     * Cache le joueur avec son pseudo et son UUID dans SQL.
      */
     public void cachePlayer(String name, UUID uuid) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            String nameLower = name.toLowerCase();
-            jedis.set("corehost:name_to_uuid:" + nameLower, uuid.toString());
-            jedis.set("corehost:uuid_to_name:" + uuid.toString(), name);
+        if (databaseManager == null) return;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "INSERT INTO players (uuid, name) VALUES (?, ?) ON DUPLICATE KEY UPDATE name = ?")) {
+            stmt.setString(1, uuid.toString());
+            stmt.setString(2, name);
+            stmt.setString(3, name);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public UUID getUuidByName(String name) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            String uuidStr = jedis.get("corehost:name_to_uuid:" + name.toLowerCase());
-            return uuidStr != null ? UUID.fromString(uuidStr) : null;
+        if (databaseManager == null) return null;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT uuid FROM players WHERE LOWER(name) = LOWER(?)")) {
+            stmt.setString(1, name);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return UUID.fromString(rs.getString("uuid"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
     public String getNameByUuid(UUID uuid) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            return jedis.get("corehost:uuid_to_name:" + uuid.toString());
+        if (databaseManager == null) return null;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT name FROM players WHERE uuid = ?")) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("name");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return null;
     }
 
     public Set<String> getFriends(UUID uuid) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            return jedis.smembers("corehost:friends:" + uuid.toString());
+        Set<String> friends = new HashSet<>();
+        if (databaseManager == null) return friends;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT player2_uuid FROM friends WHERE player1_uuid = ?")) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    friends.add(rs.getString("player2_uuid"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return friends;
     }
 
+    // Friend requests are still in Redis because they expire
     public Set<String> getFriendRequests(UUID uuid) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             String key = "corehost:friend_requests:" + uuid.toString();
             long now = System.currentTimeMillis();
             jedis.zremrangeByScore(key, 0, now);
-            return new java.util.HashSet<>(jedis.zrange(key, 0, -1));
+            return new HashSet<>(jedis.zrange(key, 0, -1));
         }
     }
 
     public boolean areFriends(UUID player1, UUID player2) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            return jedis.sismember("corehost:friends:" + player1.toString(), player2.toString());
+        if (databaseManager == null) return false;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT 1 FROM friends WHERE player1_uuid = ? AND player2_uuid = ?")) {
+            stmt.setString(1, player1.toString());
+            stmt.setString(2, player2.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return false;
     }
 
     public boolean hasFriendRequest(UUID target, UUID sender) {
@@ -78,11 +140,20 @@ public class FriendManager {
 
     public void acceptFriendRequest(UUID receiver, UUID sender) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            // Remove request
             jedis.zrem("corehost:friend_requests:" + receiver.toString(), sender.toString());
-            // Add to both friends lists
-            jedis.sadd("corehost:friends:" + receiver.toString(), sender.toString());
-            jedis.sadd("corehost:friends:" + sender.toString(), receiver.toString());
+        }
+        
+        if (databaseManager == null) return;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "INSERT IGNORE INTO friends (player1_uuid, player2_uuid) VALUES (?, ?), (?, ?)")) {
+            stmt.setString(1, receiver.toString());
+            stmt.setString(2, sender.toString());
+            stmt.setString(3, sender.toString());
+            stmt.setString(4, receiver.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -93,55 +164,101 @@ public class FriendManager {
     }
 
     public void removeFriend(UUID player1, UUID player2) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            jedis.srem("corehost:friends:" + player1.toString(), player2.toString());
-            jedis.srem("corehost:friends:" + player2.toString(), player1.toString());
+        if (databaseManager == null) return;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "DELETE FROM friends WHERE (player1_uuid = ? AND player2_uuid = ?) OR (player1_uuid = ? AND player2_uuid = ?)")) {
+            stmt.setString(1, player1.toString());
+            stmt.setString(2, player2.toString());
+            stmt.setString(3, player2.toString());
+            stmt.setString(4, player1.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public void setFriendRequestsBlocked(UUID uuid, boolean blocked) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            String key = "corehost:settings:requests_blocked:" + uuid.toString();
-            if (blocked) {
-                jedis.set(key, "true");
-            } else {
-                jedis.del(key);
-            }
+        if (databaseManager == null) return;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "UPDATE players SET requests_blocked = ? WHERE uuid = ?")) {
+            stmt.setBoolean(1, blocked);
+            stmt.setString(2, uuid.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public boolean areFriendRequestsBlocked(UUID uuid) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            String val = jedis.get("corehost:settings:requests_blocked:" + uuid.toString());
-            return val != null && val.equals("true");
+        if (databaseManager == null) return false;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT requests_blocked FROM players WHERE uuid = ?")) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("requests_blocked");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+        return false;
     }
 
     public void updateLastSeen(UUID uuid) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            jedis.set("corehost:lastseen:" + uuid.toString(), String.valueOf(System.currentTimeMillis()));
+        if (databaseManager == null) return;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "UPDATE players SET last_seen = ? WHERE uuid = ?")) {
+            stmt.setLong(1, System.currentTimeMillis());
+            stmt.setString(2, uuid.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public long getLastSeen(UUID uuid) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            String val = jedis.get("corehost:lastseen:" + uuid.toString());
-            if (val != null) {
-                try {
-                    return Long.parseLong(val);
-                } catch (NumberFormatException e) {
-                    return 0;
+        if (databaseManager == null) return 0;
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT last_seen FROM players WHERE uuid = ?")) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getLong("last_seen");
                 }
             }
-            return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    // --- Redis transient data & settings ---
+
+    public void setOnline(UUID uuid, boolean online) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            if (online) {
+                jedis.setex("corehost:online:" + uuid.toString(), 86400, "true");
+            } else {
+                jedis.del("corehost:online:" + uuid.toString());
+            }
+        }
+    }
+    
+    public boolean isOnline(UUID uuid) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            return jedis.exists("corehost:online:" + uuid.toString());
         }
     }
 
     public void setNotificationsEnabled(UUID uuid, boolean enabled) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            String key = "corehost:settings:notifications_disabled:" + uuid.toString();
+            String key = "corehost:settings:notifications:" + uuid.toString();
             if (!enabled) {
-                jedis.set(key, "true");
+                jedis.set(key, "false");
             } else {
                 jedis.del(key);
             }
@@ -150,25 +267,8 @@ public class FriendManager {
 
     public boolean areNotificationsEnabled(UUID uuid) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            String val = jedis.get("corehost:settings:notifications_disabled:" + uuid.toString());
-            return val == null || !val.equals("true"); // Default to true if key does not exist
-        }
-    }
-
-    public void setOnline(UUID uuid, boolean online) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            String key = "corehost:online:" + uuid.toString();
-            if (online) {
-                jedis.set(key, "true");
-            } else {
-                jedis.del(key);
-            }
-        }
-    }
-
-    public boolean isOnline(UUID uuid) {
-        try (Jedis jedis = redisManager.getPool().getResource()) {
-            return jedis.exists("corehost:online:" + uuid.toString());
+            String val = jedis.get("corehost:settings:notifications:" + uuid.toString());
+            return val == null || !val.equals("false"); // Default is true
         }
     }
 }

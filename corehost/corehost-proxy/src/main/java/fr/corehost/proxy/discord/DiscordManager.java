@@ -6,7 +6,12 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import fr.corehost.api.database.DatabaseManager;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Random;
 import java.util.UUID;
 
@@ -70,16 +75,23 @@ public class DiscordManager extends ListenerAdapter {
      * Checks if a player has linked their Discord account.
      */
     public boolean isLinked(UUID playerUuid) {
-        if (plugin.getRedisManager() == null || !plugin.getRedisManager().isConnected()) return false;
-        String discordId = plugin.getRedisManager().get("corehost:discord_link:player:" + playerUuid.toString());
-        return discordId != null;
+        DatabaseManager db = plugin.getDatabaseManager();
+        if (db == null) return false;
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT 1 FROM discord_links WHERE uuid = ?")) {
+            stmt.setString(1, playerUuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) return;
-
-        // We only accept commands in Private Messages (Direct Messages)
         if (event.isFromGuild()) return;
 
         String message = event.getMessage().getContentRaw().trim();
@@ -88,10 +100,8 @@ public class DiscordManager extends ListenerAdapter {
         if (args.length >= 1 && args[0].equalsIgnoreCase("/transfer")) {
             handleTransferCommand(event, args);
         } else if (message.matches("^\\d{6}$")) {
-            // If the message is exactly a 6-digit code, treat it as a link attempt
             handleLinkCommand(event, message);
         } else if (message.matches("^\\d{4}$")) {
-            // If the message is exactly a 4-digit code, treat it as a 2FA login PIN
             handle2FALogin(event, message);
         } else {
             event.getChannel().sendMessage("Commandes disponibles :\nEnvoyez simplement votre **code à 6 chiffres** pour lier votre compte Minecraft (ou votre **PIN à 4 chiffres** pour vous connecter).\n`/transfer <NouveauPseudo>` - Pour transférer vos données vers un nouveau pseudo").queue();
@@ -108,12 +118,10 @@ public class DiscordManager extends ListenerAdapter {
         String targetUuid = plugin.getRedisManager().get("corehost:discord_auth_code:" + pin);
 
         if (targetUuid != null) {
-            // Verify that this Discord account actually owns the Minecraft account they are trying to log into
-            String linkedDiscordId = plugin.getRedisManager().get("corehost:discord_link:player:" + targetUuid);
+            String linkedDiscordId = getDiscordId(UUID.fromString(targetUuid));
             if (linkedDiscordId != null && linkedDiscordId.equals(discordId)) {
-                // Approved!
-                plugin.getRedisManager().setEx("corehost:discord_auth:" + targetUuid, "true", 3600); // 1 hour session
-                plugin.getRedisManager().del("corehost:discord_auth_code:" + pin); // Invalidate PIN
+                plugin.getRedisManager().setEx("corehost:discord_auth:" + targetUuid, "true", 3600);
+                plugin.getRedisManager().del("corehost:discord_auth_code:" + pin);
                 event.getChannel().sendMessage("✅ Connexion autorisée ! Vous pouvez jouer.").queue();
             } else {
                 event.getChannel().sendMessage("❌ Ce code de connexion appartient à un compte Minecraft qui n'est pas lié à votre compte Discord !").queue();
@@ -123,44 +131,80 @@ public class DiscordManager extends ListenerAdapter {
         }
     }
 
+    private String getDiscordId(UUID uuid) {
+        DatabaseManager db = plugin.getDatabaseManager();
+        if (db == null) return null;
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT discord_id FROM discord_links WHERE uuid = ?")) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getString("discord_id");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String getUuidByDiscordId(String discordId) {
+        DatabaseManager db = plugin.getDatabaseManager();
+        if (db == null) return null;
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT uuid FROM discord_links WHERE discord_id = ?")) {
+            stmt.setString(1, discordId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getString("uuid");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     private void handleLinkCommand(MessageReceivedEvent event, String code) {
-        if (plugin.getRedisManager() == null || !plugin.getRedisManager().isConnected()) {
+        if (plugin.getRedisManager() == null || !plugin.getRedisManager().isConnected() || plugin.getDatabaseManager() == null) {
             event.getChannel().sendMessage("Le système de liaison est temporairement indisponible.").queue();
             return;
         }
 
         String discordId = event.getAuthor().getId();
-
-        // 1. Check if this Discord account is already linked to another Minecraft account
-        String existingUuid = plugin.getRedisManager().get("corehost:discord_link:discord:" + discordId);
+        String existingUuid = getUuidByDiscordId(discordId);
         if (existingUuid != null) {
             event.getChannel().sendMessage("Ce compte Discord est déjà lié à un compte Minecraft ! Vous ne pouvez lier qu'un seul compte Minecraft. Si vous avez changé de pseudo, utilisez `/transfer <NouveauPseudo>`.").queue();
             return;
         }
 
-        // 2. Validate Code
         String playerUuidStr = plugin.getRedisManager().get("corehost:discord_link:code:" + code);
         if (playerUuidStr == null) {
             event.getChannel().sendMessage("Ce code est invalide ou a expiré.").queue();
             return;
         }
 
-        // 3. Link them together
         UUID playerUuid = UUID.fromString(playerUuidStr);
-        plugin.getRedisManager().set("corehost:discord_link:player:" + playerUuidStr, discordId);
-        plugin.getRedisManager().set("corehost:discord_link:discord:" + discordId, playerUuidStr);
-        plugin.getRedisManager().del("corehost:discord_link:code:" + code);
-
-        event.getChannel().sendMessage("✅ Votre compte Minecraft a été lié avec succès ! Vous pouvez maintenant jouer.").queue();
+        try (Connection conn = plugin.getDatabaseManager().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "INSERT INTO discord_links (uuid, discord_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE discord_id = ?")) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.setString(2, discordId);
+            stmt.setString(3, discordId);
+            stmt.executeUpdate();
+            
+            plugin.getRedisManager().del("corehost:discord_link:code:" + code);
+            event.getChannel().sendMessage("✅ Votre compte Minecraft a été lié avec succès ! Vous pouvez maintenant jouer.").queue();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            event.getChannel().sendMessage("Une erreur est survenue lors de la liaison.").queue();
+        }
     }
+
     private void handleTransferCommand(MessageReceivedEvent event, String[] args) {
-        if (plugin.getRedisManager() == null || !plugin.getRedisManager().isConnected()) {
+        if (plugin.getDatabaseManager() == null) {
             event.getChannel().sendMessage("Le système est temporairement indisponible.").queue();
             return;
         }
 
         String discordId = event.getAuthor().getId();
-        String oldUuidStr = plugin.getRedisManager().get("corehost:discord_link:discord:" + discordId);
+        String oldUuidStr = getUuidByDiscordId(discordId);
 
         if (oldUuidStr == null) {
             event.getChannel().sendMessage("Vous n'avez aucun compte Minecraft lié à ce compte Discord. Utilisez `/link <code>`.").queue();
@@ -173,9 +217,6 @@ public class DiscordManager extends ListenerAdapter {
         }
 
         String newUsername = args[1];
-        
-        // Compute the Offline UUID for the new username
-        // The UUID is generated using UUID.nameUUIDFromBytes(("OfflinePlayer:" + newUsername).getBytes(StandardCharsets.UTF_8))
         UUID newUuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + newUsername).getBytes(java.nio.charset.StandardCharsets.UTF_8));
         String newUuidStr = newUuid.toString();
 
@@ -184,25 +225,48 @@ public class DiscordManager extends ListenerAdapter {
             return;
         }
 
-        // --- Data Transfer (Redis Keys) ---
-        // 1. Transfer corehost:friends:<uuid>
-        String oldFriends = plugin.getRedisManager().get("corehost:friends:" + oldUuidStr);
-        if (oldFriends != null) plugin.getRedisManager().set("corehost:friends:" + newUuidStr, oldFriends);
-        plugin.getRedisManager().del("corehost:friends:" + oldUuidStr);
-
-        // 2. Transfer settings
-        String oldSettings = plugin.getRedisManager().get("corehost:settings:friend_requests_blocked:" + oldUuidStr);
-        if (oldSettings != null) plugin.getRedisManager().set("corehost:settings:friend_requests_blocked:" + newUuidStr, oldSettings);
-        plugin.getRedisManager().del("corehost:settings:friend_requests_blocked:" + oldUuidStr);
-
-        // --- Update Link ---
-        plugin.getRedisManager().set("corehost:discord_link:player:" + newUuidStr, discordId);
-        plugin.getRedisManager().set("corehost:discord_link:discord:" + discordId, newUuidStr);
-        plugin.getRedisManager().del("corehost:discord_link:player:" + oldUuidStr);
-
-        // Update their cached name just in case
-        plugin.getRedisManager().set("corehost:friend_names:" + newUuidStr, newUsername);
-
-        event.getChannel().sendMessage("✅ Vos données ont été transférées avec succès vers le pseudo **" + newUsername + "** ! Vous pouvez maintenant vous connecter.").queue();
+        try (Connection conn = plugin.getDatabaseManager().getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Update players table
+                try (PreparedStatement stmt = conn.prepareStatement("UPDATE players SET uuid = ? WHERE uuid = ?")) {
+                    stmt.setString(1, newUuidStr);
+                    stmt.setString(2, oldUuidStr);
+                    stmt.executeUpdate();
+                }
+                
+                // Update friends table (player1)
+                try (PreparedStatement stmt = conn.prepareStatement("UPDATE friends SET player1_uuid = ? WHERE player1_uuid = ?")) {
+                    stmt.setString(1, newUuidStr);
+                    stmt.setString(2, oldUuidStr);
+                    stmt.executeUpdate();
+                }
+                
+                // Update friends table (player2)
+                try (PreparedStatement stmt = conn.prepareStatement("UPDATE friends SET player2_uuid = ? WHERE player2_uuid = ?")) {
+                    stmt.setString(1, newUuidStr);
+                    stmt.setString(2, oldUuidStr);
+                    stmt.executeUpdate();
+                }
+                
+                // Update discord_links
+                try (PreparedStatement stmt = conn.prepareStatement("UPDATE discord_links SET uuid = ? WHERE uuid = ?")) {
+                    stmt.setString(1, newUuidStr);
+                    stmt.setString(2, oldUuidStr);
+                    stmt.executeUpdate();
+                }
+                
+                conn.commit();
+                event.getChannel().sendMessage("✅ Vos données ont été transférées avec succès vers le pseudo **" + newUsername + "** ! Vous pouvez maintenant vous connecter.").queue();
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                event.getChannel().sendMessage("❌ Une erreur est survenue lors du transfert des données.").queue();
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

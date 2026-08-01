@@ -42,6 +42,7 @@ public class CoreHostProxy {
     private HostManager hostManager;
     private FriendManager friendManager;
     private PartyManager partyManager;
+    private fr.corehost.api.database.DatabaseManager databaseManager;
     private fr.corehost.proxy.auth.AuthManager authManager;
     private fr.corehost.proxy.discord.DiscordManager discordManager;
     private fr.corehost.proxy.redis.ProxyPubSubListener proxyPubSubListener;
@@ -64,9 +65,21 @@ public class CoreHostProxy {
             this.redisManager = new RedisManager(config.getRedisHost(), config.getRedisPort(), config.getRedisPassword());
             this.messageManager = new MessageManager(this);
             this.hostManager = new HostManager(this.redisManager);
-            this.friendManager = new FriendManager(this.redisManager);
+            
+            // Initialiser la base de données
+            this.databaseManager = new fr.corehost.api.database.DatabaseManager(
+                    config.getDbHost(), config.getDbPort(), config.getDbDatabase(),
+                    config.getDbUser(), config.getDbPassword()
+            );
+            
+            
+            this.friendManager = new FriendManager(this.redisManager, this.databaseManager);
             this.partyManager = new PartyManager(this.redisManager);
-            logger.info("Connected to Redis successfully.");
+            
+            // Run Data Migration
+            fr.corehost.api.database.DatabaseMigration.migrateFromRedis(this.redisManager, this.databaseManager);
+            
+            logger.info("Connected to Redis and Database successfully.");
             
             this.proxyPubSubListener = new fr.corehost.proxy.redis.ProxyPubSubListener(this, server);
             this.redisManager.subscribe(proxyPubSubListener, "corehost:proxy:events");
@@ -100,7 +113,7 @@ public class CoreHostProxy {
             server.getCommandManager().register("corehostproxy", new fr.corehost.proxy.commands.CoreHostProxyCommand(this));
             
         } catch (Exception e) {
-            logger.error("Could not connect to Redis", e);
+            logger.error("An error occurred during CoreHostProxy initialization", e);
         }
     }
 
@@ -119,6 +132,7 @@ public class CoreHostProxy {
                 data.put("settings", java.util.Map.of("prefix", "&8[&6CoreHost&8] &7"));
                 data.put("redis", java.util.Map.of("host", "127.0.0.1", "port", 6379, "password", ""));
                 data.put("discord", java.util.Map.of("bot-token", "", "bot-id", ""));
+                data.put("database", java.util.Map.of("host", "127.0.0.1", "port", 3306, "database", "corehost", "user", "root", "password", ""));
                 yaml.dump(data, writer);
             } catch (IOException e) {
                 logger.error("Could not create default config.yml", e);
@@ -134,6 +148,15 @@ public class CoreHostProxy {
                     if (redisData.containsKey("host")) config.setRedisHost(String.valueOf(redisData.get("host")));
                     if (redisData.containsKey("port")) config.setRedisPort(Integer.parseInt(String.valueOf(redisData.get("port"))));
                     if (redisData.containsKey("password")) config.setRedisPassword(String.valueOf(redisData.get("password")));
+                }
+                
+                if (data.containsKey("database")) {
+                    java.util.Map<String, Object> dbData = (java.util.Map<String, Object>) data.get("database");
+                    if (dbData.containsKey("host")) config.setDbHost(String.valueOf(dbData.get("host")));
+                    if (dbData.containsKey("port")) config.setDbPort(Integer.parseInt(String.valueOf(dbData.get("port"))));
+                    if (dbData.containsKey("database")) config.setDbDatabase(String.valueOf(dbData.get("database")));
+                    if (dbData.containsKey("user")) config.setDbUser(String.valueOf(dbData.get("user")));
+                    if (dbData.containsKey("password")) config.setDbPassword(String.valueOf(dbData.get("password")));
                 }
                 
                 if (data.containsKey("discord")) {
@@ -177,6 +200,10 @@ public class CoreHostProxy {
 
     public PartyManager getPartyManager() {
         return partyManager;
+    }
+
+    public fr.corehost.api.database.DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 
     public fr.corehost.proxy.auth.AuthManager getAuthManager() {

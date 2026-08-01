@@ -4,3 +4,15 @@ settings:
 gameplay:
   countdown-seconds: 5
   void-level: 50
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+
+database:
+  host: "127.0.0.1"
+  port: 3306
+  database: "corehost"
+  user: "root"
+  password: ""

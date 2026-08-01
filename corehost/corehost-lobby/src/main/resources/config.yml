@@ -9,6 +9,13 @@ redis:
   port: 6379
   password: ""
 
+database:
+  host: "127.0.0.1"
+  port: 3306
+  database: "corehost"
+  user: "root"
+  password: ""
+
 games:
   Sumo:
     name: "&e&lCréer un Mini-Jeu (Sumo)"

@@ -1,7 +1,6 @@
 package fr.corehost.lobby.listeners;
 
 import fr.corehost.lobby.gui.CustomMenu;
-import fr.corehost.lobby.gui.HostCreateMenu;
 import fr.corehost.lobby.gui.HostSearchMenu;
 import fr.corehost.lobby.gui.PlayerProfileMenu;
 import org.bukkit.ChatColor;
@@ -36,8 +35,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import fr.corehost.lobby.CoreHostLobby;
 import org.bukkit.Bukkit;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 public class LobbyListener implements Listener {

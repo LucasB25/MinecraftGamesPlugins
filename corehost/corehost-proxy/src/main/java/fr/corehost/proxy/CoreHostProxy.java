@@ -12,18 +12,14 @@ import fr.corehost.api.host.HostManager;
 import fr.corehost.api.friends.FriendManager;
 import fr.corehost.api.party.PartyManager;
 import fr.corehost.proxy.config.ProxyConfig;
-import fr.corehost.proxy.commands.HubCommand;
 import fr.corehost.proxy.commands.FriendCommand;
 import fr.corehost.proxy.commands.PartyCommand;
-import fr.corehost.proxy.commands.PremiumExceptionCommand;
 import fr.corehost.proxy.commands.MsgCommand;
 import fr.corehost.proxy.commands.ReplyCommand;
 import fr.corehost.proxy.commands.IgnoreCommand;
 import fr.corehost.proxy.messages.MessageManager;
 import fr.corehost.proxy.listeners.PlayerConnectionListener;
 import fr.corehost.proxy.listeners.PartyListener;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.io.FileReader;

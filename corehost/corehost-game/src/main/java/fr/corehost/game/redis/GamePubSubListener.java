@@ -2,13 +2,11 @@ package fr.corehost.game.redis;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import fr.corehost.api.host.HostData;
 import fr.corehost.api.redis.RedisManager;
 import fr.corehost.game.CoreHostGame;
 import fr.corehost.game.slime.SlimeManager;
 import redis.clients.jedis.JedisPubSub;
 
-import java.util.UUID;
 
 public class GamePubSubListener extends JedisPubSub {
 

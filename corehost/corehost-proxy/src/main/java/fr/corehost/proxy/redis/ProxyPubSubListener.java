@@ -13,7 +13,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import redis.clients.jedis.JedisPubSub;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

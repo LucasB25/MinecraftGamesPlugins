@@ -9,7 +9,6 @@ import eu.cloudnetservice.driver.service.ServiceCreateResult;
 import eu.cloudnetservice.driver.service.ServiceInfoSnapshot;
 import eu.cloudnetservice.driver.service.ServiceTask;
 import fr.corehost.api.host.HostData;
-import fr.corehost.api.host.HostManager;
 import fr.corehost.lobby.CoreHostLobby;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;

@@ -46,6 +46,7 @@ public class CoreHostProxy {
     private fr.corehost.proxy.discord.DiscordManager discordManager;
     private fr.corehost.proxy.redis.ProxyPubSubListener proxyPubSubListener;
     private MessageManager messageManager;
+    private ProxyConfig config;
 
     @Inject
     public CoreHostProxy(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -57,8 +58,7 @@ public class CoreHostProxy {
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
         logger.info("CoreHostProxy is starting...");
-        
-        ProxyConfig config = loadConfig();
+        this.config = loadConfig();
 
         try {
             this.redisManager = new RedisManager(config.getRedisHost(), config.getRedisPort(), config.getRedisPassword());
@@ -97,6 +97,7 @@ public class CoreHostProxy {
             server.getCommandManager().register("msg", new MsgCommand(this, server), "w", "tell", "m");
             server.getCommandManager().register("reply", new ReplyCommand(this, server), "r", "rep");
             server.getCommandManager().register("ignore", new IgnoreCommand(this, server));
+            server.getCommandManager().register("corehostproxy", new fr.corehost.proxy.commands.CoreHostProxyCommand(this));
             
         } catch (Exception e) {
             logger.error("Could not connect to Redis", e);
@@ -151,6 +152,15 @@ public class CoreHostProxy {
             }
         }
         return new ProxyConfig();
+    }
+    
+    public void reloadConfig() {
+        this.config = loadConfig();
+        logger.info("Configuration reloaded");
+    }
+    
+    public ProxyConfig getConfig() {
+        return config;
     }
     
     public RedisManager getRedisManager() {

@@ -11,6 +11,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import fr.corehost.lobby.utils.Constants;
+import fr.corehost.lobby.utils.ItemBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,127 +65,71 @@ public class SettingsMenu implements CustomMenu {
                 MenuUtils.fillBorder(inventory);
 
                 // ── Slot 11: Friend Requests Toggle ──
-                ItemStack friendRequestToggle = new ItemStack(isBlocked ? Material.RED_DYE : Material.LIME_DYE);
-                ItemMeta toggleMeta = friendRequestToggle.getItemMeta();
-                if (toggleMeta != null) {
-                    toggleMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Demandes d'amis");
-                    List<String> lore = new ArrayList<>();
-                    lore.add("");
-                    if (isBlocked) {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.RED + "Bloqué");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Personne ne peut vous envoyer");
-                        lore.add(ChatColor.GRAY + "de demande d'ami.");
-                        lore.add("");
-                        lore.add(ChatColor.GREEN + "► Cliquez pour Autoriser");
-                    } else {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.GREEN + "Autorisé");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Tout le monde peut vous envoyer");
-                        lore.add(ChatColor.GRAY + "des demandes d'amis.");
-                        lore.add("");
-                        lore.add(ChatColor.RED + "► Cliquez pour Bloquer");
-                    }
-                    toggleMeta.setLore(lore);
-                    friendRequestToggle.setItemMeta(toggleMeta);
-                }
+                ItemStack friendRequestToggle = new ItemBuilder(isBlocked ? Material.RED_DYE : Material.LIME_DYE)
+                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Demandes d'amis")
+                    .setLore(
+                        "",
+                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (isBlocked ? ChatColor.RED + "Bloqué" : ChatColor.GREEN + "Autorisé"),
+                        "",
+                        isBlocked ? ChatColor.GRAY + "Personne ne peut vous envoyer" : ChatColor.GRAY + "Tout le monde peut vous envoyer",
+                        isBlocked ? ChatColor.GRAY + "de demande d'ami." : ChatColor.GRAY + "des demandes d'amis.",
+                        "",
+                        isBlocked ? ChatColor.GREEN + "► Cliquez pour Autoriser" : ChatColor.RED + "► Cliquez pour Bloquer"
+                    ).build();
                 inventory.setItem(11, friendRequestToggle);
 
                 // ── Slot 12: Notifications Toggle ──
-                ItemStack notificationsToggle = new ItemStack(notificationsEnabled ? Material.LIME_DYE : Material.RED_DYE);
-                ItemMeta notifMeta = notificationsToggle.getItemMeta();
-                if (notifMeta != null) {
-                    notifMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Notifications de Connexion");
-                    List<String> lore = new ArrayList<>();
-                    lore.add("");
-                    if (notificationsEnabled) {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.GREEN + "Activé");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Vous recevrez une alerte quand");
-                        lore.add(ChatColor.GRAY + "un ami se connecte.");
-                        lore.add("");
-                        lore.add(ChatColor.RED + "► Cliquez pour Désactiver");
-                    } else {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.RED + "Désactivé");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Vous ne recevrez plus d'alerte");
-                        lore.add(ChatColor.GRAY + "quand un ami se connecte.");
-                        lore.add("");
-                        lore.add(ChatColor.GREEN + "► Cliquez pour Activer");
-                    }
-                    notifMeta.setLore(lore);
-                    notificationsToggle.setItemMeta(notifMeta);
-                }
+                ItemStack notificationsToggle = new ItemBuilder(notificationsEnabled ? Material.LIME_DYE : Material.RED_DYE)
+                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Notifications de Connexion")
+                    .setLore(
+                        "",
+                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (notificationsEnabled ? ChatColor.GREEN + "Activé" : ChatColor.RED + "Désactivé"),
+                        "",
+                        notificationsEnabled ? ChatColor.GRAY + "Vous recevrez une alerte quand" : ChatColor.GRAY + "Vous ne recevrez plus d'alerte",
+                        notificationsEnabled ? ChatColor.GRAY + "un ami se connecte." : ChatColor.GRAY + "quand un ami se connecte.",
+                        "",
+                        notificationsEnabled ? ChatColor.RED + "► Cliquez pour Désactiver" : ChatColor.GREEN + "► Cliquez pour Activer"
+                    ).build();
                 inventory.setItem(12, notificationsToggle);
 
                 // ── Slot 13: Party Invitations Toggle ──
-                ItemStack partyToggle = new ItemStack(partyBlocked ? Material.RED_DYE : Material.LIME_DYE);
-                ItemMeta partyMeta = partyToggle.getItemMeta();
-                if (partyMeta != null) {
-                    partyMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Invitations de Groupe");
-                    List<String> lore = new ArrayList<>();
-                    lore.add("");
-                    if (partyBlocked) {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.RED + "Bloqué");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Personne ne peut vous envoyer");
-                        lore.add(ChatColor.GRAY + "d'invitation de groupe.");
-                        lore.add("");
-                        lore.add(ChatColor.GREEN + "► Cliquez pour Autoriser");
-                    } else {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.GREEN + "Autorisé");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Tout le monde peut vous envoyer");
-                        lore.add(ChatColor.GRAY + "des invitations de groupe.");
-                        lore.add("");
-                        lore.add(ChatColor.RED + "► Cliquez pour Bloquer");
-                    }
-                    partyMeta.setLore(lore);
-                    partyToggle.setItemMeta(partyMeta);
-                }
+                ItemStack partyToggle = new ItemBuilder(partyBlocked ? Material.RED_DYE : Material.LIME_DYE)
+                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Invitations de Groupe")
+                    .setLore(
+                        "",
+                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (partyBlocked ? ChatColor.RED + "Bloqué" : ChatColor.GREEN + "Autorisé"),
+                        "",
+                        partyBlocked ? ChatColor.GRAY + "Personne ne peut vous envoyer" : ChatColor.GRAY + "Tout le monde peut vous envoyer",
+                        partyBlocked ? ChatColor.GRAY + "d'invitation de groupe." : ChatColor.GRAY + "des invitations de groupe.",
+                        "",
+                        partyBlocked ? ChatColor.GREEN + "► Cliquez pour Autoriser" : ChatColor.RED + "► Cliquez pour Bloquer"
+                    ).build();
                 inventory.setItem(13, partyToggle);
 
                 // ── Slot 14: Private Messages Toggle ──
-                ItemStack pmsToggle = new ItemStack(pmsBlocked ? Material.RED_DYE : Material.LIME_DYE);
-                ItemMeta pmsMeta = pmsToggle.getItemMeta();
-                if (pmsMeta != null) {
-                    pmsMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Messages Privés");
-                    List<String> lore = new ArrayList<>();
-                    lore.add("");
-                    if (pmsBlocked) {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.RED + "Bloqué");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Personne ne peut vous envoyer");
-                        lore.add(ChatColor.GRAY + "de messages privés.");
-                        lore.add("");
-                        lore.add(ChatColor.GREEN + "► Cliquez pour Autoriser");
-                    } else {
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.GREEN + "Autorisé");
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Tout le monde peut vous envoyer");
-                        lore.add(ChatColor.GRAY + "des messages privés.");
-                        lore.add("");
-                        lore.add(ChatColor.RED + "► Cliquez pour Bloquer");
-                    }
-                    pmsMeta.setLore(lore);
-                    pmsToggle.setItemMeta(pmsMeta);
-                }
+                ItemStack pmsToggle = new ItemBuilder(pmsBlocked ? Material.RED_DYE : Material.LIME_DYE)
+                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Messages Privés")
+                    .setLore(
+                        "",
+                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (pmsBlocked ? ChatColor.RED + "Bloqué" : ChatColor.GREEN + "Autorisé"),
+                        "",
+                        pmsBlocked ? ChatColor.GRAY + "Personne ne peut vous envoyer" : ChatColor.GRAY + "Tout le monde peut vous envoyer",
+                        pmsBlocked ? ChatColor.GRAY + "de messages privés." : ChatColor.GRAY + "des messages privés.",
+                        "",
+                        pmsBlocked ? ChatColor.GREEN + "► Cliquez pour Autoriser" : ChatColor.RED + "► Cliquez pour Bloquer"
+                    ).build();
                 inventory.setItem(14, pmsToggle);
 
                 // ── Slot 15: Ignored Players ──
-                ItemStack ignoredPlayers = new ItemStack(Material.BARRIER);
-                ItemMeta ignoredMeta = ignoredPlayers.getItemMeta();
-                if (ignoredMeta != null) {
-                    ignoredMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Joueurs Ignorés");
-                    List<String> lore = new ArrayList<>();
-                    lore.add("");
-                    lore.add(ChatColor.GRAY + "Gérez la liste des joueurs");
-                    lore.add(ChatColor.GRAY + "que vous avez ignorés.");
-                    lore.add("");
-                    lore.add(ChatColor.YELLOW + "► Cliquez pour Gérer");
-                    ignoredMeta.setLore(lore);
-                    ignoredPlayers.setItemMeta(ignoredMeta);
-                }
+                ItemStack ignoredPlayers = new ItemBuilder(Material.BARRIER)
+                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Joueurs Ignorés")
+                    .setLore(
+                        "",
+                        ChatColor.GRAY + "Gérez la liste des joueurs",
+                        ChatColor.GRAY + "que vous avez ignorés.",
+                        "",
+                        ChatColor.YELLOW + "► Cliquez pour Gérer"
+                    ).build();
                 inventory.setItem(15, ignoredPlayers);
 
                 // ── Slot 22: Back to Profile ──

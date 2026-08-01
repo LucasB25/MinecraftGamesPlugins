@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import fr.corehost.lobby.utils.Constants;
+import fr.corehost.lobby.utils.ItemBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,19 +80,15 @@ public class PartyMenu implements CustomMenu {
                 boolean isLeader = leaderUuid != null && leaderUuid.equals(playerUuid);
 
                 if (leaderUuid == null) {
-                    ItemStack noParty = new ItemStack(Material.COBWEB);
-                    ItemMeta noMeta = noParty.getItemMeta();
-                    if (noMeta != null) {
-                        noMeta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Aucun Groupe");
-                        noMeta.setLore(Arrays.asList(
+                    ItemStack noParty = new ItemBuilder(Material.COBWEB)
+                        .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Aucun Groupe")
+                        .setLore(
                             "",
                             ChatColor.GRAY + "Vous n'êtes dans aucun groupe.",
                             ChatColor.GRAY + "Invitez un joueur avec",
                             ChatColor.YELLOW + "/party invite <pseudo>",
                             ""
-                        ));
-                        noParty.setItemMeta(noMeta);
-                    }
+                        ).build();
                     inventory.setItem(22, noParty);
                 } else {
                     int slot = 0;
@@ -102,53 +99,46 @@ public class PartyMenu implements CustomMenu {
 
                         boolean isMemberLeader = memberId.equals(leaderUuid);
 
-                        ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-                        SkullMeta meta = (SkullMeta) head.getItemMeta();
-                        if (meta != null) {
-                            meta.setDisplayName((isMemberLeader ? ChatColor.GOLD : ChatColor.GREEN) + "" + ChatColor.BOLD + memberName);
-                            meta.setOwningPlayer(Bukkit.getOfflinePlayer(memberId));
-
-                            List<String> lore = new ArrayList<>();
-                            lore.add("");
-                            lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + (isMemberLeader ? ChatColor.GOLD + "Chef" : ChatColor.GRAY + "Membre"));
-                            lore.add("");
-                            
-                            if (isLeader && !isMemberLeader) {
-                                lore.add(ChatColor.RED + "► Clic-Droit " + ChatColor.GRAY + "Expulser du groupe");
-                            }
-                            
-                            meta.setLore(lore);
-                            
-                            org.bukkit.NamespacedKey uuidKey = new org.bukkit.NamespacedKey(plugin, "party_uuid");
-                            meta.getPersistentDataContainer().set(uuidKey, org.bukkit.persistence.PersistentDataType.STRING, memberId.toString());
-                            
-                            head.setItemMeta(meta);
+                        List<String> lore = new ArrayList<>();
+                        lore.add("");
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + (isMemberLeader ? ChatColor.GOLD + "Chef" : ChatColor.GRAY + "Membre"));
+                        lore.add("");
+                        
+                        if (isLeader && !isMemberLeader) {
+                            lore.add(ChatColor.RED + "► Clic-Droit " + ChatColor.GRAY + "Expulser du groupe");
                         }
+                        
+                        org.bukkit.NamespacedKey uuidKey = new org.bukkit.NamespacedKey(plugin, "party_uuid");
+                        
+                        ItemStack head = new ItemBuilder(Material.PLAYER_HEAD)
+                            .setName((isMemberLeader ? ChatColor.GOLD : ChatColor.GREEN) + "" + ChatColor.BOLD + memberName)
+                            .setSkullOwner(Bukkit.getOfflinePlayer(memberId).getName())
+                            .setLore(lore)
+                            .addPersistentData(uuidKey, org.bukkit.persistence.PersistentDataType.STRING, memberId.toString())
+                            .build();
+
                         inventory.setItem(slot++, head);
                     }
                 }
 
                 // ── Info: Party Info (slot 48) — matches FriendsMenu ──
-                ItemStack info = new ItemStack(Material.BOOK);
-                ItemMeta infoMeta = info.getItemMeta();
-                if (infoMeta != null) {
-                    infoMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Informations");
-                    List<String> infoLore = new ArrayList<>();
-                    infoLore.add("");
-                    if (leaderUuid == null) {
-                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Groupe : " + ChatColor.RED + "Aucun");
-                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + ChatColor.GRAY + "—");
-                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Membres : " + ChatColor.WHITE + "0");
-                    } else {
-                        String leaderName = memberNames.getOrDefault(leaderUuid, "Inconnu");
-                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Chef : " + ChatColor.GOLD + leaderName);
-                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + (isLeader ? ChatColor.GOLD + "Chef" : ChatColor.GREEN + "Membre"));
-                        infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Membres : " + ChatColor.WHITE + members.size());
-                    }
-                    infoLore.add("");
-                    infoMeta.setLore(infoLore);
-                    info.setItemMeta(infoMeta);
+                List<String> infoLore = new ArrayList<>();
+                infoLore.add("");
+                if (leaderUuid == null) {
+                    infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Groupe : " + ChatColor.RED + "Aucun");
+                    infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + ChatColor.GRAY + "—");
+                    infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Membres : " + ChatColor.WHITE + "0");
+                } else {
+                    String leaderName = memberNames.getOrDefault(leaderUuid, "Inconnu");
+                    infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Chef : " + ChatColor.GOLD + leaderName);
+                    infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Rôle : " + (isLeader ? ChatColor.GOLD + "Chef" : ChatColor.GREEN + "Membre"));
+                    infoLore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Membres : " + ChatColor.WHITE + members.size());
                 }
+                infoLore.add("");
+                
+                ItemStack info = new ItemBuilder(Material.BOOK)
+                    .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Informations")
+                    .setLore(infoLore).build();
                 inventory.setItem(48, info);
 
                 // ── Back to Profile (slot 49) — matches FriendsMenu ──
@@ -156,35 +146,27 @@ public class PartyMenu implements CustomMenu {
 
                 // ── Invite Player (slot 50) — matches FriendsMenu "Ajouter un ami" ──
                 if (isLeader) {
-                    ItemStack inviteItem = new ItemStack(Material.EMERALD);
-                    ItemMeta inviteMeta = inviteItem.getItemMeta();
-                    if (inviteMeta != null) {
-                        inviteMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Inviter un joueur");
-                        inviteMeta.setLore(Arrays.asList(
+                    ItemStack inviteItem = new ItemBuilder(Material.EMERALD)
+                        .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Inviter un joueur")
+                        .setLore(
                             "",
                             ChatColor.GRAY + "Cliquez pour inviter un",
                             ChatColor.GRAY + "joueur dans votre groupe.",
                             ""
-                        ));
-                        inviteItem.setItemMeta(inviteMeta);
-                    }
+                        ).build();
                     inventory.setItem(50, inviteItem);
                 }
 
                 // ── Leave / Disband Party (slot 51) ──
                 if (leaderUuid != null) {
-                    ItemStack leaveItem = new ItemStack(Material.BARRIER);
-                    ItemMeta leaveMeta = leaveItem.getItemMeta();
-                    if (leaveMeta != null) {
-                        if (isLeader) {
-                            leaveMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Dissoudre le groupe");
-                            leaveMeta.setLore(Arrays.asList("", ChatColor.GRAY + "Cliquez pour dissoudre", ChatColor.GRAY + "votre groupe.", ""));
-                        } else {
-                            leaveMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Quitter le groupe");
-                            leaveMeta.setLore(Arrays.asList("", ChatColor.GRAY + "Cliquez pour quitter", ChatColor.GRAY + "le groupe actuel.", ""));
-                        }
-                        leaveItem.setItemMeta(leaveMeta);
-                    }
+                    ItemStack leaveItem = new ItemBuilder(Material.BARRIER)
+                        .setName(isLeader ? ChatColor.RED + "" + ChatColor.BOLD + "Dissoudre le groupe" : ChatColor.RED + "" + ChatColor.BOLD + "Quitter le groupe")
+                        .setLore(
+                            "",
+                            ChatColor.GRAY + (isLeader ? "Cliquez pour dissoudre" : "Cliquez pour quitter"),
+                            ChatColor.GRAY + (isLeader ? "votre groupe." : "le groupe actuel."),
+                            ""
+                        ).build();
                     inventory.setItem(51, leaveItem);
                 }
 

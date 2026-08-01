@@ -23,3 +23,7 @@ commands:
     aliases: [pe]
     permission: corehost.admin
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
+  corehost:
+    description: Commande principale de CoreHost Lobby
+    permission: corehost.admin
+    permission-message: §cVous n'avez pas la permission d'exécuter cette commande.

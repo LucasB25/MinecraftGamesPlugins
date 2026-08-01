@@ -16,6 +16,8 @@ games:
     slot: 11
     max-players: 2
     max-slime-instances: 10
+    has-settings-menu: true
+    settings-menu-class: "fr.corehost.lobby.gui.SumoSettingsMenu"
     lore:
       - ""
       - "&7Démarrez un serveur Sumo"

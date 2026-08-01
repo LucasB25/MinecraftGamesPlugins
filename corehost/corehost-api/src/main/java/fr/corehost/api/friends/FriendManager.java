@@ -46,7 +46,10 @@ public class FriendManager {
 
     public Set<String> getFriendRequests(UUID uuid) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            return jedis.smembers("corehost:friend_requests:" + uuid.toString());
+            String key = "corehost:friend_requests:" + uuid.toString();
+            long now = System.currentTimeMillis();
+            jedis.zremrangeByScore(key, 0, now);
+            return new java.util.HashSet<>(jedis.zrange(key, 0, -1));
         }
     }
 
@@ -58,20 +61,25 @@ public class FriendManager {
 
     public boolean hasFriendRequest(UUID target, UUID sender) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            return jedis.sismember("corehost:friend_requests:" + target.toString(), sender.toString());
+            String key = "corehost:friend_requests:" + target.toString();
+            long now = System.currentTimeMillis();
+            jedis.zremrangeByScore(key, 0, now);
+            return jedis.zscore(key, sender.toString()) != null;
         }
     }
 
     public void sendFriendRequest(UUID sender, UUID target) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            jedis.sadd("corehost:friend_requests:" + target.toString(), sender.toString());
+            String key = "corehost:friend_requests:" + target.toString();
+            long expireTime = System.currentTimeMillis() + 60000; // 60 seconds
+            jedis.zadd(key, expireTime, sender.toString());
         }
     }
 
     public void acceptFriendRequest(UUID receiver, UUID sender) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             // Remove request
-            jedis.srem("corehost:friend_requests:" + receiver.toString(), sender.toString());
+            jedis.zrem("corehost:friend_requests:" + receiver.toString(), sender.toString());
             // Add to both friends lists
             jedis.sadd("corehost:friends:" + receiver.toString(), sender.toString());
             jedis.sadd("corehost:friends:" + sender.toString(), receiver.toString());
@@ -80,7 +88,7 @@ public class FriendManager {
 
     public void denyFriendRequest(UUID receiver, UUID sender) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            jedis.srem("corehost:friend_requests:" + receiver.toString(), sender.toString());
+            jedis.zrem("corehost:friend_requests:" + receiver.toString(), sender.toString());
         }
     }
 

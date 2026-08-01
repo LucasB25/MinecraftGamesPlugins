@@ -12,7 +12,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.Arrays;
+import java.util.List;
 import fr.corehost.lobby.utils.Constants;
+import fr.corehost.lobby.utils.ItemBuilder;
 import fr.corehost.lobby.CoreHostLobby;
 
 public class PlayerProfileMenu implements CustomMenu {
@@ -30,131 +32,111 @@ public class PlayerProfileMenu implements CustomMenu {
         // Border decoration (Pink + Purple alternating)
         MenuUtils.fillBorder(inventory);
 
+        long firstPlayed = player.getFirstPlayed();
+        String firstPlayedDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(firstPlayed));
+        String accountType = (player.getUniqueId().version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
+
         // ── Slot 10: Player Head (General Info) ──
-        ItemStack headItem = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta headMeta = (SkullMeta) headItem.getItemMeta();
-        if (headMeta != null) {
-            headMeta.setOwningPlayer(player);
-            headMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + player.getName());
-
-            long firstPlayed = player.getFirstPlayed();
-            String firstPlayedDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(firstPlayed));
-            
-            String accountType = (player.getUniqueId().version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
-
-            headMeta.setLore(Arrays.asList(
+        ItemStack headItem = new ItemBuilder(Material.PLAYER_HEAD)
+            .setSkullOwner(player.getName()) // ItemBuilder uses setOwner properly
+            .setName(ChatColor.AQUA + "" + ChatColor.BOLD + player.getName())
+            .setLore(
                 "",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + ChatColor.GREEN + "Joueur",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Première connexion : " + ChatColor.WHITE + firstPlayedDate,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Ping : " + ChatColor.YELLOW + player.getPing() + "ms",
                 ""
-            ));
-            headItem.setItemMeta(headMeta);
-        }
+            ).build();
         inventory.setItem(10, headItem);
 
         // ── Slot 11: Game Stats (Sword) ──
-        ItemStack statsItem = new ItemStack(Material.DIAMOND_SWORD);
-        ItemMeta statsMeta = statsItem.getItemMeta();
-        if (statsMeta != null) {
-            statsMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Statistiques de Jeu");
-            statsMeta.setLore(Arrays.asList(
+        ItemStack statsItem = new ItemBuilder(Material.DIAMOND_SWORD)
+            .setName(ChatColor.RED + "" + ChatColor.BOLD + "Statistiques de Jeu")
+            .setLore(
                 "",
                 ChatColor.GRAY + "Cliquez pour voir vos",
                 ChatColor.GRAY + "statistiques dans les",
                 ChatColor.GRAY + "différents mini-jeux.",
                 ""
-            ));
-            statsMeta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ATTRIBUTES);
-            statsItem.setItemMeta(statsMeta);
+            ).build();
+        
+        // Hide attributes (like +7 Attack Damage)
+        ItemMeta meta = statsItem.getItemMeta();
+        if (meta != null) {
+            meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ATTRIBUTES);
+            statsItem.setItemMeta(meta);
         }
         inventory.setItem(11, statsItem);
 
         // ── Slot 12: Friends (Name Tag) ──
-        ItemStack friendsItem = new ItemStack(Material.NAME_TAG);
-        ItemMeta friendsMeta = friendsItem.getItemMeta();
-        if (friendsMeta != null) {
-            friendsMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Amis");
-            friendsMeta.setLore(Arrays.asList(
+        ItemStack friendsItem = new ItemBuilder(Material.NAME_TAG)
+            .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Amis")
+            .setLore(
                 "",
                 ChatColor.GRAY + "Gérez votre liste d'amis",
                 ChatColor.GRAY + "et voyez qui est en ligne.",
                 ""
-            ));
-            friendsItem.setItemMeta(friendsMeta);
-        }
+            ).build();
         inventory.setItem(12, friendsItem);
 
         // ── Slot 13: Empty (glass pane) ──
         inventory.setItem(13, MenuUtils.getPurpleFiller());
 
         // ── Slot 14: Party (Cake) ──
-        ItemStack partyItem = new ItemStack(Material.CAKE);
-        ItemMeta partyMeta = partyItem.getItemMeta();
-        if (partyMeta != null) {
-            partyMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Groupe (Party)");
-            partyMeta.setLore(Arrays.asList(
+        ItemStack partyItem = new ItemBuilder(Material.CAKE)
+            .setName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Groupe (Party)")
+            .setLore(
                 "",
                 ChatColor.GRAY + "Gérez votre groupe,",
                 ChatColor.GRAY + "invitez des joueurs et",
                 ChatColor.GRAY + "jouez ensemble !",
                 ""
-            ));
-            partyItem.setItemMeta(partyMeta);
-        }
+            ).build();
         inventory.setItem(14, partyItem);
 
-        ItemStack discordItem = new ItemStack(Material.LAPIS_LAZULI);
-        ItemMeta discordMeta = discordItem.getItemMeta();
-        if (discordMeta != null) {
-            discordMeta.setDisplayName(ChatColor.BLUE + "" + ChatColor.BOLD + "Sécurité du Compte");
-            
-            if (player.getUniqueId().version() == 4) {
-                // Premium Account
-                discordMeta.setLore(Arrays.asList(
+        List<String> discordLore;
+        if (player.getUniqueId().version() == 4) {
+            discordLore = Arrays.asList(
+                "",
+                ChatColor.GREEN + "✔ Compte Premium",
+                ChatColor.GRAY + "Sécurisé par Mojang",
+                ""
+            );
+        } else {
+            if (isLinked) {
+                discordLore = Arrays.asList(
                     "",
-                    ChatColor.GREEN + "✔ Compte Premium",
-                    ChatColor.GRAY + "Sécurisé par Mojang",
+                    ChatColor.GREEN + "✔ Compte Lié",
+                    ChatColor.GRAY + "Sécurisé par Discord",
                     ""
-                ));
+                );
             } else {
-                // Cracked Account
-                if (isLinked) {
-                    discordMeta.setLore(Arrays.asList(
-                        "",
-                        ChatColor.GREEN + "✔ Compte Lié",
-                        ChatColor.GRAY + "Sécurisé par Discord",
-                        ""
-                    ));
-                } else {
-                    discordMeta.setLore(Arrays.asList(
-                        "",
-                        ChatColor.RED + "✖ Compte Non Lié",
-                        ChatColor.GRAY + "Liez votre compte Discord",
-                        ChatColor.GRAY + "pour sécuriser ce profil.",
-                        "",
-                        ChatColor.GREEN + "► Cliquez pour lier"
-                    ));
-                }
+                discordLore = Arrays.asList(
+                    "",
+                    ChatColor.RED + "✖ Compte Non Lié",
+                    ChatColor.GRAY + "Liez votre compte Discord",
+                    ChatColor.GRAY + "pour sécuriser ce profil.",
+                    "",
+                    ChatColor.GREEN + "► Cliquez pour lier"
+                );
             }
-            discordItem.setItemMeta(discordMeta);
         }
+        
+        ItemStack discordItem = new ItemBuilder(Material.LAPIS_LAZULI)
+            .setName(ChatColor.BLUE + "" + ChatColor.BOLD + "Sécurité du Compte")
+            .setLore(discordLore).build();
         inventory.setItem(15, discordItem);
 
         // ── Slot 16: Settings (Redstone Torch) ──
-        ItemStack settingsItem = new ItemStack(Material.REDSTONE_TORCH);
-        ItemMeta settingsMeta = settingsItem.getItemMeta();
-        if (settingsMeta != null) {
-            settingsMeta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Paramètres");
-            settingsMeta.setLore(Arrays.asList(
+        ItemStack settingsItem = new ItemBuilder(Material.REDSTONE_TORCH)
+            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Paramètres")
+            .setLore(
                 "",
                 ChatColor.GRAY + "Gérez vos préférences",
                 ChatColor.GRAY + "et votre confidentialité.",
                 ""
-            ));
-            settingsItem.setItemMeta(settingsMeta);
-        }
+            ).build();
         inventory.setItem(16, settingsItem);
     }
 

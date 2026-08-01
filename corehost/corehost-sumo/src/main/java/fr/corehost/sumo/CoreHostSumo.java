@@ -23,6 +23,9 @@ public class CoreHostSumo extends JavaPlugin {
         getCommand("sumosetup").setExecutor(new SumoSetupCommand(this));
         getCommand("sumosetup").setTabCompleter(new SumoSetupCommand(this));
         
+        fr.corehost.sumo.commands.CoreHostSumoCommand command = new fr.corehost.sumo.commands.CoreHostSumoCommand(this);
+        if (getCommand("corehostsumo") != null) getCommand("corehostsumo").setExecutor(command);
+        
         getServer().getPluginManager().registerEvents(new SumoListener(this), this);
 
         getLogger().info("CoreHostSumo activated!");

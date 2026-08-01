@@ -13,6 +13,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import fr.corehost.lobby.utils.ItemBuilder;
 import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
@@ -62,13 +63,8 @@ public class IgnoreMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 // ── Border decoration ──
-                ItemStack filler1 = new ItemStack(Material.RED_STAINED_GLASS_PANE);
-                ItemMeta meta1 = filler1.getItemMeta();
-                if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
-
-                ItemStack filler2 = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-                ItemMeta meta2 = filler2.getItemMeta();
-                if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
+                ItemStack filler1 = new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setName(" ").build();
+                ItemStack filler2 = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE).setName(" ").build();
 
                 for (int i = 45; i < 54; i++) {
                     inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
@@ -82,46 +78,31 @@ public class IgnoreMenu implements CustomMenu {
                     OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(ignoredUuid);
                     String name = offlinePlayer.getName() != null ? offlinePlayer.getName() : "Joueur Inconnu";
 
-                    ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
-                    SkullMeta skullMeta = (SkullMeta) skull.getItemMeta();
-                    if (skullMeta != null) {
-                        skullMeta.setOwningPlayer(offlinePlayer);
-                        skullMeta.setDisplayName(ChatColor.RED + name);
-                        List<String> lore = new ArrayList<>();
-                        lore.add("");
-                        lore.add(ChatColor.GRAY + "Ce joueur est actuellement");
-                        lore.add(ChatColor.GRAY + "ignoré. Vous ne recevrez");
-                        lore.add(ChatColor.GRAY + "plus de messages privés");
-                        lore.add(ChatColor.GRAY + "de sa part.");
-                        lore.add("");
-                        lore.add(ChatColor.GREEN + "► Cliquez pour ne plus l'ignorer");
-                        skullMeta.setLore(lore);
-                        skull.setItemMeta(skullMeta);
-                    }
+                    ItemStack skull = new ItemBuilder(Material.PLAYER_HEAD)
+                        .setSkullOwner(name)
+                        .setName(ChatColor.RED + name)
+                        .setLore(
+                            "",
+                            ChatColor.GRAY + "Ce joueur est actuellement",
+                            ChatColor.GRAY + "ignoré. Vous ne recevrez",
+                            ChatColor.GRAY + "plus de messages privés",
+                            ChatColor.GRAY + "de sa part.",
+                            "",
+                            ChatColor.GREEN + "► Cliquez pour ne plus l'ignorer"
+                        ).build();
                     inventory.setItem(slot, skull);
                     slot++;
                 }
 
                 if (ignoredPlayersList.isEmpty()) {
-                    ItemStack empty = new ItemStack(Material.BARRIER);
-                    ItemMeta emptyMeta = empty.getItemMeta();
-                    if (emptyMeta != null) {
-                        emptyMeta.setDisplayName(ChatColor.RED + "Aucun joueur ignoré");
-                        List<String> lore = new ArrayList<>();
-                        lore.add(ChatColor.GRAY + "Vous n'avez ignoré personne.");
-                        emptyMeta.setLore(lore);
-                        empty.setItemMeta(emptyMeta);
-                    }
+                    ItemStack empty = new ItemBuilder(Material.BARRIER)
+                        .setName(ChatColor.RED + "Aucun joueur ignoré")
+                        .setLore(ChatColor.GRAY + "Vous n'avez ignoré personne.").build();
                     inventory.setItem(22, empty); // Center of inventory
                 }
 
                 // ── Back to Settings ──
-                ItemStack back = new ItemStack(Material.ARROW);
-                ItemMeta backMeta = back.getItemMeta();
-                if (backMeta != null) {
-                    backMeta.setDisplayName(ChatColor.RED + "◄ Retour aux Paramètres");
-                    back.setItemMeta(backMeta);
-                }
+                ItemStack back = new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour aux Paramètres").build();
                 inventory.setItem(49, back);
 
                 player.openInventory(inventory);

@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import fr.corehost.lobby.utils.Constants;
+import fr.corehost.lobby.utils.ItemBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,18 +98,14 @@ public class FriendsMenu implements CustomMenu {
                 int endIndex = Math.min(startIndex + 45, friends.size());
 
                 if (friends.isEmpty()) {
-                    ItemStack noFriends = new ItemStack(Material.COBWEB);
-                    ItemMeta noMeta = noFriends.getItemMeta();
-                    if (noMeta != null) {
-                        noMeta.setDisplayName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Aucun ami");
-                        noMeta.setLore(Arrays.asList(
+                    ItemStack noFriends = new ItemBuilder(Material.COBWEB)
+                        .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Aucun ami")
+                        .setLore(
                             "",
                             ChatColor.GRAY + "Utilisez le bouton " + ChatColor.GREEN + "Ajouter un ami",
                             ChatColor.GRAY + "ou la commande " + ChatColor.YELLOW + "/friend add <pseudo>",
                             ""
-                        ));
-                        noFriends.setItemMeta(noMeta);
-                    }
+                        ).build();
                     inventory.setItem(22, noFriends);
                 }
 
@@ -122,45 +119,42 @@ public class FriendsMenu implements CustomMenu {
                     String rank = ChatColor.GRAY + "Joueur";
                     String accountType = (friendId.version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
 
-                    ItemStack head = new ItemStack(Material.PLAYER_HEAD);
-                    SkullMeta meta = (SkullMeta) head.getItemMeta();
-                    if (meta != null) {
-                        meta.setDisplayName((isOnlineNetwork ? ChatColor.GREEN : ChatColor.GRAY) + "" + ChatColor.BOLD + friendName);
-                        meta.setOwningPlayer(Bukkit.getOfflinePlayer(friendId));
-
-                        List<String> lore = new ArrayList<>();
-                        lore.add("");
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + rank);
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType);
-                        if (isOnlineNetwork) {
-                            lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + ChatColor.GREEN + "En ligne");
+                    List<String> lore = new ArrayList<>();
+                    lore.add("");
+                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + rank);
+                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType);
+                    if (isOnlineNetwork) {
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + ChatColor.GREEN + "En ligne");
+                    } else {
+                        long lastSeen = friendLastSeen.getOrDefault(friendId, 0L);
+                        String lastSeenStr;
+                        if (lastSeen > 0) {
+                            lastSeenStr = ChatColor.YELLOW + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date(lastSeen));
                         } else {
-                            long lastSeen = friendLastSeen.getOrDefault(friendId, 0L);
-                            String lastSeenStr;
-                            if (lastSeen > 0) {
-                                lastSeenStr = ChatColor.YELLOW + new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date(lastSeen));
-                            } else {
-                                lastSeenStr = ChatColor.RED + "Inconnue";
-                            }
-                            lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Dernière connexion : " + lastSeenStr);
+                            lastSeenStr = ChatColor.RED + "Inconnue";
                         }
-                        lore.add("");
-                        UUID myLeader = plugin.getPartyManager().getPartyLeader(player.getUniqueId());
-                        boolean canInvite = (myLeader == null || myLeader.equals(player.getUniqueId()));
-                        UUID friendLeader = plugin.getPartyManager().getPartyLeader(friendId);
-                        boolean isFriendInParty = (friendLeader != null);
-
-                        if (canInvite && !isFriendInParty) {
-                            lore.add(ChatColor.GREEN + "► Clic-Gauche " + ChatColor.GRAY + "Inviter en Party");
-                        }
-                        lore.add(ChatColor.RED + "► Clic-Droit " + ChatColor.GRAY + "Retirer des amis");
-                        meta.setLore(lore);
-                        
-                        org.bukkit.NamespacedKey uuidKey = new org.bukkit.NamespacedKey(plugin, "friend_uuid");
-                        meta.getPersistentDataContainer().set(uuidKey, org.bukkit.persistence.PersistentDataType.STRING, friendId.toString());
-                        
-                        head.setItemMeta(meta);
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Dernière connexion : " + lastSeenStr);
                     }
+                    lore.add("");
+                    UUID myLeader = plugin.getPartyManager().getPartyLeader(player.getUniqueId());
+                    boolean canInvite = (myLeader == null || myLeader.equals(player.getUniqueId()));
+                    UUID friendLeader = plugin.getPartyManager().getPartyLeader(friendId);
+                    boolean isFriendInParty = (friendLeader != null);
+
+                    if (canInvite && !isFriendInParty) {
+                        lore.add(ChatColor.GREEN + "► Clic-Gauche " + ChatColor.GRAY + "Inviter en Party");
+                    }
+                    lore.add(ChatColor.RED + "► Clic-Droit " + ChatColor.GRAY + "Retirer des amis");
+                    
+                    org.bukkit.NamespacedKey uuidKey = new org.bukkit.NamespacedKey(plugin, "friend_uuid");
+                    
+                    ItemStack head = new ItemBuilder(Material.PLAYER_HEAD)
+                        .setSkullOwner(Bukkit.getOfflinePlayer(friendId).getName())
+                        .setName((isOnlineNetwork ? ChatColor.GREEN : ChatColor.GRAY) + "" + ChatColor.BOLD + friendName)
+                        .setLore(lore)
+                        .addPersistentData(uuidKey, org.bukkit.persistence.PersistentDataType.STRING, friendId.toString())
+                        .build();
+
                     inventory.setItem(slot++, head);
                 }
 
@@ -175,36 +169,28 @@ public class FriendsMenu implements CustomMenu {
                 }
 
                 // ── Info: Friend Count (slot 48) ──
-                ItemStack info = new ItemStack(Material.BOOK);
-                ItemMeta infoMeta = info.getItemMeta();
-                if (infoMeta != null) {
-                    infoMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Informations");
-                    infoMeta.setLore(Arrays.asList(
+                ItemStack info = new ItemBuilder(Material.BOOK)
+                    .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Informations")
+                    .setLore(
                         "",
                         ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Amis : " + ChatColor.WHITE + friends.size() + ChatColor.DARK_GRAY + "/" + ChatColor.WHITE + "50",
                         ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Page : " + ChatColor.WHITE + (page + 1),
                         ""
-                    ));
-                    info.setItemMeta(infoMeta);
-                }
+                    ).build();
                 inventory.setItem(48, info);
 
                 // ── Back to Profile (slot 49) ──
                 inventory.setItem(49, MenuUtils.getBackButton());
 
                 // ── Add Friend (slot 50) ──
-                ItemStack addFriend = new ItemStack(Material.EMERALD);
-                ItemMeta addMeta = addFriend.getItemMeta();
-                if (addMeta != null) {
-                    addMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Ajouter un ami");
-                    addMeta.setLore(Arrays.asList(
+                ItemStack addFriend = new ItemBuilder(Material.EMERALD)
+                    .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Ajouter un ami")
+                    .setLore(
                         "",
                         ChatColor.GRAY + "Cliquez pour envoyer une",
                         ChatColor.GRAY + "demande d'ami à un joueur.",
                         ""
-                    ));
-                    addFriend.setItemMeta(addMeta);
-                }
+                    ).build();
                 inventory.setItem(50, addFriend);
 
                 player.openInventory(inventory);

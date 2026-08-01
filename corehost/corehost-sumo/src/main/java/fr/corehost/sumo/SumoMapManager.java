@@ -41,6 +41,11 @@ public class SumoMapManager {
         plugin.getLogger().info("Loaded " + loadedMaps.size() + " sumo maps.");
     }
 
+    public void reloadMaps() {
+        this.mapsConfig = YamlConfiguration.loadConfiguration(mapsFile);
+        loadMaps();
+    }
+
     public void saveMap(SumoMapConfig mapConfig) {
         loadedMaps.put(mapConfig.getName().toLowerCase(), mapConfig);
         org.bukkit.configuration.ConfigurationSection section = mapsConfig.getConfigurationSection(mapConfig.getName());

@@ -11,3 +11,7 @@ commands:
     description: Configuration des maps Sumo
     usage: /sumosetup <mapName> <action>
     permission: corehost.admin
+  corehostsumo:
+    description: Commande principale de CoreHost Sumo
+    permission: corehost.admin
+    permission-message: §cVous n'avez pas la permission d'exécuter cette commande.

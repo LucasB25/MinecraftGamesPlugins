@@ -16,6 +16,7 @@ import fr.corehost.lobby.CoreHostLobby;
 import fr.corehost.api.host.HostData;
 import fr.corehost.api.host.HostStatus;
 import fr.corehost.lobby.utils.Constants;
+import fr.corehost.lobby.utils.ItemBuilder;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -39,73 +40,52 @@ public class HostSearchMenu implements CustomMenu {
     }
     
     private void drawBottomBar() {
-        ItemStack filler1 = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta1 = filler1.getItemMeta();
-        if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
-        
-        ItemStack filler2 = new ItemStack(Material.LIGHT_BLUE_STAINED_GLASS_PANE);
-        ItemMeta meta2 = filler2.getItemMeta();
-        if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
+        ItemStack filler1 = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).setName(" ").build();
+        ItemStack filler2 = new ItemBuilder(Material.LIGHT_BLUE_STAINED_GLASS_PANE).setName(" ").build();
         
         for (int i = 45; i < 54; i++) {
             inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
         }
 
-        // Create Host item (Centered on last line: slot 49)
-        ItemStack createItem = new ItemStack(Material.NETHER_STAR);
-        ItemMeta createMeta = createItem.getItemMeta();
-        if (createMeta != null) {
-            createMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Créer un Host");
-            createMeta.setLore(java.util.Arrays.asList(
-                "",
-                ChatColor.GRAY + "Cliquez pour créer votre propre",
-                ChatColor.GRAY + "serveur de jeu personnalisé !"
-            ));
-            createItem.setItemMeta(createMeta);
-        }
-        inventory.setItem(49, createItem);
+        // Create Host item
+        String currentFilter = gameFilter.equals("ALL") ? "Tous" : gameFilter;
+        String currentStatusFilter = statusFilter == null ? "Tous" : statusFilter.name();
 
-        // Refresh item (Next to it: slot 50)
-        ItemStack refreshItem = new ItemStack(Material.EMERALD);
-        ItemMeta refreshMeta = refreshItem.getItemMeta();
-        if (refreshMeta != null) {
-            refreshMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Rafraîchir la liste");
-            refreshMeta.setLore(java.util.Arrays.asList(
-                ChatColor.GRAY + "Recharger la liste des serveurs",
-                ChatColor.GRAY + "actuellement disponibles."
-            ));
-            refreshItem.setItemMeta(refreshMeta);
-        }
-        inventory.setItem(50, refreshItem);
-        
-        // Filter by Game item (Slot 45)
-        ItemStack gameFilterItem = new ItemStack(Material.HOPPER);
-        ItemMeta gameFilterMeta = gameFilterItem.getItemMeta();
-        if (gameFilterMeta != null) {
-            gameFilterMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Jeu");
-            gameFilterMeta.setLore(java.util.Arrays.asList(
-                ChatColor.GRAY + "Actuel : " + ChatColor.YELLOW + (gameFilter.equals("ALL") ? "Tous" : gameFilter),
+        ItemStack createItem = new ItemBuilder(Material.NETHER_STAR)
+            .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Créer un Host")
+            .setLore(
                 "",
-                ChatColor.GREEN + "► Clic-Gauche : Suivant",
-                ChatColor.RED + "► Clic-Droit : Précédent"
-            ));
-            gameFilterItem.setItemMeta(gameFilterMeta);
-        }
+                ChatColor.GRAY + "Créez votre propre serveur",
+                ChatColor.GRAY + "et invitez vos amis !",
+                "",
+                ChatColor.YELLOW + "► Cliquez pour créer"
+            ).build();
+        inventory.setItem(53, createItem);
+
+        // Refresh item
+        ItemStack refreshItem = new ItemBuilder(Material.EMERALD)
+            .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Rafraîchir la liste")
+            .setLore(ChatColor.GRAY + "Mettre à jour les serveurs").build();
+        inventory.setItem(49, refreshItem);
+        
+        // Filter by Game item
+        ItemStack gameFilterItem = new ItemBuilder(Material.HOPPER)
+            .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Jeu")
+            .setLore(
+                ChatColor.GRAY + "Actuel: " + ChatColor.YELLOW + currentFilter,
+                "",
+                ChatColor.YELLOW + "► Cliquez pour changer"
+            ).build();
         inventory.setItem(45, gameFilterItem);
         
-        // Filter by Status item (Slot 46)
-        ItemStack statusFilterItem = new ItemStack(Material.COMPARATOR);
-        ItemMeta statusFilterMeta = statusFilterItem.getItemMeta();
-        if (statusFilterMeta != null) {
-            statusFilterMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Statut");
-            statusFilterMeta.setLore(java.util.Arrays.asList(
-                ChatColor.GRAY + "Actuel : " + ChatColor.YELLOW + (statusFilter == null ? "Tous" : statusFilter.name()),
+        // Filter by Status item
+        ItemStack statusFilterItem = new ItemBuilder(Material.COMPARATOR)
+            .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Statut")
+            .setLore(
+                ChatColor.GRAY + "Actuel: " + ChatColor.YELLOW + currentStatusFilter,
                 "",
-                ChatColor.GREEN + "► Clic-Gauche : Suivant",
-                ChatColor.RED + "► Clic-Droit : Précédent"
-            ));
-            statusFilterItem.setItemMeta(statusFilterMeta);
-        }
+                ChatColor.YELLOW + "► Cliquez pour changer"
+            ).build();
         inventory.setItem(46, statusFilterItem);
     }
     
@@ -119,28 +99,24 @@ public class HostSearchMenu implements CustomMenu {
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
         
         if (plugin.getHostManager() == null) {
-            ItemStack maintenanceItem = new ItemStack(Material.BARRIER);
-            ItemMeta maintenanceMeta = maintenanceItem.getItemMeta();
-            if (maintenanceMeta != null) {
-                maintenanceMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Système en Maintenance");
-                maintenanceMeta.setLore(java.util.Arrays.asList(
-                    ChatColor.GRAY + "Le système de Host est actuellement",
-                    ChatColor.GRAY + "en cours de maintenance ou de",
-                    ChatColor.GRAY + "mise à jour. Réessayez plus tard."
-                ));
-                maintenanceItem.setItemMeta(maintenanceMeta);
-            }
+            ItemStack maintenanceItem = new ItemBuilder(Material.BARRIER)
+                .setName(ChatColor.RED + "" + ChatColor.BOLD + "Système en Maintenance")
+                .setLore(
+                    "",
+                    ChatColor.GRAY + "La recherche de Host est",
+                    ChatColor.GRAY + "temporairement désactivée."
+                ).build();
             inventory.setItem(22, maintenanceItem); // Center of the inventory
             return;
         }
         
         List<HostData> hosts = plugin.getHostManager().getAllHosts();
         
-        int slot = 0;
-        NamespacedKey serverKey = new NamespacedKey(plugin, "server_name");
+        int index = 0;
+        NamespacedKey hostKey = new NamespacedKey(plugin, "host_id");
 
         for (HostData host : hosts) {
-            if (slot >= 45) break; // Maximum capacity in this page
+            if (index >= 45) break; // Maximum capacity in this page
             
             // Apply Filters
             if (!gameFilter.equals("ALL") && !host.getGameType().equalsIgnoreCase(gameFilter)) {
@@ -154,31 +130,24 @@ public class HostSearchMenu implements CustomMenu {
             Material mat = Material.matchMaterial(materialName);
             if (mat == null) mat = Material.BEDROCK;
             
-            ItemStack hostItem = new ItemStack(mat);
-            ItemMeta hostMeta = hostItem.getItemMeta();
-            
-            if (hostMeta != null) {
-                hostMeta.setDisplayName(ChatColor.YELLOW + "Serveur " + host.getGameType());
-                
-                String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
-                
-                hostMeta.setLore(java.util.Arrays.asList(
+            String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
+            List<String> lore = java.util.Arrays.asList(
                     "",
                     ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Hôte : " + ChatColor.WHITE + host.getOwnerName(),
                     ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name(),
                     ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + host.getMaxPlayers(),
                     "",
                     ChatColor.GREEN + "► Cliquez pour rejoindre !"
-                ));
-                
-                // Store the server name in the item's persistent data
-                hostMeta.getPersistentDataContainer().set(serverKey, PersistentDataType.STRING, host.getServerName());
-                
-                hostItem.setItemMeta(hostMeta);
-            }
+            );
             
-            inventory.setItem(slot, hostItem);
-            slot++;
+            ItemStack hostItem = new ItemBuilder(mat)
+                .setName(ChatColor.YELLOW + "Serveur " + host.getGameType())
+                .setLore(lore)
+                .addPersistentData(hostKey, PersistentDataType.STRING, host.getHostId().toString())
+                .build();
+            
+            inventory.setItem(index, hostItem);
+            index++;
         }
     }
 

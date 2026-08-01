@@ -4,28 +4,16 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import fr.corehost.lobby.utils.ItemBuilder;
 
 public class MenuUtils {
 
     public static ItemStack getPinkFiller() {
-        ItemStack filler = new ItemStack(Material.PINK_STAINED_GLASS_PANE);
-        ItemMeta meta = filler.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(" ");
-            filler.setItemMeta(meta);
-        }
-        return filler;
+        return new ItemBuilder(Material.PINK_STAINED_GLASS_PANE).setName(" ").build();
     }
 
     public static ItemStack getPurpleFiller() {
-        ItemStack filler = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
-        ItemMeta meta = filler.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName(" ");
-            filler.setItemMeta(meta);
-        }
-        return filler;
+        return new ItemBuilder(Material.PURPLE_STAINED_GLASS_PANE).setName(" ").build();
     }
 
     public static void fillBottomRow(Inventory inventory) {
@@ -55,32 +43,14 @@ public class MenuUtils {
     }
     
     public static ItemStack getBackButton() {
-        ItemStack back = new ItemStack(Material.ARROW);
-        ItemMeta backMeta = back.getItemMeta();
-        if (backMeta != null) {
-            backMeta.setDisplayName(ChatColor.RED + "◄ Retour au Profil");
-            back.setItemMeta(backMeta);
-        }
-        return back;
+        return new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour au Profil").build();
     }
 
     public static ItemStack getPrevPageButton() {
-        ItemStack prev = new ItemStack(Material.ARROW);
-        ItemMeta prevMeta = prev.getItemMeta();
-        if (prevMeta != null) {
-            prevMeta.setDisplayName(ChatColor.YELLOW + "◄ Page Précédente");
-            prev.setItemMeta(prevMeta);
-        }
-        return prev;
+        return new ItemBuilder(Material.ARROW).setName(ChatColor.YELLOW + "◄ Page Précédente").build();
     }
 
     public static ItemStack getNextPageButton() {
-        ItemStack next = new ItemStack(Material.ARROW);
-        ItemMeta nextMeta = next.getItemMeta();
-        if (nextMeta != null) {
-            nextMeta.setDisplayName(ChatColor.YELLOW + "Page Suivante ►");
-            next.setItemMeta(nextMeta);
-        }
-        return next;
+        return new ItemBuilder(Material.ARROW).setName(ChatColor.YELLOW + "Page Suivante ►").build();
     }
 }

@@ -44,6 +44,10 @@ public class CoreHostGame extends JavaPlugin {
         // Initialiser IsolationListener
         getServer().getPluginManager().registerEvents(new fr.corehost.game.listeners.IsolationListener(this), this);
         
+        // Register commands
+        fr.corehost.game.commands.CoreHostGameCommand command = new fr.corehost.game.commands.CoreHostGameCommand(this);
+        if (getCommand("corehostgame") != null) getCommand("corehostgame").setExecutor(command);
+        
         log.info("CoreHostGame activé avec succès sur " + serverName + " !");
     }
     

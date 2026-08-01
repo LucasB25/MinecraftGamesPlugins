@@ -14,6 +14,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.ConfigurationSection;
 import fr.corehost.lobby.CoreHostLobby;
+import fr.corehost.lobby.utils.ItemBuilder;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -29,13 +30,8 @@ public class HostCreateMenu implements CustomMenu {
 
     private void initializeItems() {
         // Border decoration
-        ItemStack filler1 = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta1 = filler1.getItemMeta();
-        if (meta1 != null) { meta1.setDisplayName(" "); filler1.setItemMeta(meta1); }
-        
-        ItemStack filler2 = new ItemStack(Material.ORANGE_STAINED_GLASS_PANE);
-        ItemMeta meta2 = filler2.getItemMeta();
-        if (meta2 != null) { meta2.setDisplayName(" "); filler2.setItemMeta(meta2); }
+        ItemStack filler1 = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).setName(" ").build();
+        ItemStack filler2 = new ItemBuilder(Material.ORANGE_STAINED_GLASS_PANE).setName(" ").build();
         
         for (int i = 0; i < inventory.getSize(); i++) {
             if (i < 9 || i > 17 || i == 9 || i == 17) {
@@ -58,22 +54,19 @@ public class HostCreateMenu implements CustomMenu {
                 Material mat = Material.matchMaterial(materialName);
                 if (mat == null) mat = Material.BEDROCK;
                 
-                ItemStack gameItem = new ItemStack(mat);
-                ItemMeta meta = gameItem.getItemMeta();
-                if (meta != null) {
-                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+                ItemBuilder builder = new ItemBuilder(mat)
+                    .setName(ChatColor.translateAlternateColorCodes('&', name))
+                    .addPersistentData(gameKey, PersistentDataType.STRING, gameId);
                     
-                    if (configLore != null) {
-                        List<String> lore = new ArrayList<>();
-                        for (String line : configLore) {
-                            lore.add(ChatColor.translateAlternateColorCodes('&', line));
-                        }
-                        meta.setLore(lore);
+                if (configLore != null) {
+                    List<String> lore = new ArrayList<>();
+                    for (String line : configLore) {
+                        lore.add(ChatColor.translateAlternateColorCodes('&', line));
                     }
-                    
-                    meta.getPersistentDataContainer().set(gameKey, PersistentDataType.STRING, gameId);
-                    gameItem.setItemMeta(meta);
+                    builder.setLore(lore);
                 }
+                
+                ItemStack gameItem = builder.build();
                 
                 if (slot >= 0 && slot < inventory.getSize()) {
                     inventory.setItem(slot, gameItem);
@@ -106,10 +99,29 @@ public class HostCreateMenu implements CustomMenu {
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.5f);
                 player.closeInventory();
                 
-                if (gameId.equalsIgnoreCase("Sumo")) {
-                    new SumoSettingsMenu(plugin).open(player);
+                ConfigurationSection gamesSection = plugin.getConfig().getConfigurationSection("games");
+                boolean hasSettings = false;
+                
+                if (gamesSection != null && gamesSection.contains(gameId)) {
+                    hasSettings = gamesSection.getBoolean(gameId + ".has-settings-menu", false);
+                    if (hasSettings) {
+                        String className = gamesSection.getString(gameId + ".settings-menu-class");
+                        if (className != null) {
+                            try {
+                                Class<?> clazz = Class.forName(className);
+                                Object menu = clazz.getConstructor(CoreHostLobby.class).newInstance(plugin);
+                                clazz.getMethod("open", Player.class).invoke(menu, player);
+                            } catch (Exception e) {
+                                plugin.getLogger().severe("Could not open settings menu for " + gameId + ": " + e.getMessage());
+                                plugin.getCloudNetServiceManager().createHost(player, gameId, 3);
+                            }
+                        } else {
+                            plugin.getCloudNetServiceManager().createHost(player, gameId, 3);
+                        }
+                    } else {
+                        plugin.getCloudNetServiceManager().createHost(player, gameId, 3);
+                    }
                 } else {
-                    // Default to BO3 for other games, or ignore if not applicable
                     plugin.getCloudNetServiceManager().createHost(player, gameId, 3);
                 }
             }

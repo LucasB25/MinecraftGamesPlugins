@@ -85,30 +85,7 @@ public class AuthListener implements Listener {
                 msg2.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Ouvrir Discord pour envoyer un MP").color(net.md_5.bungee.api.ChatColor.YELLOW).create()));
                 player.spigot().sendMessage(msg1, msg2, new TextComponent("\n"));
                 
-                BukkitRunnable task = new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (!player.isOnline()) {
-                            this.cancel();
-                            return;
-                        }
-                        
-                        if (isLinked(uuid)) {
-                            blockedPlayers.remove(uuid);
-                            isPending2FA.remove(uuid);
-                            player.sendTitle(ChatColor.GREEN + "Liaison Réussie", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
-                            player.sendMessage(ChatColor.GREEN + "Votre compte a bien été lié à Discord !");
-                            this.cancel();
-                            actionbarTasks.remove(uuid);
-                            return;
-                        }
-                        
-                        String message = ChatColor.RED + "Envoyez le code " + ChatColor.YELLOW + code + ChatColor.RED + " en Message Privé au Bot Discord !";
-                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
-                    }
-                };
-                task.runTaskTimer(plugin, 0L, 20L);
-                actionbarTasks.put(uuid, task);
+                startAuthTask(player, uuid, false, code);
                 
             } else {
                 // Player is cracked and ALREADY linked. Require 2FA PIN.
@@ -138,35 +115,58 @@ public class AuthListener implements Listener {
                 msg2.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("Ouvrir Discord pour envoyer un MP").color(net.md_5.bungee.api.ChatColor.YELLOW).create()));
                 player.spigot().sendMessage(msg1, msg2, new TextComponent("\n"));
                 
-                BukkitRunnable task = new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (!player.isOnline()) {
-                            this.cancel();
-                            return;
-                        }
-                        
-                        if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
-                            String approved = plugin.getRedisManager().get("corehost:discord_auth:" + uuid.toString());
-                            if (approved != null && approved.equals("true")) {
-                                blockedPlayers.remove(uuid);
-                                isPending2FA.remove(uuid);
-                                player.sendTitle(ChatColor.GREEN + "Accès Autorisé", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
-                                player.sendMessage(ChatColor.GREEN + "Authentification réussie !");
-                                this.cancel();
-                                actionbarTasks.remove(uuid);
-                                return;
-                            }
-                        }
-                        
-                        String message = ChatColor.GOLD + "Vérification requise ! " + ChatColor.RED + "Envoyez " + ChatColor.YELLOW + pin + ChatColor.RED + " au Bot Discord !";
-                        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
-                    }
-                };
-                task.runTaskTimer(plugin, 0L, 20L);
-                actionbarTasks.put(uuid, task);
+                startAuthTask(player, uuid, true, pin);
             }
         }
+    }
+
+    private void startAuthTask(Player player, UUID uuid, boolean is2FA, String expectedCode) {
+        BukkitRunnable task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline()) {
+                    this.cancel();
+                    return;
+                }
+                
+                boolean approved = false;
+                if (is2FA) {
+                    if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                        String authStr = plugin.getRedisManager().get("corehost:discord_auth:" + uuid.toString());
+                        if (authStr != null && authStr.equals("true")) {
+                            approved = true;
+                        }
+                    }
+                } else {
+                    approved = isLinked(uuid);
+                }
+                
+                if (approved) {
+                    blockedPlayers.remove(uuid);
+                    isPending2FA.remove(uuid);
+                    if (is2FA) {
+                        player.sendTitle(ChatColor.GREEN + "Accès Autorisé", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
+                        player.sendMessage(ChatColor.GREEN + "Authentification réussie !");
+                    } else {
+                        player.sendTitle(ChatColor.GREEN + "Liaison Réussie", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
+                        player.sendMessage(ChatColor.GREEN + "Votre compte a bien été lié à Discord !");
+                    }
+                    this.cancel();
+                    actionbarTasks.remove(uuid);
+                    return;
+                }
+                
+                String message;
+                if (is2FA) {
+                    message = ChatColor.GOLD + "Vérification requise ! " + ChatColor.RED + "Envoyez " + ChatColor.YELLOW + expectedCode + ChatColor.RED + " au Bot Discord !";
+                } else {
+                    message = ChatColor.RED + "Envoyez le code " + ChatColor.YELLOW + expectedCode + ChatColor.RED + " en Message Privé au Bot Discord !";
+                }
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
+            }
+        };
+        task.runTaskTimer(plugin, 0L, 20L);
+        actionbarTasks.put(uuid, task);
     }
 
     @EventHandler

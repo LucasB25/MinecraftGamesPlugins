@@ -69,6 +69,9 @@ public class CoreHostLobby extends JavaPlugin {
         fr.corehost.lobby.commands.PremiumExceptionCommand premiumCommand = new fr.corehost.lobby.commands.PremiumExceptionCommand(this);
         if (getCommand("premiumexception") != null) getCommand("premiumexception").setExecutor(premiumCommand);
 
+        fr.corehost.lobby.commands.CoreHostCommand coreHostCommand = new fr.corehost.lobby.commands.CoreHostCommand(this);
+        if (getCommand("corehost") != null) getCommand("corehost").setExecutor(coreHostCommand);
+
 
         
         // Setup Worlds Security (Delayed by 1 tick to ensure worlds are fully loaded)

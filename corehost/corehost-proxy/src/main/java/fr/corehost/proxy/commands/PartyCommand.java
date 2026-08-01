@@ -8,6 +8,7 @@ import fr.corehost.proxy.CoreHostProxy;
 import fr.corehost.api.party.PartyManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import fr.corehost.proxy.utils.ProxyPrefix;
 
 import java.util.Arrays;
 import java.util.List;
@@ -104,7 +105,7 @@ public class PartyCommand implements SimpleCommand {
 
     private void handleInvite(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(Component.text("Usage: /party invite <joueur>", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Usage: /party invite <joueur>", NamedTextColor.RED));
             return;
         }
         
@@ -112,7 +113,7 @@ public class PartyCommand implements SimpleCommand {
         UUID leaderUuid = partyManager.getPartyLeader(playerUuid);
         
         if (leaderUuid != null && !leaderUuid.equals(playerUuid)) {
-            player.sendMessage(Component.text("Seul le chef de groupe peut inviter des joueurs.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Seul le chef de groupe peut inviter des joueurs.", NamedTextColor.RED));
             return;
         }
         
@@ -120,7 +121,7 @@ public class PartyCommand implements SimpleCommand {
         Optional<Player> targetOpt = server.getPlayer(targetName);
         
         if (targetOpt.isEmpty()) {
-            player.sendMessage(Component.text("Joueur introuvable ou hors ligne.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Joueur introuvable ou hors ligne.", NamedTextColor.RED));
             return;
         }
         
@@ -128,24 +129,24 @@ public class PartyCommand implements SimpleCommand {
         UUID targetUuid = target.getUniqueId();
         
         if (playerUuid.equals(targetUuid)) {
-            player.sendMessage(Component.text("Vous ne pouvez pas vous inviter vous-même.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous ne pouvez pas vous inviter vous-même.", NamedTextColor.RED));
             return;
         }
         
         if (partyManager.getPartyLeader(targetUuid) != null) {
-            player.sendMessage(Component.text("Ce joueur est déjà dans un groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Ce joueur est déjà dans un groupe.", NamedTextColor.RED));
             return;
         }
         
         if (partyManager.arePartyInvitesBlocked(targetUuid)) {
-            player.sendMessage(Component.text("Ce joueur n'accepte pas les invitations de groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Ce joueur n'accepte pas les invitations de groupe.", NamedTextColor.RED));
             return;
         }
         
         partyManager.sendInvite(playerUuid, targetUuid);
-        player.sendMessage(Component.text("Invitation envoyée à " + target.getUsername() + ".", NamedTextColor.GREEN));
+        player.sendMessage(ProxyPrefix.message("Invitation envoyée à " + target.getUsername() + ".", NamedTextColor.GREEN));
         
-        target.sendMessage(Component.text("Vous avez reçu une invitation de groupe de " + player.getUsername() + ".", NamedTextColor.YELLOW));
+        target.sendMessage(ProxyPrefix.get().append(Component.text("Vous avez reçu une invitation de groupe de " + player.getUsername() + ".", NamedTextColor.YELLOW)));
         
         Component acceptButton = Component.text("[ACCEPTER]")
             .color(NamedTextColor.GREEN)
@@ -162,14 +163,14 @@ public class PartyCommand implements SimpleCommand {
 
     private void handleAccept(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(Component.text("Usage: /party accept <joueur>", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Usage: /party accept <joueur>", NamedTextColor.RED));
             return;
         }
         
         UUID playerUuid = player.getUniqueId();
         
         if (partyManager.getPartyLeader(playerUuid) != null) {
-            player.sendMessage(Component.text("Vous êtes déjà dans un groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous êtes déjà dans un groupe.", NamedTextColor.RED));
             return;
         }
         
@@ -177,7 +178,7 @@ public class PartyCommand implements SimpleCommand {
         Optional<Player> senderOpt = server.getPlayer(senderName);
         
         if (senderOpt.isEmpty()) {
-            player.sendMessage(Component.text("Le joueur qui vous a invité est hors ligne.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Le joueur qui vous a invité est hors ligne.", NamedTextColor.RED));
             return;
         }
         
@@ -185,7 +186,7 @@ public class PartyCommand implements SimpleCommand {
         UUID senderUuid = sender.getUniqueId();
         
         if (!partyManager.hasInvite(playerUuid, senderUuid)) {
-            player.sendMessage(Component.text("Vous n'avez pas d'invitation de ce joueur ou elle a expiré.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous n'avez pas d'invitation de ce joueur ou elle a expiré.", NamedTextColor.RED));
             return;
         }
         
@@ -205,7 +206,7 @@ public class PartyCommand implements SimpleCommand {
 
     private void handleDeny(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage(Component.text("Usage: /party deny <joueur>", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Usage: /party deny <joueur>", NamedTextColor.RED));
             return;
         }
         
@@ -214,7 +215,7 @@ public class PartyCommand implements SimpleCommand {
         Optional<Player> senderOpt = server.getPlayer(senderName);
         
         if (senderOpt.isEmpty()) {
-            player.sendMessage(Component.text("Le joueur est hors ligne.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Le joueur est hors ligne.", NamedTextColor.RED));
             return;
         }
         
@@ -222,18 +223,18 @@ public class PartyCommand implements SimpleCommand {
         UUID senderUuid = sender.getUniqueId();
         
         if (!partyManager.hasInvite(playerUuid, senderUuid)) {
-            player.sendMessage(Component.text("Vous n'avez pas d'invitation de ce joueur ou elle a expiré.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous n'avez pas d'invitation de ce joueur ou elle a expiré.", NamedTextColor.RED));
             return;
         }
         
         partyManager.removeInvite(playerUuid, senderUuid);
-        player.sendMessage(Component.text("Vous avez refusé l'invitation.", NamedTextColor.YELLOW));
-        sender.sendMessage(Component.text(player.getUsername() + " a refusé votre invitation.", NamedTextColor.RED));
+        player.sendMessage(ProxyPrefix.message("Vous avez refusé l'invitation.", NamedTextColor.YELLOW));
+        sender.sendMessage(ProxyPrefix.message(player.getUsername() + " a refusé votre invitation.", NamedTextColor.RED));
     }
 
     private void handleLeave(Player player, UUID leaderUuid) {
         if (leaderUuid == null) {
-            player.sendMessage(Component.text("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
             return;
         }
         
@@ -243,19 +244,19 @@ public class PartyCommand implements SimpleCommand {
             handleDisband(player, leaderUuid);
         } else {
             partyManager.removeMember(playerUuid);
-            player.sendMessage(Component.text("Vous avez quitté le groupe.", NamedTextColor.YELLOW));
-            sendMessageToParty(leaderUuid, Component.text(player.getUsername() + " a quitté le groupe.", NamedTextColor.YELLOW));
+            player.sendMessage(ProxyPrefix.message("Vous avez quitté le groupe.", NamedTextColor.YELLOW));
+            sendMessageToParty(leaderUuid, ProxyPrefix.message(player.getUsername() + " a quitté le groupe.", NamedTextColor.YELLOW));
         }
     }
 
     private void handleKick(Player player, UUID leaderUuid, String[] args) {
         if (leaderUuid == null || !leaderUuid.equals(player.getUniqueId())) {
-            player.sendMessage(Component.text("Vous devez être le chef de groupe pour expulser un joueur.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous devez être le chef de groupe pour expulser un joueur.", NamedTextColor.RED));
             return;
         }
         
         if (args.length < 2) {
-            player.sendMessage(Component.text("Usage: /party kick <joueur>", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Usage: /party kick <joueur>", NamedTextColor.RED));
             return;
         }
         
@@ -263,7 +264,7 @@ public class PartyCommand implements SimpleCommand {
         Optional<Player> targetOpt = server.getPlayer(targetName);
         
         if (targetOpt.isEmpty()) {
-            player.sendMessage(Component.text("Joueur introuvable.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Joueur introuvable.", NamedTextColor.RED));
             return;
         }
         
@@ -271,42 +272,42 @@ public class PartyCommand implements SimpleCommand {
         UUID targetUuid = target.getUniqueId();
         
         if (leaderUuid.equals(targetUuid)) {
-            player.sendMessage(Component.text("Vous ne pouvez pas vous expulser vous-même.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous ne pouvez pas vous expulser vous-même.", NamedTextColor.RED));
             return;
         }
         
         UUID targetLeader = partyManager.getPartyLeader(targetUuid);
         if (targetLeader == null || !targetLeader.equals(leaderUuid)) {
-            player.sendMessage(Component.text("Ce joueur n'est pas dans votre groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Ce joueur n'est pas dans votre groupe.", NamedTextColor.RED));
             return;
         }
         
         partyManager.removeMember(targetUuid);
-        target.sendMessage(Component.text("Vous avez été expulsé du groupe.", NamedTextColor.RED));
-        sendMessageToParty(leaderUuid, Component.text(target.getUsername() + " a été expulsé du groupe.", NamedTextColor.YELLOW));
+        target.sendMessage(ProxyPrefix.message("Vous avez été expulsé du groupe.", NamedTextColor.RED));
+        sendMessageToParty(leaderUuid, ProxyPrefix.message(target.getUsername() + " a été expulsé du groupe.", NamedTextColor.YELLOW));
     }
 
     private void handleDisband(Player player, UUID leaderUuid) {
         if (leaderUuid == null || !leaderUuid.equals(player.getUniqueId())) {
-            player.sendMessage(Component.text("Vous devez être le chef de groupe pour dissoudre le groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous devez être le chef de groupe pour dissoudre le groupe.", NamedTextColor.RED));
             return;
         }
         
-        sendMessageToParty(leaderUuid, Component.text("Le groupe a été dissous.", NamedTextColor.RED));
+        sendMessageToParty(leaderUuid, ProxyPrefix.message("Le groupe a été dissous.", NamedTextColor.RED));
         partyManager.disbandParty(leaderUuid);
     }
 
     private void handleList(Player player, UUID leaderUuid) {
         if (leaderUuid == null) {
-            player.sendMessage(Component.text("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
             return;
         }
         
         Set<UUID> members = partyManager.getPartyMembers(leaderUuid);
         player.sendMessage(Component.text("")
-                .append(Component.text("====== ").color(NamedTextColor.LIGHT_PURPLE))
+                .append(Component.text("====== ").color(NamedTextColor.DARK_GRAY))
                 .append(Component.text("Membres du Groupe (" + members.size() + ")").color(NamedTextColor.GOLD))
-                .append(Component.text(" ======").color(NamedTextColor.LIGHT_PURPLE)));
+                .append(Component.text(" ======").color(NamedTextColor.DARK_GRAY)));
         for (UUID memberUuid : members) {
             Optional<Player> memberOpt = server.getPlayer(memberUuid);
             if (memberOpt.isPresent()) {
@@ -323,17 +324,17 @@ public class PartyCommand implements SimpleCommand {
                     .append(Component.text(" [Hors ligne]", NamedTextColor.RED)));
             }
         }
-        player.sendMessage(Component.text("============================").color(NamedTextColor.LIGHT_PURPLE));
+        player.sendMessage(Component.text("============================").color(NamedTextColor.DARK_GRAY));
     }
 
     private void handleChat(Player player, UUID leaderUuid, String[] args) {
         if (leaderUuid == null) {
-            player.sendMessage(Component.text("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous n'êtes pas dans un groupe.", NamedTextColor.RED));
             return;
         }
         
         if (args.length < 2) {
-            player.sendMessage(Component.text("Usage: /party chat <message>", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Usage: /party chat <message>", NamedTextColor.RED));
             return;
         }
         
@@ -354,9 +355,9 @@ public class PartyCommand implements SimpleCommand {
 
     private void sendHelp(Player player) {
         player.sendMessage(Component.text("").color(NamedTextColor.DARK_GRAY)
-                .append(Component.text("====== ").color(NamedTextColor.LIGHT_PURPLE))
+                .append(Component.text("====== ").color(NamedTextColor.DARK_GRAY))
                 .append(Component.text("Système de Groupe").color(NamedTextColor.GOLD))
-                .append(Component.text(" ======").color(NamedTextColor.LIGHT_PURPLE)));
+                .append(Component.text(" ======").color(NamedTextColor.DARK_GRAY)));
         
         player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party invite <joueur>").color(NamedTextColor.YELLOW)).append(Component.text(" - Inviter un joueur").color(NamedTextColor.GRAY)));
         player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party accept <joueur>").color(NamedTextColor.YELLOW)).append(Component.text(" - Accepter une invitation").color(NamedTextColor.GRAY)));
@@ -367,6 +368,6 @@ public class PartyCommand implements SimpleCommand {
         player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party list").color(NamedTextColor.YELLOW)).append(Component.text(" - Voir les membres").color(NamedTextColor.GRAY)));
         player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party chat <message>").color(NamedTextColor.YELLOW)).append(Component.text(" - Parler au groupe").color(NamedTextColor.GRAY)));
         
-        player.sendMessage(Component.text("============================").color(NamedTextColor.LIGHT_PURPLE));
+        player.sendMessage(Component.text("============================").color(NamedTextColor.DARK_GRAY));
     }
 }

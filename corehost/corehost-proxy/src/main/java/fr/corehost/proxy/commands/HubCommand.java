@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import fr.corehost.proxy.utils.ProxyPrefix;
 
 import java.util.Optional;
 
@@ -34,7 +35,7 @@ public class HubCommand implements SimpleCommand {
         // Check if the player is already on the Lobby server
         Optional<RegisteredServer> currentServer = player.getCurrentServer().map(serverConnection -> serverConnection.getServer());
         if (currentServer.isPresent() && currentServer.get().getServerInfo().getName().toLowerCase().contains("lobby")) {
-            player.sendMessage(Component.text("Vous êtes déjà sur le Lobby.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous êtes déjà sur le Lobby.", NamedTextColor.RED));
             return;
         }
 
@@ -44,10 +45,10 @@ public class HubCommand implements SimpleCommand {
                 .findFirst();
 
         if (lobbyServer.isPresent()) {
-            player.sendMessage(Component.text("Redirection vers le Hub...", NamedTextColor.GREEN));
+            player.sendMessage(ProxyPrefix.message("Redirection vers le Hub...", NamedTextColor.GREEN));
             player.createConnectionRequest(lobbyServer.get()).fireAndForget();
         } else {
-            player.sendMessage(Component.text("Aucun Hub n'est disponible pour le moment.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Aucun Hub n'est disponible pour le moment.", NamedTextColor.RED));
         }
     }
 }

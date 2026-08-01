@@ -39,7 +39,7 @@ public class IgnoreMenu implements CustomMenu {
     }
 
     public void open(Player player) {
-        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.RED + "Joueurs Ignorés");
+        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW + "Joueurs Ignorés");
 
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
 
@@ -62,13 +62,8 @@ public class IgnoreMenu implements CustomMenu {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!player.isOnline()) return;
 
-                // ── Border decoration ──
-                ItemStack filler1 = new ItemBuilder(Material.RED_STAINED_GLASS_PANE).setName(" ").build();
-                ItemStack filler2 = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE).setName(" ").build();
-
-                for (int i = 45; i < 54; i++) {
-                    inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
-                }
+                // ── Bottom bar decoration (unified Pink + Purple) ──
+                MenuUtils.fillBottomRow(inventory);
 
                 // ── Populate Ignored Players ──
                 int slot = 0;
@@ -102,8 +97,7 @@ public class IgnoreMenu implements CustomMenu {
                 }
 
                 // ── Back to Settings ──
-                ItemStack back = new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour aux Paramètres").build();
-                inventory.setItem(49, back);
+                inventory.setItem(49, MenuUtils.getBackToSettingsButton());
 
                 player.openInventory(inventory);
             });

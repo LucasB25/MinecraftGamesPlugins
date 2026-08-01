@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.Player;
 import fr.corehost.proxy.CoreHostProxy;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import fr.corehost.proxy.utils.ProxyPrefix;
 
 import java.util.Optional;
 import java.util.Set;
@@ -37,7 +38,7 @@ public class PlayerConnectionListener {
                         Optional<Player> onlineFriend = plugin.getServer().getPlayer(friendUuid);
                         onlineFriend.ifPresent(p -> {
                             if (plugin.getFriendManager().areNotificationsEnabled(friendUuid)) {
-                                p.sendMessage(Component.text("► ").color(NamedTextColor.DARK_GRAY)
+                                p.sendMessage(ProxyPrefix.get()
                                     .append(Component.text("Votre ami ").color(NamedTextColor.YELLOW))
                                     .append(Component.text(player.getUsername()).color(NamedTextColor.GOLD))
                                     .append(Component.text(" vient de se connecter !").color(NamedTextColor.YELLOW)));

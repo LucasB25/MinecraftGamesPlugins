@@ -29,7 +29,7 @@ public class HostSearchMenu implements CustomMenu {
     private HostStatus statusFilter = null;
 
     public HostSearchMenu() {
-        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.DARK_AQUA + "Recherche de Serveurs");
+        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.GOLD + "Recherche de Serveurs");
         initializeItems();
     }
 
@@ -40,12 +40,7 @@ public class HostSearchMenu implements CustomMenu {
     }
     
     private void drawBottomBar() {
-        ItemStack filler1 = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).setName(" ").build();
-        ItemStack filler2 = new ItemBuilder(Material.LIGHT_BLUE_STAINED_GLASS_PANE).setName(" ").build();
-        
-        for (int i = 45; i < 54; i++) {
-            inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
-        }
+        MenuUtils.fillBottomRow(inventory);
 
         // Create Host item
         String currentFilter = gameFilter.equals("ALL") ? "Tous" : gameFilter;

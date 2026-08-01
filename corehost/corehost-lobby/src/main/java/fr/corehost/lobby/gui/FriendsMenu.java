@@ -48,7 +48,7 @@ public class FriendsMenu implements CustomMenu {
         }
 
         this.inventory = Bukkit.createInventory(this, 54,
-                ChatColor.DARK_GRAY + "» " + ChatColor.GREEN + "Amis" + ChatColor.DARK_GRAY + " - Page " + (page + 1));
+                ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Amis" + ChatColor.DARK_GRAY + " - Page " + (page + 1));
 
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
 

@@ -1,6 +1,7 @@
 package fr.corehost.lobby.gui;
 
 import fr.corehost.lobby.CoreHostLobby;
+import fr.corehost.lobby.utils.ItemBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -9,10 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SumoSettingsMenu implements CustomMenu {
 
@@ -26,76 +23,57 @@ public class SumoSettingsMenu implements CustomMenu {
     }
 
     private void initializeItems() {
-        // Border decoration
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta = filler.getItemMeta();
-        if (meta != null) { meta.setDisplayName(" "); filler.setItemMeta(meta); }
-        
-        for (int i = 0; i < inventory.getSize(); i++) {
-            if (i < 9 || i > 17 || i == 9 || i == 17) {
-                inventory.setItem(i, filler);
-            }
-        }
+        // Border decoration (unified Pink + Purple)
+        MenuUtils.fillBorder(inventory);
 
         // BO3 Item
-        ItemStack bo3 = new ItemStack(Material.SLIME_BALL);
-        bo3.setAmount(3);
-        ItemMeta bo3Meta = bo3.getItemMeta();
-        if (bo3Meta != null) {
-            bo3Meta.setDisplayName(ChatColor.YELLOW + "Best Of 3");
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Le premier arrivé à 2 victoires");
-            lore.add(ChatColor.GRAY + "gagne la partie.");
-            lore.add("");
-            lore.add(ChatColor.GREEN + "► Cliquez pour héberger en BO3");
-            bo3Meta.setLore(lore);
-            bo3.setItemMeta(bo3Meta);
-        }
+        ItemStack bo3 = new ItemBuilder(Material.SLIME_BALL, 3)
+            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Best Of 3")
+            .setLore(
+                "",
+                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Victoires nécessaires : " + ChatColor.WHITE + "2",
+                "",
+                ChatColor.GRAY + "Le premier arrivé à 2 victoires",
+                ChatColor.GRAY + "gagne la partie.",
+                "",
+                ChatColor.GREEN + "► Cliquez pour héberger en BO3"
+            ).build();
         inventory.setItem(11, bo3);
 
         // BO5 Item
-        ItemStack bo5 = new ItemStack(Material.SLIME_BALL);
-        bo5.setAmount(5);
-        ItemMeta bo5Meta = bo5.getItemMeta();
-        if (bo5Meta != null) {
-            bo5Meta.setDisplayName(ChatColor.YELLOW + "Best Of 5");
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Le premier arrivé à 3 victoires");
-            lore.add(ChatColor.GRAY + "gagne la partie.");
-            lore.add("");
-            lore.add(ChatColor.GREEN + "► Cliquez pour héberger en BO5");
-            bo5Meta.setLore(lore);
-            bo5.setItemMeta(bo5Meta);
-        }
+        ItemStack bo5 = new ItemBuilder(Material.SLIME_BALL, 5)
+            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Best Of 5")
+            .setLore(
+                "",
+                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Victoires nécessaires : " + ChatColor.WHITE + "3",
+                "",
+                ChatColor.GRAY + "Le premier arrivé à 3 victoires",
+                ChatColor.GRAY + "gagne la partie.",
+                "",
+                ChatColor.GREEN + "► Cliquez pour héberger en BO5"
+            ).build();
         inventory.setItem(13, bo5);
 
         // BO7 Item
-        ItemStack bo7 = new ItemStack(Material.SLIME_BALL);
-        bo7.setAmount(7);
-        ItemMeta bo7Meta = bo7.getItemMeta();
-        if (bo7Meta != null) {
-            bo7Meta.setDisplayName(ChatColor.YELLOW + "Best Of 7");
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Le premier arrivé à 4 victoires");
-            lore.add(ChatColor.GRAY + "gagne la partie.");
-            lore.add("");
-            lore.add(ChatColor.GREEN + "► Cliquez pour héberger en BO7");
-            bo7Meta.setLore(lore);
-            bo7.setItemMeta(bo7Meta);
-        }
+        ItemStack bo7 = new ItemBuilder(Material.SLIME_BALL, 7)
+            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Best Of 7")
+            .setLore(
+                "",
+                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Victoires nécessaires : " + ChatColor.WHITE + "4",
+                "",
+                ChatColor.GRAY + "Le premier arrivé à 4 victoires",
+                ChatColor.GRAY + "gagne la partie.",
+                "",
+                ChatColor.GREEN + "► Cliquez pour héberger en BO7"
+            ).build();
         inventory.setItem(15, bo7);
 
-        // Back button
-        ItemStack back = new ItemStack(Material.ARROW);
-        ItemMeta backMeta = back.getItemMeta();
-        if (backMeta != null) {
-            backMeta.setDisplayName(ChatColor.RED + "◄ Retour");
-            back.setItemMeta(backMeta);
-        }
-        inventory.setItem(22, back);
+        // Back button (unified)
+        inventory.setItem(22, MenuUtils.getBackToCreateButton());
     }
 
     public void open(Player player) {
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
         player.openInventory(inventory);
     }
 

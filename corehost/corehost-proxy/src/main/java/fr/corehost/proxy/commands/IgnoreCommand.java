@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import fr.corehost.proxy.CoreHostProxy;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import fr.corehost.proxy.utils.ProxyPrefix;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +35,7 @@ public class IgnoreCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length != 1) {
-            player.sendMessage(Component.text("Utilisation : /ignore <joueur>", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Utilisation : /ignore <joueur>", NamedTextColor.RED));
             return;
         }
 
@@ -44,14 +45,14 @@ public class IgnoreCommand implements SimpleCommand {
         // For simplicity we require the player to be online to ignore them by name, 
         // because we don't have a reliable UUID fetcher by name in proxy without FriendManager/DB
         if (targetOpt.isEmpty()) {
-            player.sendMessage(Component.text("Joueur introuvable ou hors ligne.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Joueur introuvable ou hors ligne.", NamedTextColor.RED));
             return;
         }
 
         Player target = targetOpt.get();
 
         if (player.getUniqueId().equals(target.getUniqueId())) {
-            player.sendMessage(Component.text("Vous ne pouvez pas vous ignorer vous-même.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous ne pouvez pas vous ignorer vous-même.", NamedTextColor.RED));
             return;
         }
 
@@ -59,10 +60,10 @@ public class IgnoreCommand implements SimpleCommand {
 
         if (isIgnoring) {
             plugin.getMessageManager().removeIgnore(player.getUniqueId(), target.getUniqueId());
-            player.sendMessage(Component.text("Vous n'ignorez plus " + target.getUsername() + ".", NamedTextColor.GREEN));
+            player.sendMessage(ProxyPrefix.message("Vous n'ignorez plus " + target.getUsername() + ".", NamedTextColor.GREEN));
         } else {
             plugin.getMessageManager().addIgnore(player.getUniqueId(), target.getUniqueId());
-            player.sendMessage(Component.text("Vous ignorez désormais " + target.getUsername() + ".", NamedTextColor.YELLOW));
+            player.sendMessage(ProxyPrefix.message("Vous ignorez désormais " + target.getUsername() + ".", NamedTextColor.YELLOW));
         }
     }
 

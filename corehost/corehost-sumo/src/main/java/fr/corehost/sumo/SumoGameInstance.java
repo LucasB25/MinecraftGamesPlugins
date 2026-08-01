@@ -219,10 +219,12 @@ public class SumoGameInstance {
         }
     }
 
+    private static final String SUMO_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "Sumo" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+
     private void broadcast(String message) {
         for (UUID uuid : players) {
             Player p = Bukkit.getPlayer(uuid);
-            if (p != null) p.sendMessage(message);
+            if (p != null) p.sendMessage(SUMO_PREFIX + message);
         }
     }
 

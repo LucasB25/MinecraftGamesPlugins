@@ -29,15 +29,8 @@ public class HostCreateMenu implements CustomMenu {
     }
 
     private void initializeItems() {
-        // Border decoration
-        ItemStack filler1 = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE).setName(" ").build();
-        ItemStack filler2 = new ItemBuilder(Material.ORANGE_STAINED_GLASS_PANE).setName(" ").build();
-        
-        for (int i = 0; i < inventory.getSize(); i++) {
-            if (i < 9 || i > 17 || i == 9 || i == 17) {
-                inventory.setItem(i, (i % 2 == 0) ? filler1 : filler2);
-            }
-        }
+        // Border decoration (unified Pink + Purple)
+        MenuUtils.fillBorder(inventory);
 
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
         ConfigurationSection gamesSection = plugin.getConfig().getConfigurationSection("games");
@@ -76,6 +69,7 @@ public class HostCreateMenu implements CustomMenu {
     }
 
     public void open(Player player) {
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
         player.openInventory(inventory);
     }
 

@@ -53,4 +53,12 @@ public class MenuUtils {
     public static ItemStack getNextPageButton() {
         return new ItemBuilder(Material.ARROW).setName(ChatColor.YELLOW + "Page Suivante ►").build();
     }
+
+    public static ItemStack getBackToSettingsButton() {
+        return new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour aux Paramètres").build();
+    }
+
+    public static ItemStack getBackToCreateButton() {
+        return new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour à la Création").build();
+    }
 }

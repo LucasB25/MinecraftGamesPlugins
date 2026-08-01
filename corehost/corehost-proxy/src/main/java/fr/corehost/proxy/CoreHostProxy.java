@@ -15,6 +15,11 @@ import fr.corehost.proxy.config.ProxyConfig;
 import fr.corehost.proxy.commands.HubCommand;
 import fr.corehost.proxy.commands.FriendCommand;
 import fr.corehost.proxy.commands.PartyCommand;
+import fr.corehost.proxy.commands.PremiumExceptionCommand;
+import fr.corehost.proxy.commands.MsgCommand;
+import fr.corehost.proxy.commands.ReplyCommand;
+import fr.corehost.proxy.commands.IgnoreCommand;
+import fr.corehost.proxy.messages.MessageManager;
 import fr.corehost.proxy.listeners.PlayerConnectionListener;
 import fr.corehost.proxy.listeners.PartyListener;
 import com.google.gson.Gson;
@@ -43,6 +48,8 @@ public class CoreHostProxy {
     private PartyManager partyManager;
     private fr.corehost.proxy.auth.AuthManager authManager;
     private fr.corehost.proxy.discord.DiscordManager discordManager;
+    private fr.corehost.proxy.redis.ProxyPubSubListener proxyPubSubListener;
+    private MessageManager messageManager;
 
     @Inject
     public CoreHostProxy(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
@@ -59,10 +66,14 @@ public class CoreHostProxy {
 
         try {
             this.redisManager = new RedisManager(config.getRedisHost(), config.getRedisPort(), config.getRedisPassword());
+            this.messageManager = new MessageManager(this);
             this.hostManager = new HostManager(this.redisManager);
             this.friendManager = new FriendManager(this.redisManager);
             this.partyManager = new PartyManager(this.redisManager);
             logger.info("Connected to Redis successfully.");
+            
+            this.proxyPubSubListener = new fr.corehost.proxy.redis.ProxyPubSubListener(this, server);
+            this.redisManager.subscribe(proxyPubSubListener, "corehost:proxy:events");
             
             // Register Listener
             server.getEventManager().register(this, new PlayerConnectionListener(this));
@@ -87,6 +98,9 @@ public class CoreHostProxy {
             // Register Command
             server.getCommandManager().register("friend", new FriendCommand(this, server), "f", "amie", "amis");
             server.getCommandManager().register("party", new PartyCommand(this, server), "p", "groupe");
+            server.getCommandManager().register("msg", new MsgCommand(this, server), "w", "tell", "m");
+            server.getCommandManager().register("reply", new ReplyCommand(this, server), "r", "rep");
+            server.getCommandManager().register("ignore", new IgnoreCommand(this, server));
             
         } catch (Exception e) {
             logger.error("Could not connect to Redis", e);
@@ -159,6 +173,10 @@ public class CoreHostProxy {
 
     public fr.corehost.proxy.discord.DiscordManager getDiscordManager() {
         return discordManager;
+    }
+
+    public MessageManager getMessageManager() {
+        return messageManager;
     }
 
     private void registerCloudNet() {

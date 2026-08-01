@@ -116,4 +116,26 @@ public class PartyManager {
     public int getPartyLimit(UUID leader) {
         return DEFAULT_LIMIT;
     }
+
+    /**
+     * Vérifie si le joueur a bloqué les invitations de groupe.
+     */
+    public boolean arePartyInvitesBlocked(UUID player) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            return jedis.exists("corehost:party:settings:invites_blocked:" + player.toString());
+        }
+    }
+
+    /**
+     * Bloque ou débloque les invitations de groupe pour un joueur.
+     */
+    public void setPartyInvitesBlocked(UUID player, boolean blocked) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            if (blocked) {
+                jedis.set("corehost:party:settings:invites_blocked:" + player.toString(), "true");
+            } else {
+                jedis.del("corehost:party:settings:invites_blocked:" + player.toString());
+            }
+        }
+    }
 }

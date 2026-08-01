@@ -19,7 +19,11 @@ public class SpawnCommand implements CommandExecutor {
         Player player = (Player) sender;
         
         // Teleport to the world's spawn location
-        player.teleport(player.getWorld().getSpawnLocation());
+        org.bukkit.Location spawn = player.getWorld().getSpawnLocation().clone();
+        spawn.setX(spawn.getBlockX() + 0.5);
+        spawn.setZ(spawn.getBlockZ() + 0.5);
+        spawn.setYaw(spawn.getYaw() + 180f);
+        player.teleport(spawn);
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
         player.sendMessage(ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GREEN + "Téléportation au spawn du Lobby !");
         

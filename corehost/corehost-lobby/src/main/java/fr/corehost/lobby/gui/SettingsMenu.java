@@ -30,6 +30,10 @@ public class SettingsMenu implements CustomMenu {
     }
 
     public void open(Player player) {
+        open(player, true);
+    }
+
+    public void open(Player player, boolean playSound) {
         this.inventory = Bukkit.createInventory(this, 27,
                 ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW + "Paramètres");
 
@@ -38,11 +42,20 @@ public class SettingsMenu implements CustomMenu {
             return;
         }
 
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        if (playSound) {
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        }
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             boolean isBlocked = plugin.getFriendManager().areFriendRequestsBlocked(player.getUniqueId());
             boolean notificationsEnabled = plugin.getFriendManager().areNotificationsEnabled(player.getUniqueId());
+            boolean partyBlocked = plugin.getPartyManager().arePartyInvitesBlocked(player.getUniqueId());
+            
+            boolean pmsBlockedTemp = false;
+            if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                pmsBlockedTemp = "true".equals(plugin.getRedisManager().get("corehost:messages:blocked:" + player.getUniqueId().toString()));
+            }
+            final boolean pmsBlocked = pmsBlockedTemp;
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!player.isOnline()) return;
@@ -89,7 +102,7 @@ public class SettingsMenu implements CustomMenu {
                 }
                 inventory.setItem(11, friendRequestToggle);
 
-                // ── Slot 13: Notifications Toggle ──
+                // ── Slot 12: Notifications Toggle ──
                 ItemStack notificationsToggle = new ItemStack(notificationsEnabled ? Material.LIME_DYE : Material.RED_DYE);
                 ItemMeta notifMeta = notificationsToggle.getItemMeta();
                 if (notifMeta != null) {
@@ -114,23 +127,77 @@ public class SettingsMenu implements CustomMenu {
                     notifMeta.setLore(lore);
                     notificationsToggle.setItemMeta(notifMeta);
                 }
-                inventory.setItem(13, notificationsToggle);
+                inventory.setItem(12, notificationsToggle);
 
-                // ── Slot 15: Party Invitations Toggle (Placeholder) ──
-                ItemStack partyToggle = new ItemStack(Material.LIME_DYE);
+                // ── Slot 13: Party Invitations Toggle ──
+                ItemStack partyToggle = new ItemStack(partyBlocked ? Material.RED_DYE : Material.LIME_DYE);
                 ItemMeta partyMeta = partyToggle.getItemMeta();
                 if (partyMeta != null) {
                     partyMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Invitations de Groupe");
                     List<String> lore = new ArrayList<>();
                     lore.add("");
-                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.GREEN + "Autorisé");
-                    lore.add("");
-                    lore.add(ChatColor.GRAY + "Prochainement disponible.");
-                    lore.add("");
+                    if (partyBlocked) {
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.RED + "Bloqué");
+                        lore.add("");
+                        lore.add(ChatColor.GRAY + "Personne ne peut vous envoyer");
+                        lore.add(ChatColor.GRAY + "d'invitation de groupe.");
+                        lore.add("");
+                        lore.add(ChatColor.GREEN + "► Cliquez pour Autoriser");
+                    } else {
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.GREEN + "Autorisé");
+                        lore.add("");
+                        lore.add(ChatColor.GRAY + "Tout le monde peut vous envoyer");
+                        lore.add(ChatColor.GRAY + "des invitations de groupe.");
+                        lore.add("");
+                        lore.add(ChatColor.RED + "► Cliquez pour Bloquer");
+                    }
                     partyMeta.setLore(lore);
                     partyToggle.setItemMeta(partyMeta);
                 }
-                inventory.setItem(15, partyToggle);
+                inventory.setItem(13, partyToggle);
+
+                // ── Slot 14: Private Messages Toggle ──
+                ItemStack pmsToggle = new ItemStack(pmsBlocked ? Material.RED_DYE : Material.LIME_DYE);
+                ItemMeta pmsMeta = pmsToggle.getItemMeta();
+                if (pmsMeta != null) {
+                    pmsMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Messages Privés");
+                    List<String> lore = new ArrayList<>();
+                    lore.add("");
+                    if (pmsBlocked) {
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.RED + "Bloqué");
+                        lore.add("");
+                        lore.add(ChatColor.GRAY + "Personne ne peut vous envoyer");
+                        lore.add(ChatColor.GRAY + "de messages privés.");
+                        lore.add("");
+                        lore.add(ChatColor.GREEN + "► Cliquez pour Autoriser");
+                    } else {
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + ChatColor.GREEN + "Autorisé");
+                        lore.add("");
+                        lore.add(ChatColor.GRAY + "Tout le monde peut vous envoyer");
+                        lore.add(ChatColor.GRAY + "des messages privés.");
+                        lore.add("");
+                        lore.add(ChatColor.RED + "► Cliquez pour Bloquer");
+                    }
+                    pmsMeta.setLore(lore);
+                    pmsToggle.setItemMeta(pmsMeta);
+                }
+                inventory.setItem(14, pmsToggle);
+
+                // ── Slot 15: Ignored Players ──
+                ItemStack ignoredPlayers = new ItemStack(Material.BARRIER);
+                ItemMeta ignoredMeta = ignoredPlayers.getItemMeta();
+                if (ignoredMeta != null) {
+                    ignoredMeta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Joueurs Ignorés");
+                    List<String> lore = new ArrayList<>();
+                    lore.add("");
+                    lore.add(ChatColor.GRAY + "Gérez la liste des joueurs");
+                    lore.add(ChatColor.GRAY + "que vous avez ignorés.");
+                    lore.add("");
+                    lore.add(ChatColor.YELLOW + "► Cliquez pour Gérer");
+                    ignoredMeta.setLore(lore);
+                    ignoredPlayers.setItemMeta(ignoredMeta);
+                }
+                inventory.setItem(15, ignoredPlayers);
 
                 // ── Slot 22: Back to Profile ──
                 ItemStack back = new ItemStack(Material.ARROW);
@@ -177,14 +244,14 @@ public class SettingsMenu implements CustomMenu {
                     } else {
                         player.sendMessage(prefix + "Demandes d'amis " + ChatColor.RED + "bloquées" + ChatColor.GRAY + ".");
                     }
-                    open(player); // Refresh menu
+                    open(player, false); // Refresh menu
                 });
             });
             return;
         }
 
         // ── Notifications Toggle ──
-        if (slot == 13) {
+        if (slot == 12) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 boolean enabled = plugin.getFriendManager().areNotificationsEnabled(player.getUniqueId());
@@ -197,9 +264,61 @@ public class SettingsMenu implements CustomMenu {
                     } else {
                         player.sendMessage(prefix + "Notifications " + ChatColor.GREEN + "activées" + ChatColor.GRAY + ".");
                     }
-                    open(player); // Refresh menu
+                    open(player, false); // Refresh menu
                 });
             });
+            return;
+        }
+
+        // ── Party Invitations Toggle ──
+        if (slot == 13) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                boolean partyBlocked = plugin.getPartyManager().arePartyInvitesBlocked(player.getUniqueId());
+                plugin.getPartyManager().setPartyInvitesBlocked(player.getUniqueId(), !partyBlocked);
+
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                    if (partyBlocked) {
+                        player.sendMessage(prefix + "Invitations de groupe " + ChatColor.GREEN + "autorisées" + ChatColor.GRAY + ".");
+                    } else {
+                        player.sendMessage(prefix + "Invitations de groupe " + ChatColor.RED + "bloquées" + ChatColor.GRAY + ".");
+                    }
+                    open(player, false); // Refresh menu
+                });
+            });
+            return;
+        }
+
+        // ── Private Messages Toggle ──
+        if (slot == 14) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    boolean pmsBlocked = "true".equals(plugin.getRedisManager().get("corehost:messages:blocked:" + player.getUniqueId().toString()));
+                    if (pmsBlocked) {
+                        plugin.getRedisManager().del("corehost:messages:blocked:" + player.getUniqueId().toString());
+                    } else {
+                        plugin.getRedisManager().set("corehost:messages:blocked:" + player.getUniqueId().toString(), "true");
+                    }
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                        if (pmsBlocked) {
+                            player.sendMessage(prefix + "Messages privés " + ChatColor.GREEN + "autorisés" + ChatColor.GRAY + ".");
+                        } else {
+                            player.sendMessage(prefix + "Messages privés " + ChatColor.RED + "bloqués" + ChatColor.GRAY + ".");
+                        }
+                        open(player, false); // Refresh menu
+                    });
+                }
+            });
+            return;
+        }
+
+        // ── Ignored Players ──
+        if (slot == 15) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+            new IgnoreMenu(plugin, player).open(player);
             return;
         }
     }

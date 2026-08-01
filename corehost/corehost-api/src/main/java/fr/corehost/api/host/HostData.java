@@ -8,19 +8,23 @@ public class HostData {
     private String ownerName;
     private String gameType;
     private String serverName;
+    private String worldName;
     private HostStatus status;
     private int maxPlayers;
     private int currentPlayers;
+    private int bestOf;
 
-    public HostData(UUID hostId, UUID ownerUuid, String ownerName, String gameType, String serverName, int maxPlayers) {
+    public HostData(UUID hostId, UUID ownerUuid, String ownerName, String gameType, String serverName, String worldName, int maxPlayers) {
         this.hostId = hostId;
         this.ownerUuid = ownerUuid;
         this.ownerName = ownerName;
         this.gameType = gameType;
         this.serverName = serverName;
+        this.worldName = worldName;
         this.status = HostStatus.STARTING;
         this.maxPlayers = maxPlayers;
         this.currentPlayers = 0;
+        this.bestOf = 3; // Par défaut BO3
     }
 
     // Used for deserialization
@@ -41,6 +45,9 @@ public class HostData {
     public String getServerName() { return serverName; }
     public void setServerName(String serverName) { this.serverName = serverName; }
 
+    public String getWorldName() { return worldName; }
+    public void setWorldName(String worldName) { this.worldName = worldName; }
+
     public HostStatus getStatus() { return status; }
     public void setStatus(HostStatus status) { this.status = status; }
 
@@ -49,4 +56,7 @@ public class HostData {
 
     public int getCurrentPlayers() { return currentPlayers; }
     public void setCurrentPlayers(int currentPlayers) { this.currentPlayers = currentPlayers; }
+
+    public int getBestOf() { return bestOf; }
+    public void setBestOf(int bestOf) { this.bestOf = bestOf; }
 }

@@ -11,6 +11,7 @@ games:
     material: "SLIME_BALL"
     slot: 11
     max-players: 2
+    max-slime-instances: 10
     lore:
       - ""
       - "&7Démarrez un serveur Sumo"
@@ -23,6 +24,7 @@ games:
     material: "RED_BANNER"
     slot: 15
     max-players: 20
+    max-slime-instances: 3
     lore:
       - ""
       - "&7Capture the Flag !"

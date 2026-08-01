@@ -53,8 +53,14 @@ public class PartyMenu implements CustomMenu {
 
             if (leaderUuid != null) {
                 Set<UUID> memberUuids = plugin.getPartyManager().getPartyMembers(leaderUuid);
+                
+                if (memberUuids.contains(leaderUuid)) {
+                    members.add(leaderUuid.toString());
+                }
                 for (UUID uuid : memberUuids) {
-                    members.add(uuid.toString());
+                    if (!uuid.equals(leaderUuid)) {
+                        members.add(uuid.toString());
+                    }
                     String name = Bukkit.getOfflinePlayer(uuid).getName();
                     if (name == null) {
                         name = plugin.getFriendManager().getNameByUuid(uuid);
@@ -164,19 +170,21 @@ public class PartyMenu implements CustomMenu {
                 inventory.setItem(49, back);
 
                 // ── Invite Player (slot 50) — matches FriendsMenu "Ajouter un ami" ──
-                ItemStack inviteItem = new ItemStack(Material.EMERALD);
-                ItemMeta inviteMeta = inviteItem.getItemMeta();
-                if (inviteMeta != null) {
-                    inviteMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Inviter un joueur");
-                    inviteMeta.setLore(Arrays.asList(
-                        "",
-                        ChatColor.GRAY + "Cliquez pour inviter un",
-                        ChatColor.GRAY + "joueur dans votre groupe.",
-                        ""
-                    ));
-                    inviteItem.setItemMeta(inviteMeta);
+                if (isLeader) {
+                    ItemStack inviteItem = new ItemStack(Material.EMERALD);
+                    ItemMeta inviteMeta = inviteItem.getItemMeta();
+                    if (inviteMeta != null) {
+                        inviteMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Inviter un joueur");
+                        inviteMeta.setLore(Arrays.asList(
+                            "",
+                            ChatColor.GRAY + "Cliquez pour inviter un",
+                            ChatColor.GRAY + "joueur dans votre groupe.",
+                            ""
+                        ));
+                        inviteItem.setItemMeta(inviteMeta);
+                    }
+                    inventory.setItem(50, inviteItem);
                 }
-                inventory.setItem(50, inviteItem);
 
                 // ── Leave / Disband Party (slot 51) ──
                 if (leaderUuid != null) {
@@ -218,8 +226,16 @@ public class PartyMenu implements CustomMenu {
 
         // ── Invite Player ──
         if (slot == 50 && clickedItem.getType() == Material.EMERALD) {
+            UUID leaderUuid = plugin.getPartyManager().getPartyLeader(player.getUniqueId());
+            if (leaderUuid != null && !leaderUuid.equals(player.getUniqueId())) {
+                String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+                player.sendMessage(prefix + ChatColor.RED + "Seul le chef de groupe peut inviter des joueurs.");
+                player.closeInventory();
+                return;
+            }
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             player.closeInventory();
+            // Add player to pending party invite list so LobbyListener catches their next chat message
             fr.corehost.lobby.listeners.LobbyListener.pendingPartyInvite.add(player.getUniqueId());
             String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
             player.sendMessage(prefix + "Tapez le " + ChatColor.GREEN + "pseudo" + ChatColor.GRAY + " du joueur à inviter dans le chat.");

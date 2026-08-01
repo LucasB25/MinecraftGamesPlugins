@@ -105,7 +105,13 @@ public class HostCreateMenu implements CustomMenu {
             if (gameId != null) {
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.5f);
                 player.closeInventory();
-                plugin.getCloudNetServiceManager().createHost(player, gameId);
+                
+                if (gameId.equalsIgnoreCase("Sumo")) {
+                    new SumoSettingsMenu(plugin).open(player);
+                } else {
+                    // Default to BO3 for other games, or ignore if not applicable
+                    plugin.getCloudNetServiceManager().createHost(player, gameId, 3);
+                }
             }
         }
     }

@@ -79,6 +79,21 @@ public class AuthManager {
 
         return EventTask.async(() -> {
             try {
+                // Vérifier si le joueur a une exception premium
+                boolean hasException = false;
+                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    String exceptionKey = "corehost:auth:exception:" + username.toLowerCase();
+                    if (plugin.getRedisManager().get(exceptionKey) != null) {
+                        hasException = true;
+                    }
+                }
+
+                if (hasException) {
+                    // S'il y a une exception, on force le mode offline
+                    event.setResult(PreLoginComponentResult.forceOfflineMode());
+                    return;
+                }
+
                 boolean premium = isPremium(username).join();
                 if (premium) {
                     event.setResult(PreLoginComponentResult.forceOnlineMode());

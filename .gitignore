@@ -4,3 +4,5 @@
 /corehost/corehost-proxy/target/
 /corehost/corehost-lobby/target/
 /corehost/corehost-api/target/
+/corehost/corehost-game/target/
+/corehost/corehost-sumo/target/

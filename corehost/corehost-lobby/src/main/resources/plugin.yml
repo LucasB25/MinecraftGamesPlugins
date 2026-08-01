@@ -18,3 +18,8 @@ commands:
     aliases: [f, ami, amis]
     permission: corehost.command.friend
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
+  premiumexception:
+    description: Gérer les exceptions de pseudo premium.
+    aliases: [pe]
+    permission: corehost.admin
+    permission-message: §cVous n'avez pas la permission d'exécuter cette commande.

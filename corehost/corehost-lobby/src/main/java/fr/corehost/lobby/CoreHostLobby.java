@@ -64,6 +64,9 @@ public class CoreHostLobby extends JavaPlugin {
         // Register Commands
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();
         if (getCommand("spawn") != null) getCommand("spawn").setExecutor(spawnCommand);
+        
+        fr.corehost.lobby.commands.PremiumExceptionCommand premiumCommand = new fr.corehost.lobby.commands.PremiumExceptionCommand(this);
+        if (getCommand("premiumexception") != null) getCommand("premiumexception").setExecutor(premiumCommand);
 
 
         
@@ -91,6 +94,7 @@ public class CoreHostLobby extends JavaPlugin {
             world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
             world.setGameRule(GameRule.DO_MOB_LOOT, false);
             world.setGameRule(GameRule.DO_INSOMNIA, false);
+            world.setDifficulty(org.bukkit.Difficulty.PEACEFUL);
             
             try {
                 if (world.getEnvironment() == World.Environment.NORMAL) {

@@ -62,6 +62,13 @@ public class LobbyListener implements Listener {
         player.setAllowFlight(false);
         player.setCollidable(false); // Disable player collision
         
+        // Precise spawn
+        org.bukkit.Location spawn = player.getWorld().getSpawnLocation().clone();
+        spawn.setX(spawn.getBlockX() + 0.5);
+        spawn.setZ(spawn.getBlockZ() + 0.5);
+        spawn.setYaw(spawn.getYaw() + 180f);
+        player.teleport(spawn);
+        
         // Cache player for friends system if bypassing Proxy
         if (plugin.getFriendManager() != null) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -220,9 +227,22 @@ public class LobbyListener implements Listener {
     }
 
     @EventHandler
-    public void onCreatureSpawn(CreatureSpawnEvent event) {
-        if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.CUSTOM) {
-            event.setCancelled(true);
+    public void onEntitySpawn(org.bukkit.event.entity.EntitySpawnEvent event) {
+        if (event.getEntity() instanceof org.bukkit.entity.LivingEntity && !(event.getEntity() instanceof Player) && !(event.getEntity() instanceof org.bukkit.entity.ArmorStand)) {
+            // Allow custom spawned entities, block natural spawns
+            if (event.getEntity().getEntitySpawnReason() != org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.CUSTOM) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onChunkLoad(org.bukkit.event.world.ChunkLoadEvent event) {
+        for (org.bukkit.entity.Entity entity : event.getChunk().getEntities()) {
+            if (entity instanceof org.bukkit.entity.LivingEntity && !(entity instanceof Player) && !(entity instanceof org.bukkit.entity.ArmorStand)) {
+                // If it's a mob that was saved in the world, remove it
+                entity.remove();
+            }
         }
     }
 
@@ -247,7 +267,11 @@ public class LobbyListener implements Listener {
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
         if (player.getLocation().getY() < 0) {
-            player.teleport(player.getWorld().getSpawnLocation());
+            org.bukkit.Location spawn = player.getWorld().getSpawnLocation().clone();
+            spawn.setX(spawn.getBlockX() + 0.5);
+            spawn.setZ(spawn.getBlockZ() + 0.5);
+            spawn.setYaw(spawn.getYaw() + 180f);
+            player.teleport(spawn);
         }
     }
 

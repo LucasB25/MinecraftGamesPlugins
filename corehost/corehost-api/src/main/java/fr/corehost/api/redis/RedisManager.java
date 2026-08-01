@@ -3,6 +3,7 @@ package fr.corehost.api.redis;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.exceptions.JedisException;
 
 public class RedisManager {
@@ -67,5 +68,21 @@ public class RedisManager {
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(key);
         } catch (JedisException ignored) {}
+    }
+
+    public void publish(String channel, String message) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.publish(channel, message);
+        } catch (JedisException ignored) {}
+    }
+    
+    public void subscribe(JedisPubSub jedisPubSub, String... channels) {
+        new Thread(() -> {
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.subscribe(jedisPubSub, channels);
+            } catch (JedisException e) {
+                e.printStackTrace();
+            }
+        }, "Redis-PubSub-Thread").start();
     }
 }

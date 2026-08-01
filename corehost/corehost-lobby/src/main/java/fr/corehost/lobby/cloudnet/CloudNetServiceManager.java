@@ -1,5 +1,6 @@
 package fr.corehost.lobby.cloudnet;
 
+import com.google.gson.JsonObject;
 import eu.cloudnetservice.driver.inject.InjectionLayer;
 import eu.cloudnetservice.driver.provider.CloudServiceFactory;
 import eu.cloudnetservice.driver.provider.ServiceTaskProvider;
@@ -35,7 +36,7 @@ public class CloudNetServiceManager {
     }
 
     @SuppressWarnings("deprecation")
-    public void createHost(Player player, String gameType) {
+    public void createHost(Player player, String gameType, int bestOf) {
         String prefix = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "CoreHost" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
         
         if (!isCloudNetEnabled || plugin.getHostManager() == null) {
@@ -61,11 +62,12 @@ public class CloudNetServiceManager {
                 ServiceInfoSnapshot warmService = null;
                 
                 List<HostData> allHosts = plugin.getHostManager().getAllHosts();
+                int maxInstances = plugin.getConfig().getInt("games." + gameType + ".max-slime-instances", 5);
                 
                 for (ServiceInfoSnapshot service : runningServices) {
                     if (service.lifeCycle() == ServiceLifeCycle.RUNNING) {
-                        boolean isClaimed = allHosts.stream().anyMatch(h -> h.getServerName().equalsIgnoreCase(service.name()));
-                        if (!isClaimed) {
+                        long instances = allHosts.stream().filter(h -> h.getServerName().equalsIgnoreCase(service.name())).count();
+                        if (instances < maxInstances) {
                             warmService = service;
                             break;
                         }
@@ -84,22 +86,29 @@ public class CloudNetServiceManager {
                             player.getName(),
                             gameType,
                             serverName,
+                            hostId.toString(),
                             maxPlayers
                     );
+                    hostData.setBestOf(bestOf);
                     
-                    // We set it directly to WAITING so the Proxy can teleport them if needed, or they can be teleported now
-                    hostData.setStatus(fr.corehost.api.host.HostStatus.WAITING);
+                    // The slime world needs to be generated, so status is STARTING
+                    hostData.setStatus(fr.corehost.api.host.HostStatus.STARTING);
                     plugin.getHostManager().saveHost(hostData);
                     
                     if (player.isOnline()) {
-                        player.sendMessage(prefix + ChatColor.GREEN + "Serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " trouvé (Warm Pool) ! Téléportation immédiate...");
+                        player.sendMessage(prefix + ChatColor.GREEN + "Serveur CloudNet trouvé ! Génération du monde Slime en cours...");
                     }
-                    // Velocity will handle the teleportation via its own logic if they use a command, or they need to connect.
-                    // To force connect them from Lobby, we use BungeeCord channel
-                    sendPlayerToServer(player, serverName);
+                    
+                    // Send PubSub message to the game server to create the slime instance
+                    JsonObject request = new JsonObject();
+                    request.addProperty("action", "create_slime_instance");
+                    request.addProperty("hostId", hostId.toString());
+                    request.addProperty("gameType", gameType);
+                    
+                    plugin.getRedisManager().publish("corehost:game:" + serverName, request.toString());
                     
                 } else {
-                    // Fallback: Create new service
+                    // Fallback: Create new CloudNet service
                     ServiceConfiguration configuration = ServiceConfiguration.builder(task).build();
                     
                     CloudServiceFactory serviceFactory = InjectionLayer.ext().instance(CloudServiceFactory.class);
@@ -119,16 +128,23 @@ public class CloudNetServiceManager {
                                 player.getName(),
                                 gameType,
                                 serverName,
+                                hostId.toString(),
                                 maxPlayers
                         );
+                        hostData.setBestOf(bestOf);
 
                         plugin.getHostManager().saveHost(hostData);
 
                         if (player.isOnline()) {
-                            player.sendMessage(prefix + ChatColor.GREEN + "Le serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " est prêt et démarre !");
+                            player.sendMessage(prefix + ChatColor.GREEN + "Aucun serveur prêt. Démarrage complet du serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " en cours...");
                         }
                         
-                        // Actually start the process
+                        // Start the CloudNet service, proxy will catch it when RUNNING
+                        // But wait! When it starts, it won't load the Slime World automatically!
+                        // The proxy will need to send a create_slime_instance message to it, or it will auto-load?
+                        // This logic needs to be handled: we publish the message right now, and when the server starts and connects to Redis, it will MISS the message.
+                        // We will need the Game Plugin to check its missing instances on startup, or we just let it be STARTING and let Proxy resend the pubsub when it's RUNNING.
+                        
                         serviceInfo.provider().start();
                     } else {
                         if (player.isOnline()) {

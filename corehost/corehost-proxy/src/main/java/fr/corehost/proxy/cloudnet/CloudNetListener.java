@@ -8,15 +8,12 @@ import eu.cloudnetservice.driver.event.events.service.CloudServiceLifecycleChang
 import eu.cloudnetservice.driver.service.ServiceLifeCycle;
 import eu.cloudnetservice.driver.service.ServiceInfoSnapshot;
 import fr.corehost.api.host.HostData;
+import fr.corehost.api.host.HostData;
 import fr.corehost.api.host.HostManager;
-import fr.corehost.api.party.PartyManager;
 import fr.corehost.proxy.CoreHostProxy;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import com.google.gson.JsonObject;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class CloudNetListener {
@@ -43,49 +40,17 @@ public class CloudNetListener {
                 List<HostData> hosts = hostManager.getAllHosts();
                 
                 for (HostData host : hosts) {
-                        // Si ce serveur correspond a un Host en cours de demarrage
+                    // Si ce serveur correspond a un Host en cours de demarrage (attendant un demarrage CloudNet complet)
                     if (serverName.equalsIgnoreCase(host.getServerName()) && fr.corehost.api.host.HostStatus.STARTING == host.getStatus()) {
                         
-                        // Mettre a jour l'etat dans Redis
-                        host.setStatus(fr.corehost.api.host.HostStatus.WAITING);
-                        hostManager.saveHost(host);
+                        plugin.getLogger().info("CloudNet Server " + serverName + " is now RUNNING. Requesting Slime world creation for Host " + host.getWorldName());
                         
-                        // Teleporter le proprietaire
-                        UUID ownerId = host.getOwnerUuid();
-                        Optional<Player> ownerOpt = server.getPlayer(ownerId);
+                        JsonObject request = new JsonObject();
+                        request.addProperty("action", "create_slime_instance");
+                        request.addProperty("hostId", host.getWorldName());
+                        request.addProperty("gameType", host.getGameType());
                         
-                        Optional<RegisteredServer> targetServer = server.getServer(serverName);
-                        if (targetServer.isEmpty()) {
-                            // plugin.getLogger() is not publicly available directly, maybe just use System.out or server.getConsoleCommandSource()
-                            return;
-                        }
-                        
-                        if (ownerOpt.isPresent()) {
-                            Player owner = ownerOpt.get();
-                            owner.sendMessage(Component.text("Votre serveur Host ", NamedTextColor.GRAY)
-                                    .append(Component.text(serverName, NamedTextColor.GOLD))
-                                    .append(Component.text(" est prêt ! Téléportation en cours...", NamedTextColor.GRAY)));
-                                    
-                            owner.createConnectionRequest(targetServer.get()).connect();
-                            
-                            // Teleporter la Party du proprietaire s'il y en a une
-                            PartyManager partyManager = plugin.getPartyManager();
-                            if (partyManager != null) {
-                                UUID partyLeader = partyManager.getPartyLeader(ownerId);
-                                if (partyLeader != null && partyLeader.equals(ownerId)) {
-                                    java.util.Set<UUID> members = partyManager.getPartyMembers(partyLeader);
-                                    for (UUID memberId : members) {
-                                        if (!memberId.equals(ownerId)) {
-                                            server.getPlayer(memberId).ifPresent(member -> {
-                                                member.sendMessage(Component.text("Le Host de la party est prêt ! Téléportation en cours...", NamedTextColor.GRAY));
-                                                member.createConnectionRequest(targetServer.get()).connect();
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
+                        plugin.getRedisManager().publish("corehost:game:" + serverName, request.toString());
                     }
                 }
             }).delay(2, TimeUnit.SECONDS).schedule(); // Delai de securite

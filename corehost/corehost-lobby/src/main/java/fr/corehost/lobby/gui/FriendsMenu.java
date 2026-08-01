@@ -54,10 +54,23 @@ public class FriendsMenu implements CustomMenu {
             Set<String> friendUuids = plugin.getFriendManager().getFriends(player.getUniqueId());
             List<String> friends = new ArrayList<>(friendUuids);
 
+            // Fetch online status for all friends to sort them properly
+            java.util.Map<UUID, Boolean> friendOnline = new java.util.HashMap<>();
+            for (String fUuid : friends) {
+                UUID friendId = UUID.fromString(fUuid);
+                friendOnline.put(friendId, plugin.getFriendManager().isOnline(friendId));
+            }
+
+            // Sort friends: online first
+            friends.sort((u1, u2) -> {
+                boolean o1 = friendOnline.getOrDefault(UUID.fromString(u1), false);
+                boolean o2 = friendOnline.getOrDefault(UUID.fromString(u2), false);
+                return Boolean.compare(o2, o1);
+            });
+
             // Preload data asynchronously to avoid lag spikes
             java.util.Map<UUID, String> friendNames = new java.util.HashMap<>();
             java.util.Map<UUID, Long> friendLastSeen = new java.util.HashMap<>();
-            java.util.Map<UUID, Boolean> friendOnline = new java.util.HashMap<>();
 
             int asyncStart = page * 45;
             int asyncEnd = Math.min(asyncStart + 45, friends.size());
@@ -66,9 +79,7 @@ public class FriendsMenu implements CustomMenu {
                 UUID friendId = UUID.fromString(friends.get(i));
                 String name = plugin.getFriendManager().getNameByUuid(friendId);
                 friendNames.put(friendId, name != null ? name : "Inconnu");
-                boolean online = plugin.getFriendManager().isOnline(friendId);
-                friendOnline.put(friendId, online);
-                if (!online) {
+                if (!friendOnline.get(friendId)) {
                     friendLastSeen.put(friendId, plugin.getFriendManager().getLastSeen(friendId));
                 }
             }
@@ -143,7 +154,14 @@ public class FriendsMenu implements CustomMenu {
                             lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Dernière connexion : " + lastSeenStr);
                         }
                         lore.add("");
-                        lore.add(ChatColor.GREEN + "► Clic-Gauche " + ChatColor.GRAY + "Inviter en Party");
+                        UUID myLeader = plugin.getPartyManager().getPartyLeader(player.getUniqueId());
+                        boolean canInvite = (myLeader == null || myLeader.equals(player.getUniqueId()));
+                        UUID friendLeader = plugin.getPartyManager().getPartyLeader(friendId);
+                        boolean isFriendInParty = (friendLeader != null);
+
+                        if (canInvite && !isFriendInParty) {
+                            lore.add(ChatColor.GREEN + "► Clic-Gauche " + ChatColor.GRAY + "Inviter en Party");
+                        }
                         lore.add(ChatColor.RED + "► Clic-Droit " + ChatColor.GRAY + "Retirer des amis");
                         meta.setLore(lore);
                         
@@ -287,6 +305,20 @@ public class FriendsMenu implements CustomMenu {
                 player.closeInventory();
                 
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    UUID myLeader = plugin.getPartyManager().getPartyLeader(player.getUniqueId());
+                    if (myLeader != null && !myLeader.equals(player.getUniqueId())) {
+                        String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                        player.sendMessage(prefix + net.md_5.bungee.api.ChatColor.RED + "Seul le chef de groupe peut inviter des joueurs.");
+                        return;
+                    }
+
+                    UUID targetLeader = plugin.getPartyManager().getPartyLeader(targetUuid);
+                    if (targetLeader != null) {
+                        String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
+                        player.sendMessage(prefix + net.md_5.bungee.api.ChatColor.RED + "Ce joueur est déjà dans un groupe.");
+                        return;
+                    }
+
                     if (!plugin.getFriendManager().isOnline(targetUuid)) {
                         String prefix = net.md_5.bungee.api.ChatColor.DARK_GRAY + "[" + net.md_5.bungee.api.ChatColor.GOLD + "CoreHost" + net.md_5.bungee.api.ChatColor.DARK_GRAY + "] " + net.md_5.bungee.api.ChatColor.GRAY;
                         player.sendMessage(prefix + net.md_5.bungee.api.ChatColor.RED + "Ce joueur est hors ligne.");

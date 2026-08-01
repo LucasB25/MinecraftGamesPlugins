@@ -137,6 +137,11 @@ public class PartyCommand implements SimpleCommand {
             return;
         }
         
+        if (partyManager.arePartyInvitesBlocked(targetUuid)) {
+            player.sendMessage(Component.text("Ce joueur n'accepte pas les invitations de groupe.", NamedTextColor.RED));
+            return;
+        }
+        
         partyManager.sendInvite(playerUuid, targetUuid);
         player.sendMessage(Component.text("Invitation envoyée à " + target.getUsername() + ".", NamedTextColor.GREEN));
         

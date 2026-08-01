@@ -13,6 +13,8 @@
         <module>corehost-api</module>
         <module>corehost-proxy</module>
         <module>corehost-lobby</module>
+        <module>corehost-game</module>
+        <module>corehost-sumo</module>
     </modules>
 
     <properties>

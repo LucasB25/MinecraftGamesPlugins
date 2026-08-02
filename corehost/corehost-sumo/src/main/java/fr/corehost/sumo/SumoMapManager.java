@@ -78,4 +78,15 @@ public class SumoMapManager {
     public Map<String, SumoMapConfig> getLoadedMaps() {
         return loadedMaps;
     }
+
+    public SumoMapConfig getRandomFunctionalMap() {
+        java.util.List<SumoMapConfig> functional = new java.util.ArrayList<>();
+        for (SumoMapConfig map : loadedMaps.values()) {
+            if (map.isSetup()) {
+                functional.add(map);
+            }
+        }
+        if (functional.isEmpty()) return null;
+        return functional.get(new java.util.Random().nextInt(functional.size()));
+    }
 }

@@ -24,10 +24,9 @@ public class SumoGameManager {
             return;
         }
 
-        SumoMapConfig mapConfig = plugin.getMapManager().getMap(mapName);
+        SumoMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
         if (mapConfig == null) {
-            plugin.getLogger().warning("Map configuration " + mapName + " not found! Using default.");
-            mapConfig = new SumoMapConfig(mapName);
+            plugin.getLogger().warning("Aucune carte fonctionnelle trouvée ! L'instance sera injouable.");
         }
 
         SumoGameInstance instance = new SumoGameInstance(plugin, hostId, world, mapConfig);

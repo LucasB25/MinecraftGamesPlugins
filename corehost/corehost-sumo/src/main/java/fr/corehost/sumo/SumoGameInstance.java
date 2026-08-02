@@ -242,6 +242,12 @@ public class SumoGameInstance {
                 
                 if (roundWinner != null) {
                     broadcast(ChatColor.GOLD + roundWinner.getName() + " a gagné la partie !");
+                    
+                    CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+                    if (coreGame != null && coreGame.getRedisManager() != null) {
+                        coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_COINS\", \"uuid\":\"" + roundWinner.getUniqueId().toString() + "\", \"amount\": 50}");
+                    }
+                    
                     for (UUID uuid : players) {
                         Player p = Bukkit.getPlayer(uuid);
                         if (p != null) {

@@ -13,7 +13,7 @@ public class DatabaseManager {
 
     public DatabaseManager(String host, int port, String database, String user, String password) {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&autoReconnect=true");
+        config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&autoReconnect=true&allowPublicKeyRetrieval=true");
         config.setDriverClassName("com.mysql.cj.jdbc.Driver");
         config.setUsername(user);
         config.setPassword(password);
@@ -36,9 +36,18 @@ public class DatabaseManager {
                     "uuid VARCHAR(36) PRIMARY KEY, " +
                     "name VARCHAR(16) NOT NULL, " +
                     "last_seen BIGINT DEFAULT 0, " +
-                    "requests_blocked BOOLEAN DEFAULT FALSE" +
+                    "requests_blocked BOOLEAN DEFAULT FALSE, " +
+                    "coins INT DEFAULT 0" +
                     ");")) {
                 stmt.executeUpdate();
+            }
+            
+            // Alter table just in case the table already exists without coins column
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "ALTER TABLE players ADD COLUMN coins INT DEFAULT 0;")) {
+                stmt.executeUpdate();
+            } catch (SQLException ignored) {
+                // Column probably already exists
             }
             
             // Table for friends

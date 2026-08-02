@@ -13,12 +13,25 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
+
 public class PlayerConnectionListener {
 
     private final CoreHostProxy plugin;
 
     public PlayerConnectionListener(CoreHostProxy plugin) {
         this.plugin = plugin;
+    }
+
+    @Subscribe
+    public void onChooseInitialServer(PlayerChooseInitialServerEvent event) {
+        // Automatically send players to a Lobby server when they connect
+        Optional<RegisteredServer> lobby = plugin.getServer().getAllServers().stream()
+                .filter(server -> server.getServerInfo().getName().toLowerCase().contains("lobby"))
+                .findFirst();
+        
+        lobby.ifPresent(event::setInitialServer);
     }
 
     @Subscribe

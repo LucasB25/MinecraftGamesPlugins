@@ -89,6 +89,13 @@ public class ProxyPubSubListener extends JedisPubSub {
                         }
                     }
                 }
+            } else if ("ADD_COINS".equals(action)) {
+                String uuidStr = json.get("uuid").getAsString();
+                int amount = json.get("amount").getAsInt();
+                
+                if (plugin.getProfileManager() != null) {
+                    plugin.getProfileManager().addCoins(UUID.fromString(uuidStr), amount);
+                }
             }
         } catch (Exception e) {
             plugin.getLogger().error("Erreur PubSub Proxy: ", e);

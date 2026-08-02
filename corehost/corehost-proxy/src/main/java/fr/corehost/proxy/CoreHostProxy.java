@@ -42,6 +42,7 @@ public class CoreHostProxy {
     private HostManager hostManager;
     private FriendManager friendManager;
     private PartyManager partyManager;
+    private fr.corehost.api.profile.ProfileManager profileManager;
     private fr.corehost.api.database.DatabaseManager databaseManager;
     private fr.corehost.proxy.auth.AuthManager authManager;
     private fr.corehost.proxy.discord.DiscordManager discordManager;
@@ -72,8 +73,9 @@ public class CoreHostProxy {
                     config.getDbUser(), config.getDbPassword()
             );
             
+            this.profileManager = new fr.corehost.api.profile.ProfileManager(this.databaseManager, this.redisManager, java.util.logging.Logger.getLogger("ProfileManager"));
             
-            this.friendManager = new FriendManager(this.redisManager, this.databaseManager);
+            this.friendManager = new FriendManager(this.redisManager, this.databaseManager, this.profileManager);
             this.partyManager = new PartyManager(this.redisManager);
             
             // Run Data Migration
@@ -204,6 +206,10 @@ public class CoreHostProxy {
 
     public fr.corehost.api.database.DatabaseManager getDatabaseManager() {
         return databaseManager;
+    }
+
+    public fr.corehost.api.profile.ProfileManager getProfileManager() {
+        return profileManager;
     }
 
     public fr.corehost.proxy.auth.AuthManager getAuthManager() {

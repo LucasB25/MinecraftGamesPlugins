@@ -22,6 +22,7 @@ public class CoreHostLobby extends JavaPlugin {
     private FriendManager friendManager;
     private PartyManager partyManager;
     private CloudNetServiceManager cloudNetServiceManager;
+    private fr.corehost.api.profile.ProfileManager profileManager;
     private fr.corehost.api.database.DatabaseManager databaseManager;
 
     @Override
@@ -46,8 +47,9 @@ public class CoreHostLobby extends JavaPlugin {
             this.redisManager = new RedisManager(redisHost, redisPort, redisPassword);
             if (this.redisManager.isConnected()) {
                 this.databaseManager = new fr.corehost.api.database.DatabaseManager(dbHost, dbPort, dbName, dbUser, dbPassword);
+                this.profileManager = new fr.corehost.api.profile.ProfileManager(this.databaseManager, this.redisManager, getLogger());
                 this.hostManager = new HostManager(this.redisManager);
-                this.friendManager = new FriendManager(this.redisManager, this.databaseManager);
+                this.friendManager = new FriendManager(this.redisManager, this.databaseManager, this.profileManager);
                 this.partyManager = new PartyManager(this.redisManager);
                 getLogger().info("Connected to Redis and Database successfully.");
             } else {
@@ -137,6 +139,10 @@ public class CoreHostLobby extends JavaPlugin {
 
     public FriendManager getFriendManager() {
         return friendManager;
+    }
+
+    public fr.corehost.api.profile.ProfileManager getProfileManager() {
+        return profileManager;
     }
 
     public PartyManager getPartyManager() {

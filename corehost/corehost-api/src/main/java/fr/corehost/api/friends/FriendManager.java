@@ -2,6 +2,7 @@ package fr.corehost.api.friends;
 
 import fr.corehost.api.database.DatabaseManager;
 import fr.corehost.api.redis.RedisManager;
+import fr.corehost.api.profile.ProfileManager;
 import redis.clients.jedis.Jedis;
 
 import java.sql.Connection;
@@ -16,16 +17,19 @@ public class FriendManager {
 
     private final RedisManager redisManager;
     private final DatabaseManager databaseManager;
+    private final ProfileManager profileManager;
 
-    public FriendManager(RedisManager redisManager, DatabaseManager databaseManager) {
+    public FriendManager(RedisManager redisManager, DatabaseManager databaseManager, ProfileManager profileManager) {
         this.redisManager = redisManager;
         this.databaseManager = databaseManager;
+        this.profileManager = profileManager;
     }
 
     // For backwards compatibility when DatabaseManager is not yet fully initialized
     public FriendManager(RedisManager redisManager) {
         this.redisManager = redisManager;
         this.databaseManager = null;
+        this.profileManager = null;
     }
 
     /**
@@ -46,6 +50,7 @@ public class FriendManager {
     }
 
     public UUID getUuidByName(String name) {
+        // Not easily cacheable by UUID without a reverse lookup cache, keeping SQL for now
         if (databaseManager == null) return null;
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT uuid FROM players WHERE LOWER(name) = LOWER(?)")) {
@@ -62,6 +67,10 @@ public class FriendManager {
     }
 
     public String getNameByUuid(UUID uuid) {
+        if (profileManager != null) {
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            if (profile != null) return profile.getName();
+        }
         if (databaseManager == null) return null;
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT name FROM players WHERE uuid = ?")) {
@@ -78,6 +87,10 @@ public class FriendManager {
     }
 
     public Set<String> getFriends(UUID uuid) {
+        if (profileManager != null) {
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            if (profile != null) return profile.getFriends();
+        }
         Set<String> friends = new HashSet<>();
         if (databaseManager == null) return friends;
         try (Connection conn = databaseManager.getConnection();
@@ -106,6 +119,10 @@ public class FriendManager {
     }
 
     public boolean areFriends(UUID player1, UUID player2) {
+        if (profileManager != null) {
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(player1);
+            if (profile != null) return profile.hasFriend(player2.toString());
+        }
         if (databaseManager == null) return false;
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(
@@ -152,6 +169,11 @@ public class FriendManager {
             stmt.setString(3, sender.toString());
             stmt.setString(4, receiver.toString());
             stmt.executeUpdate();
+            
+            if (profileManager != null) {
+                profileManager.publishProfileUpdate(receiver);
+                profileManager.publishProfileUpdate(sender);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -173,6 +195,11 @@ public class FriendManager {
             stmt.setString(3, player2.toString());
             stmt.setString(4, player1.toString());
             stmt.executeUpdate();
+            
+            if (profileManager != null) {
+                profileManager.publishProfileUpdate(player1);
+                profileManager.publishProfileUpdate(player2);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -186,12 +213,20 @@ public class FriendManager {
             stmt.setBoolean(1, blocked);
             stmt.setString(2, uuid.toString());
             stmt.executeUpdate();
+            
+            if (profileManager != null) {
+                profileManager.publishProfileUpdate(uuid);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public boolean areFriendRequestsBlocked(UUID uuid) {
+        if (profileManager != null) {
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            if (profile != null) return profile.isRequestsBlocked();
+        }
         if (databaseManager == null) return false;
         try (Connection conn = databaseManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement("SELECT requests_blocked FROM players WHERE uuid = ?")) {
@@ -262,10 +297,17 @@ public class FriendManager {
             } else {
                 jedis.del(key);
             }
+            if (profileManager != null) {
+                profileManager.publishProfileUpdate(uuid);
+            }
         }
     }
 
     public boolean areNotificationsEnabled(UUID uuid) {
+        if (profileManager != null) {
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            if (profile != null) return profile.isNotificationsEnabled();
+        }
         try (Jedis jedis = redisManager.getPool().getResource()) {
             String val = jedis.get("corehost:settings:notifications:" + uuid.toString());
             return val == null || !val.equals("false"); // Default is true

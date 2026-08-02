@@ -28,7 +28,7 @@ public class PlayerProfileMenu implements CustomMenu {
         this.player = player;
     }
 
-    private void initializeItems(boolean isLinked) {
+    private void initializeItems(boolean isLinked, int coins) {
         // Border decoration (Pink + Purple alternating)
         MenuUtils.fillBorder(inventory);
 
@@ -44,6 +44,7 @@ public class PlayerProfileMenu implements CustomMenu {
                 "",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + ChatColor.GREEN + "Joueur",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType,
+                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Coins : " + ChatColor.GOLD + coins,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Première connexion : " + ChatColor.WHITE + firstPlayedDate,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Ping : " + ChatColor.YELLOW + player.getPing() + "ms",
                 ""
@@ -149,9 +150,19 @@ public class PlayerProfileMenu implements CustomMenu {
             }
             
             final boolean isLinked = linked;
+            
+            int fetchedCoins = 0;
+            if (plugin.getProfileManager() != null) {
+                fr.corehost.api.profile.PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                if (profile != null) {
+                    fetchedCoins = profile.getCoins();
+                }
+            }
+            final int coins = fetchedCoins;
+            
             Bukkit.getScheduler().runTask(plugin, () -> {
                 this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Profil de " + player.getName());
-                initializeItems(isLinked);
+                initializeItems(isLinked, coins);
                 player.openInventory(inventory);
             });
         });

@@ -9,6 +9,11 @@ settings:
   prefix: "&8[&6CoreHost&8] &7"
   discord-url: "https://discord.gg/aqQM4B7jxH"
 
+scoreboard:
+  enabled: true
+  title: "&6&lCOREHOST"
+  ip: "&eplay.corehost.fr"
+
 redis:
   host: "127.0.0.1"
   port: 6379

@@ -42,7 +42,7 @@ public class PlayerProfileMenu implements CustomMenu {
                 "",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + ChatColor.GREEN + "Joueur",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType,
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Coins : " + ChatColor.GOLD + coins,
+                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Coins : " + ChatColor.GOLD + coins + " ⛃",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Première connexion : " + ChatColor.WHITE + firstPlayedDate,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Ping : " + ChatColor.YELLOW + player.getPing() + "ms",
                 ""

@@ -14,6 +14,9 @@ import fr.corehost.api.party.PartyManager;
 import fr.corehost.lobby.cloudnet.CloudNetServiceManager;
 import fr.corehost.lobby.parkour.ParkourManager;
 import fr.corehost.lobby.parkour.ParkourListener;
+import fr.corehost.lobby.headhunt.HeadHuntManager;
+import fr.corehost.lobby.headhunt.HeadHuntListener;
+import fr.corehost.lobby.utils.LobbyScoreboardManager;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
@@ -27,6 +30,8 @@ public class CoreHostLobby extends JavaPlugin {
     private fr.corehost.api.profile.ProfileManager profileManager;
     private fr.corehost.api.database.DatabaseManager databaseManager;
     private ParkourManager parkourManager;
+    private HeadHuntManager headHuntManager;
+    private LobbyScoreboardManager scoreboardManager;
 
     @Override
     public void onEnable() {
@@ -78,6 +83,18 @@ public class CoreHostLobby extends JavaPlugin {
         // Initialize Parkour
         this.parkourManager = new ParkourManager(this);
         pm.registerEvents(new ParkourListener(this.parkourManager), this);
+
+        // Initialize HeadHunt
+        this.headHuntManager = new HeadHuntManager(this);
+        pm.registerEvents(new HeadHuntListener(this), this);
+
+        // Initialize Scoreboard
+        this.scoreboardManager = new LobbyScoreboardManager(this);
+        getServer().getScheduler().runTaskTimer(this, () -> {
+            if (this.scoreboardManager != null) {
+                this.scoreboardManager.updateAll();
+            }
+        }, 20L, 40L); // Update every 2 seconds
 
         // Register Commands
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();
@@ -165,6 +182,14 @@ public class CoreHostLobby extends JavaPlugin {
     
     public ParkourManager getParkourManager() {
         return parkourManager;
+    }
+
+    public HeadHuntManager getHeadHuntManager() {
+        return headHuntManager;
+    }
+
+    public LobbyScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
     }
 
     public void connectToServer(Player player, String serverName) {

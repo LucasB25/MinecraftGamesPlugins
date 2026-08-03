@@ -92,6 +92,10 @@ public class LobbyListener implements Listener {
             profile.setItemMeta(profileMeta);
         }
         player.getInventory().setItem(8, profile);
+        // Scoreboard
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().setupScoreboard(player);
+        }
     }
 
     @EventHandler
@@ -206,6 +210,10 @@ public class LobbyListener implements Listener {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 plugin.getFriendManager().updateLastSeen(player.getUniqueId());
             });
+        }
+        
+        if (plugin.getScoreboardManager() != null) {
+            plugin.getScoreboardManager().removeScoreboard(player);
         }
     }
 

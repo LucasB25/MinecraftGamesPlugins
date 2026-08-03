@@ -42,28 +42,35 @@ public class AdminCommand implements TabExecutor {
             return true;
         }
 
-        if (args.length == 1) {
-            String arg = args[0].toLowerCase();
-            switch (arg) {
+        if (args.length >= 3 && args[0].equalsIgnoreCase("parkour")) {
+            String courseId = args[1].toLowerCase();
+            String sub = args[2].toLowerCase();
+            
+            if (!courseId.equals("easy") && !courseId.equals("hard")) {
+                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Parcours invalide. Utilisez 'easy' ou 'hard'.");
+                return true;
+            }
+            
+            switch (sub) {
                 case "sethologram":
-                    plugin.getParkourManager().setHologramLocation(player.getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Position de l'hologramme du parkour définie à votre position.");
+                    plugin.getParkourManager().setHologramLocation(courseId, player.getLocation());
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Hologramme du parkour " + courseId + " défini.");
                     return true;
                 case "setstart":
-                    plugin.getParkourManager().setStartPlate(player.getLocation().getBlock().getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de départ définie.");
+                    plugin.getParkourManager().setStartPlate(courseId, player.getLocation().getBlock().getLocation());
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de départ du parkour " + courseId + " définie.");
                     return true;
                 case "setend":
-                    plugin.getParkourManager().setEndPlate(player.getLocation().getBlock().getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de fin définie.");
+                    plugin.getParkourManager().setEndPlate(courseId, player.getLocation().getBlock().getLocation());
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de fin du parkour " + courseId + " définie.");
                     return true;
                 case "addcheckpoint":
-                    plugin.getParkourManager().addCheckpoint(player.getLocation().getBlock().getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Checkpoint ajouté à votre position.");
+                    plugin.getParkourManager().addCheckpoint(courseId, player.getLocation().getBlock().getLocation());
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Checkpoint ajouté pour le parkour " + courseId + ".");
                     return true;
                 case "clearcheckpoints":
-                    plugin.getParkourManager().clearCheckpoints();
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Tous les checkpoints ont été supprimés.");
+                    plugin.getParkourManager().clearCheckpoints(courseId);
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Checkpoints effacés pour le parkour " + courseId + ".");
                     return true;
             }
         } else if (args.length >= 2 && args[0].equalsIgnoreCase("headhunt")) {
@@ -163,10 +170,28 @@ public class AdminCommand implements TabExecutor {
     public java.util.List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             java.util.List<String> completions = new java.util.ArrayList<>();
-            java.util.List<String> commands = java.util.Arrays.asList("sethologram", "setstart", "setend", "addcheckpoint", "clearcheckpoints", "headhunt");
+            java.util.List<String> commands = java.util.Arrays.asList("parkour", "headhunt");
             
             for (String c : commands) {
                 if (c.toLowerCase().startsWith(args[0].toLowerCase())) {
+                    completions.add(c);
+                }
+            }
+            return completions;
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("parkour")) {
+            java.util.List<String> completions = new java.util.ArrayList<>();
+            java.util.List<String> courses = java.util.Arrays.asList("easy", "hard");
+            for (String c : courses) {
+                if (c.toLowerCase().startsWith(args[1].toLowerCase())) {
+                    completions.add(c);
+                }
+            }
+            return completions;
+        } else if (args.length == 3 && args[0].equalsIgnoreCase("parkour")) {
+            java.util.List<String> completions = new java.util.ArrayList<>();
+            java.util.List<String> subCommands = java.util.Arrays.asList("sethologram", "setstart", "setend", "addcheckpoint", "clearcheckpoints");
+            for (String c : subCommands) {
+                if (c.toLowerCase().startsWith(args[2].toLowerCase())) {
                     completions.add(c);
                 }
             }

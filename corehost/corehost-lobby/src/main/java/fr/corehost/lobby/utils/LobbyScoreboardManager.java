@@ -59,14 +59,17 @@ public class LobbyScoreboardManager {
         // Ligne 9 : Parkour
         objective.getScore(ChatColor.WHITE + "🏃 Parkour :").setScore(9);
 
-        // Ligne 8 : Record
-        Team recordTeam = board.registerNewTeam("record");
-        recordTeam.addEntry(ChatColor.RED + "");
-        recordTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Record: " + ChatColor.RED + "Aucun");
+        // Ligne 8 : Record Easy
+        Team recordEasyTeam = board.registerNewTeam("record_easy");
+        recordEasyTeam.addEntry(ChatColor.RED + "");
+        recordEasyTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Easy: " + ChatColor.RED + "Aucun");
         objective.getScore(ChatColor.RED + "").setScore(8);
 
-        // Ligne 7 : Espace
-        objective.getScore("  ").setScore(7);
+        // Ligne 7 : Record Hard
+        Team recordHardTeam = board.registerNewTeam("record_hard");
+        recordHardTeam.addEntry(ChatColor.DARK_RED + "");
+        recordHardTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Hard: " + ChatColor.RED + "Aucun");
+        objective.getScore(ChatColor.DARK_RED + "").setScore(7);
 
         // Ligne 6 : Têtes
         objective.getScore(ChatColor.WHITE + "🎁 Têtes :").setScore(6);
@@ -86,6 +89,22 @@ public class LobbyScoreboardManager {
         // Ligne 2 : IP
         String ip = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("scoreboard.ip", "&eplay.corehost.fr"));
         objective.getScore(ip).setScore(2);
+
+        // No Collision Team
+        Team collisionTeam = board.registerNewTeam("npc_coll");
+        collisionTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            collisionTeam.addEntry(p.getName());
+            if (p != player) {
+                Scoreboard pBoard = scoreboards.get(p.getUniqueId());
+                if (pBoard != null) {
+                    Team pCollTeam = pBoard.getTeam("npc_coll");
+                    if (pCollTeam != null) {
+                        pCollTeam.addEntry(player.getName());
+                    }
+                }
+            }
+        }
 
         player.setScoreboard(board);
         scoreboards.put(player.getUniqueId(), board);
@@ -124,19 +143,41 @@ public class LobbyScoreboardManager {
             coinsTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Coins: " + ChatColor.YELLOW + coins + " ⛃");
         }
 
-        // Mise à jour du record de parkour
-        Team recordTeam = board.getTeam("record");
-        if (recordTeam != null) {
-            String recordStr = ChatColor.RED + "Aucun";
-            if (plugin.getParkourManager() != null) {
-                Map<UUID, Long> bestTimes = plugin.getParkourManager().getBestTimes();
-                if (bestTimes.containsKey(player.getUniqueId())) {
-                    long timeTaken = bestTimes.get(player.getUniqueId());
-                    String formattedTime = String.format("%.2f", timeTaken / 1000.0);
-                    recordStr = ChatColor.GREEN + formattedTime + "s";
-                }
-            }
-            recordTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Record: " + recordStr);
+        // Fetch Parkour Times Asynchronously
+        if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                Double easyTime = null;
+                Double hardTime = null;
+                try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                    easyTime = jedis.zscore("corehost:parkour:easy", player.getUniqueId().toString());
+                    hardTime = jedis.zscore("corehost:parkour:hard", player.getUniqueId().toString());
+                } catch (Exception ignored) {}
+                
+                final Double finalEasy = easyTime;
+                final Double finalHard = hardTime;
+                
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    Team recordEasyTeam = board.getTeam("record_easy");
+                    if (recordEasyTeam != null) {
+                        String recordText = ChatColor.RED + "Aucun";
+                        if (finalEasy != null) {
+                            String formattedTime = String.format("%.2f", finalEasy / 1000.0);
+                            recordText = ChatColor.YELLOW + formattedTime + "s";
+                        }
+                        recordEasyTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Easy: " + recordText);
+                    }
+                    
+                    Team recordHardTeam = board.getTeam("record_hard");
+                    if (recordHardTeam != null) {
+                        String recordText = ChatColor.RED + "Aucun";
+                        if (finalHard != null) {
+                            String formattedTime = String.format("%.2f", finalHard / 1000.0);
+                            recordText = ChatColor.YELLOW + formattedTime + "s";
+                        }
+                        recordHardTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Hard: " + recordText);
+                    }
+                });
+            });
         }
 
         // Mise à jour des têtes

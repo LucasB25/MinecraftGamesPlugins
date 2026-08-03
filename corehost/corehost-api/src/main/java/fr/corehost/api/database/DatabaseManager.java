@@ -69,6 +69,17 @@ public class DatabaseManager {
                 stmt.executeUpdate();
             }
 
+            // Table for parkour records
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "CREATE TABLE IF NOT EXISTS parkour_records (" +
+                    "uuid VARCHAR(36) NOT NULL, " +
+                    "course_id VARCHAR(32) NOT NULL, " +
+                    "best_time BIGINT NOT NULL, " +
+                    "PRIMARY KEY (uuid, course_id)" +
+                    ");")) {
+                stmt.executeUpdate();
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }

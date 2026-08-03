@@ -13,168 +13,238 @@ import fr.corehost.lobby.CoreHostLobby;
 import fr.corehost.lobby.utils.Constants;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ParkourManager {
 
-    private final Map<UUID, Long> activeSessions;
-    private final Map<UUID, Long> bestTimes;
+    private final Map<String, ParkourCourse> courses;
+    private final Map<UUID, ActiveParkourSession> activeSessions;
     private final Map<UUID, BukkitTask> timeoutTasks;
-    private final Map<UUID, Location> startLocations;
-    private final Map<UUID, Integer> playerCheckpoints;
-    
-    private Location startPlate;
-    private Location endPlate;
-    private final List<Location> checkpoints;
     
     private final CoreHostLobby plugin;
-    private ParkourHologram hologram;
 
     public ParkourManager(CoreHostLobby plugin) {
         this.plugin = plugin;
+        this.courses = new HashMap<>();
         this.activeSessions = new HashMap<>();
-        this.bestTimes = new HashMap<>();
         this.timeoutTasks = new HashMap<>();
-        this.startLocations = new HashMap<>();
-        this.playerCheckpoints = new HashMap<>();
-        this.checkpoints = new ArrayList<>();
         
         loadConfigData();
-        loadHologramLocation();
     }
     
     public void loadConfigData() {
-        checkpoints.clear();
+        courses.clear();
+        
+        // Initialize default courses
+        ParkourCourse easyCourse = new ParkourCourse(plugin, "easy", "Facile");
+        ParkourCourse hardCourse = new ParkourCourse(plugin, "hard", "Difficile");
+        
+        // Migration from old config format to new format
         if (plugin.getConfig().contains("parkour.start")) {
-            startPlate = plugin.getConfig().getLocation("parkour.start");
+            // Migrate to easy
+            plugin.getConfig().set("parkour.courses.easy.start", plugin.getConfig().get("parkour.start"));
+            plugin.getConfig().set("parkour.start", null);
+            
+            if (plugin.getConfig().contains("parkour.end")) {
+                plugin.getConfig().set("parkour.courses.easy.end", plugin.getConfig().get("parkour.end"));
+                plugin.getConfig().set("parkour.end", null);
+            }
+            if (plugin.getConfig().contains("parkour.checkpoints")) {
+                plugin.getConfig().set("parkour.courses.easy.checkpoints", plugin.getConfig().get("parkour.checkpoints"));
+                plugin.getConfig().set("parkour.checkpoints", null);
+            }
+            if (plugin.getConfig().contains("parkour.times")) {
+                plugin.getConfig().set("parkour.courses.easy.times", plugin.getConfig().get("parkour.times"));
+                plugin.getConfig().set("parkour.times", null);
+            }
+            if (plugin.getConfig().contains("parkour.hologram")) {
+                plugin.getConfig().set("parkour.courses.easy.hologram", plugin.getConfig().get("parkour.hologram"));
+                plugin.getConfig().set("parkour.hologram", null);
+            }
+            plugin.saveConfig();
         }
-        if (plugin.getConfig().contains("parkour.end")) {
-            endPlate = plugin.getConfig().getLocation("parkour.end");
-        }
-        if (plugin.getConfig().contains("parkour.checkpoints")) {
-            List<?> list = plugin.getConfig().getList("parkour.checkpoints");
-            if (list != null) {
-                for (Object obj : list) {
-                    if (obj instanceof Location) {
-                        checkpoints.add((Location) obj);
+
+        courses.put("easy", easyCourse);
+        courses.put("hard", hardCourse);
+
+        // Load data for all courses
+        for (ParkourCourse course : courses.values()) {
+            String path = "parkour.courses." + course.getId();
+            
+            if (plugin.getConfig().contains(path + ".start")) {
+                course.setStartPlate(plugin.getConfig().getLocation(path + ".start"));
+            }
+            if (plugin.getConfig().contains(path + ".end")) {
+                course.setEndPlate(plugin.getConfig().getLocation(path + ".end"));
+            }
+            if (plugin.getConfig().contains(path + ".checkpoints")) {
+                List<?> list = plugin.getConfig().getList(path + ".checkpoints");
+                if (list != null) {
+                    for (Object obj : list) {
+                        if (obj instanceof Location) {
+                            course.addCheckpoint((Location) obj);
+                        }
                     }
                 }
             }
-        }
-        
-        // Load best times
-        bestTimes.clear();
-        if (plugin.getConfig().contains("parkour.times")) {
-            for (String key : plugin.getConfig().getConfigurationSection("parkour.times").getKeys(false)) {
-                try {
-                    UUID uuid = UUID.fromString(key);
-                    long time = plugin.getConfig().getLong("parkour.times." + key);
-                    bestTimes.put(uuid, time);
-                } catch (IllegalArgumentException ignored) {}
+            if (plugin.getConfig().contains(path + ".times")) {
+                if (plugin.getDatabaseManager() != null && plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    // Migrate config times to Redis and MySQL
+                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                        for (String key : plugin.getConfig().getConfigurationSection(path + ".times").getKeys(false)) {
+                            try {
+                                UUID uuid = UUID.fromString(key);
+                                long time = plugin.getConfig().getLong(path + ".times." + key);
+                                
+                                // Insert to Redis
+                                try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                                    jedis.zadd("corehost:parkour:" + course.getId(), (double) time, uuid.toString());
+                                }
+                                
+                                // Insert to MySQL
+                                try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
+                                     java.sql.PreparedStatement stmt = conn.prepareStatement(
+                                         "INSERT INTO parkour_records (uuid, course_id, best_time) VALUES (?, ?, ?) " +
+                                         "ON DUPLICATE KEY UPDATE best_time = LEAST(best_time, ?)")) {
+                                    stmt.setString(1, uuid.toString());
+                                    stmt.setString(2, course.getId());
+                                    stmt.setLong(3, time);
+                                    stmt.setLong(4, time);
+                                    stmt.executeUpdate();
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        
+                        // Delete from config
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            plugin.getConfig().set(path + ".times", null);
+                            plugin.saveConfig();
+                        });
+                    });
+                }
+            }
+            if (plugin.getConfig().contains(path + ".hologram")) {
+                course.setHologramLocation(plugin.getConfig().getLocation(path + ".hologram"));
             }
         }
     }
     
-    public void saveTimes() {
-        plugin.getConfig().set("parkour.times", null); // Clear old times
-        for (Map.Entry<UUID, Long> entry : bestTimes.entrySet()) {
-            plugin.getConfig().set("parkour.times." + entry.getKey().toString(), entry.getValue());
+    // saveTimes is no longer needed in config format
+    
+    public void setStartPlate(String courseId, Location loc) {
+        ParkourCourse course = courses.get(courseId);
+        if (course != null) {
+            course.setStartPlate(loc);
+            plugin.getConfig().set("parkour.courses." + courseId + ".start", loc);
+            plugin.saveConfig();
         }
-        plugin.saveConfig();
     }
     
-    public void setStartPlate(Location loc) {
-        startPlate = loc;
-        plugin.getConfig().set("parkour.start", loc);
-        plugin.saveConfig();
+    public void setEndPlate(String courseId, Location loc) {
+        ParkourCourse course = courses.get(courseId);
+        if (course != null) {
+            course.setEndPlate(loc);
+            plugin.getConfig().set("parkour.courses." + courseId + ".end", loc);
+            plugin.saveConfig();
+        }
     }
     
-    public void setEndPlate(Location loc) {
-        endPlate = loc;
-        plugin.getConfig().set("parkour.end", loc);
-        plugin.saveConfig();
+    public void addCheckpoint(String courseId, Location loc) {
+        ParkourCourse course = courses.get(courseId);
+        if (course != null) {
+            course.addCheckpoint(loc);
+            plugin.getConfig().set("parkour.courses." + courseId + ".checkpoints", course.getCheckpoints());
+            plugin.saveConfig();
+        }
     }
     
-    public void addCheckpoint(Location loc) {
-        checkpoints.add(loc);
-        plugin.getConfig().set("parkour.checkpoints", checkpoints);
-        plugin.saveConfig();
+    public void clearCheckpoints(String courseId) {
+        ParkourCourse course = courses.get(courseId);
+        if (course != null) {
+            course.clearCheckpoints();
+            plugin.getConfig().set("parkour.courses." + courseId + ".checkpoints", null);
+            plugin.saveConfig();
+        }
+    }
+
+    public void setHologramLocation(String courseId, Location loc) {
+        ParkourCourse course = courses.get(courseId);
+        if (course != null) {
+            course.setHologramLocation(loc);
+            plugin.getConfig().set("parkour.courses." + courseId + ".hologram", loc);
+            plugin.saveConfig();
+        }
+    }
+
+    public ParkourCourse getCourse(String id) {
+        return courses.get(id);
     }
     
-    public void clearCheckpoints() {
-        checkpoints.clear();
-        plugin.getConfig().set("parkour.checkpoints", null);
-        plugin.saveConfig();
+    public Collection<ParkourCourse> getCourses() {
+        return courses.values();
     }
     
-    public boolean isStartPlate(Location loc) {
-        return startPlate != null && startPlate.getBlockX() == loc.getBlockX() && startPlate.getBlockY() == loc.getBlockY() && startPlate.getBlockZ() == loc.getBlockZ();
+    private boolean isSameBlock(Location loc1, Location loc2) {
+        if (loc1 == null || loc2 == null) return false;
+        return loc1.getBlockX() == loc2.getBlockX() && 
+               loc1.getBlockY() == loc2.getBlockY() && 
+               loc1.getBlockZ() == loc2.getBlockZ();
     }
     
-    public boolean isEndPlate(Location loc) {
-        return endPlate != null && endPlate.getBlockX() == loc.getBlockX() && endPlate.getBlockY() == loc.getBlockY() && endPlate.getBlockZ() == loc.getBlockZ();
-    }
-    
-    public int getCheckpointIndex(Location loc) {
-        for (int i = 0; i < checkpoints.size(); i++) {
-            Location cp = checkpoints.get(i);
-            if (cp.getBlockX() == loc.getBlockX() && cp.getBlockY() == loc.getBlockY() && cp.getBlockZ() == loc.getBlockZ()) {
-                return i;
+    public ParkourCourse getCourseByStartPlate(Location loc) {
+        for (ParkourCourse course : courses.values()) {
+            if (isSameBlock(course.getStartPlate(), loc)) {
+                return course;
             }
         }
-        return -1;
+        return null;
     }
     
     public void hitCheckpoint(Player player, Location loc) {
-        if (!isInParkour(player)) return;
+        ActiveParkourSession session = activeSessions.get(player.getUniqueId());
+        if (session == null) return;
         
-        int cpIndex = getCheckpointIndex(loc);
+        ParkourCourse course = session.getCourse();
+        int cpIndex = -1;
+        for (int i = 0; i < course.getCheckpoints().size(); i++) {
+            if (isSameBlock(course.getCheckpoints().get(i), loc)) {
+                cpIndex = i;
+                break;
+            }
+        }
+        
         if (cpIndex != -1) {
-            int currentCp = playerCheckpoints.getOrDefault(player.getUniqueId(), 0);
-            if (cpIndex == currentCp) {
-                playerCheckpoints.put(player.getUniqueId(), currentCp + 1);
-                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Checkpoint " + ChatColor.WHITE + (currentCp + 1) + "/" + checkpoints.size() + ChatColor.YELLOW + " atteint !");
+            if (cpIndex == session.getCurrentCheckpointIndex()) {
+                session.setCurrentCheckpointIndex(cpIndex + 1);
+                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Checkpoint " + ChatColor.WHITE + (cpIndex + 1) + "/" + course.getCheckpoints().size() + ChatColor.YELLOW + " atteint !");
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2.0f);
-                // Mettre à jour la startLocation pour pouvoir y retourner
-                startLocations.put(player.getUniqueId(), player.getLocation());
+                session.setLastCheckpointLocation(player.getLocation());
             }
         }
     }
     
-    public void loadHologramLocation() {
-        if (plugin.getConfig().contains("parkour.hologram")) {
-            Location loc = plugin.getConfig().getLocation("parkour.hologram");
-            if (loc != null) {
-                if (hologram != null) hologram.clear();
-                hologram = new ParkourHologram(loc);
-                updateHologram();
-            }
-        }
-    }
-    
-    public void setHologramLocation(Location loc) {
-        plugin.getConfig().set("parkour.hologram", loc);
-        plugin.saveConfig();
-        loadHologramLocation();
-    }
-
-    public void startParkour(Player player) {
+    public void startParkour(Player player, ParkourCourse course) {
         if (activeSessions.containsKey(player.getUniqueId())) {
-            long lastStart = activeSessions.get(player.getUniqueId());
-            if (System.currentTimeMillis() - lastStart < 1000) {
-                return; // Anti-spam (empêche le double appel lit + plaque)
+            ActiveParkourSession currentSession = activeSessions.get(player.getUniqueId());
+            if (currentSession.getCourse() == course) {
+                if (System.currentTimeMillis() - currentSession.getStartTime() < 1000) {
+                    return; // Anti-spam
+                }
+                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Parkour recommencé !");
+            } else {
+                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Nouveau parkour (" + course.getDisplayName() + ") commencé !");
             }
-            player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Parkour recommencé !");
             cancelTimeout(player);
         } else {
-            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Parkour commencé ! Vous avez " + ChatColor.WHITE + "2 minutes" + ChatColor.GREEN + ".");
+            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Parkour " + course.getDisplayName() + " commencé ! Vous avez " + ChatColor.WHITE + "2 minutes" + ChatColor.GREEN + ".");
         }
         
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 2.0f);
         
-        activeSessions.put(player.getUniqueId(), System.currentTimeMillis());
-        startLocations.put(player.getUniqueId(), player.getLocation());
-        playerCheckpoints.put(player.getUniqueId(), 0);
+        ActiveParkourSession newSession = new ActiveParkourSession(course, System.currentTimeMillis(), player.getLocation());
+        activeSessions.put(player.getUniqueId(), newSession);
+        
         giveReturnItem(player);
         
         // Schedule 2 minutes timeout (2 * 60 * 20 ticks)
@@ -189,14 +259,14 @@ public class ParkourManager {
     }
     
     public void returnToStart(Player player) {
-        if (isInParkour(player)) {
-            Location startLoc = startLocations.get(player.getUniqueId());
-            if (startLoc != null) {
-                player.teleport(startLoc);
+        ActiveParkourSession session = activeSessions.get(player.getUniqueId());
+        if (session != null) {
+            Location loc = session.getLastCheckpointLocation();
+            if (loc != null) {
+                player.teleport(loc);
                 
-                int currentCp = playerCheckpoints.getOrDefault(player.getUniqueId(), 0);
-                if (currentCp == 0) {
-                    startParkour(player); // Restart the timer only if at the start
+                if (session.getCurrentCheckpointIndex() == 0) {
+                    startParkour(player, session.getCourse()); // Restart the timer if at start
                 }
             }
         }
@@ -225,10 +295,17 @@ public class ParkourManager {
         player.getInventory().setItem(1, new ItemStack(Material.AIR));
     }
 
-    public void endParkour(Player player) {
-        if (activeSessions.containsKey(player.getUniqueId())) {
-            int requiredCheckpoints = checkpoints.size();
-            int currentCp = playerCheckpoints.getOrDefault(player.getUniqueId(), 0);
+    public void endParkour(Player player, Location endPlateLocation) {
+        ActiveParkourSession session = activeSessions.get(player.getUniqueId());
+        if (session != null) {
+            ParkourCourse course = session.getCourse();
+            
+            if (!isSameBlock(course.getEndPlate(), endPlateLocation)) {
+                return; // Not the end plate of their current course
+            }
+            
+            int requiredCheckpoints = course.getCheckpoints().size();
+            int currentCp = session.getCurrentCheckpointIndex();
             
             if (currentCp < requiredCheckpoints) {
                 player.sendMessage(Constants.PREFIX + ChatColor.RED + "Checkpoints manquants : " + ChatColor.WHITE + (requiredCheckpoints - currentCp) + "/" + requiredCheckpoints);
@@ -238,22 +315,58 @@ public class ParkourManager {
             
             cancelTimeout(player);
             removeReturnItem(player);
-            startLocations.remove(player.getUniqueId());
-            playerCheckpoints.remove(player.getUniqueId());
             
-            long startTime = activeSessions.get(player.getUniqueId());
-            long timeTaken = System.currentTimeMillis() - startTime;
+            long timeTaken = System.currentTimeMillis() - session.getStartTime();
             activeSessions.remove(player.getUniqueId());
 
             String formattedTime = String.format("%.2f", timeTaken / 1000.0);
-            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Bravo ! Parkour terminé en " + ChatColor.YELLOW + formattedTime + "s" + ChatColor.GREEN + " !");
+            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Bravo ! Parkour " + course.getDisplayName() + " terminé en " + ChatColor.YELLOW + formattedTime + "s" + ChatColor.GREEN + " !");
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.2f);
 
-            if (!bestTimes.containsKey(player.getUniqueId()) || bestTimes.get(player.getUniqueId()) > timeTaken) {
-                bestTimes.put(player.getUniqueId(), timeTaken);
-                player.sendMessage(Constants.PREFIX + ChatColor.GOLD + "✦ Nouveau record personnel !");
-                saveTimes();
-                updateHologram();
+            if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                    boolean isNewRecord = false;
+                    try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                        Double currentBest = jedis.zscore("corehost:parkour:" + course.getId(), player.getUniqueId().toString());
+                        
+                        if (currentBest == null || timeTaken < currentBest) {
+                            isNewRecord = true;
+                            // Save to Redis
+                            jedis.zadd("corehost:parkour:" + course.getId(), (double) timeTaken, player.getUniqueId().toString());
+                            
+                            // Save to MySQL
+                            if (plugin.getDatabaseManager() != null) {
+                                try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
+                                     java.sql.PreparedStatement stmt = conn.prepareStatement(
+                                         "INSERT INTO parkour_records (uuid, course_id, best_time) VALUES (?, ?, ?) " +
+                                         "ON DUPLICATE KEY UPDATE best_time = LEAST(best_time, ?)")) {
+                                    stmt.setString(1, player.getUniqueId().toString());
+                                    stmt.setString(2, course.getId());
+                                    stmt.setLong(3, timeTaken);
+                                    stmt.setLong(4, timeTaken);
+                                    stmt.executeUpdate();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    
+                    if (isNewRecord) {
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            player.sendMessage(Constants.PREFIX + ChatColor.GOLD + "✦ Nouveau record personnel !");
+                            course.updateHologram();
+                            
+                            if (plugin.getScoreboardManager() != null) {
+                                plugin.getScoreboardManager().updateScoreboard(player);
+                            }
+                        });
+                    }
+                });
+            } else {
+                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Impossible d'enregistrer votre temps (Base de données hors-ligne).");
             }
         }
     }
@@ -262,8 +375,6 @@ public class ParkourManager {
         if (activeSessions.containsKey(player.getUniqueId())) {
             cancelTimeout(player);
             removeReturnItem(player);
-            startLocations.remove(player.getUniqueId());
-            playerCheckpoints.remove(player.getUniqueId());
             activeSessions.remove(player.getUniqueId());
             player.sendMessage(Constants.PREFIX + ChatColor.RED + "Parkour annulé.");
         }
@@ -276,48 +387,11 @@ public class ParkourManager {
         }
     }
     
-    private void updateHologram() {
-        if (hologram == null) return;
-        
-        List<String> lines = new ArrayList<>();
-        lines.add("");
-        lines.add(ChatColor.GOLD + "" + ChatColor.BOLD + "✦ Top 10 Parkour ✦");
-        lines.add("");
-        
-        if (bestTimes.isEmpty()) {
-            lines.add(ChatColor.GRAY + "Aucun record pour l'instant.");
-        } else {
-            List<Map.Entry<UUID, Long>> sorted = bestTimes.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue())
-                .limit(10)
-                .collect(Collectors.toList());
-                
-            int rank = 1;
-            for (Map.Entry<UUID, Long> entry : sorted) {
-                String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
-                if (name == null) name = "Inconnu";
-                String formattedTime = String.format("%.2f", entry.getValue() / 1000.0);
-                
-                ChatColor rankColor;
-                if (rank == 1) rankColor = ChatColor.GOLD;
-                else if (rank == 2) rankColor = ChatColor.GRAY;
-                else if (rank == 3) rankColor = ChatColor.RED;
-                else rankColor = ChatColor.DARK_GRAY;
-                
-                lines.add(rankColor + "#" + rank + " " + ChatColor.WHITE + name + ChatColor.DARK_GRAY + " - " + ChatColor.GREEN + formattedTime + "s");
-                rank++;
-            }
-        }
-        
-        lines.add("");
-        hologram.update(lines);
-    }
-    
     public boolean isInParkour(Player player) {
         return activeSessions.containsKey(player.getUniqueId());
     }
     
-    public Map<UUID, Long> getBestTimes() {
-        return bestTimes;
+    public ActiveParkourSession getSession(Player player) {
+        return activeSessions.get(player.getUniqueId());
     }
 }

@@ -160,6 +160,10 @@ public class CoreHostLobby extends JavaPlugin {
         return redisManager;
     }
 
+    public fr.corehost.api.database.DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
     public HostManager getHostManager() {
         return hostManager;
     }

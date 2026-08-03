@@ -66,23 +66,26 @@ public class ParkourListener implements Listener {
             }
         }
 
-        // Start plate
-        if (parkourManager.isStartPlate(block.getLocation())) {
-            parkourManager.startParkour(player);
-        }
-        // End plate
-        else if (parkourManager.isEndPlate(block.getLocation())) {
-            if (parkourManager.isInParkour(player)) {
-                interactCooldown.put(player.getUniqueId(), currentTime);
-                parkourManager.endParkour(player);
-            }
-        }
-        // Checkpoints
-        else if (parkourManager.getCheckpointIndex(block.getLocation()) != -1) {
-            parkourManager.hitCheckpoint(player, block.getLocation());
-        }
-        else {
+        ParkourCourse startedCourse = parkourManager.getCourseByStartPlate(block.getLocation());
+        if (startedCourse != null) {
+            parkourManager.startParkour(player, startedCourse);
+            interactCooldown.put(player.getUniqueId(), currentTime);
             return;
+        }
+        
+        if (parkourManager.isInParkour(player)) {
+            ActiveParkourSession session = parkourManager.getSession(player);
+            ParkourCourse course = session.getCourse();
+            
+            // Check End plate
+            if (course.getEndPlate() != null && course.getEndPlate().getBlockX() == block.getX() && course.getEndPlate().getBlockY() == block.getY() && course.getEndPlate().getBlockZ() == block.getZ()) {
+                interactCooldown.put(player.getUniqueId(), currentTime);
+                parkourManager.endParkour(player, block.getLocation());
+                return;
+            }
+            
+            // Check Checkpoints
+            parkourManager.hitCheckpoint(player, block.getLocation());
         }
         
         interactCooldown.put(player.getUniqueId(), currentTime);

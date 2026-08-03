@@ -11,3 +11,8 @@ commands:
     description: Commande principale de CoreHost Game
     permission: corehost.admin
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
+
+permissions:
+  corehost.admin:
+    description: Permet d'utiliser les commandes d'administration de CoreHost Game
+    default: op

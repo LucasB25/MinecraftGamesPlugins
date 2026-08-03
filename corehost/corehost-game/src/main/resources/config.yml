@@ -1,3 +1,5 @@
+# // Permissions:
+# // - corehost.admin : Permet d'utiliser les commandes d'administration de CoreHost Game
 settings:
   prefix: "&8[&6CoreHost&8] &7"
 

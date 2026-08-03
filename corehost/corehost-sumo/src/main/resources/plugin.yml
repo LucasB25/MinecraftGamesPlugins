@@ -15,3 +15,8 @@ commands:
     description: Commande principale de CoreHost Sumo
     permission: corehost.admin
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
+
+permissions:
+  corehost.admin:
+    description: Permet d'utiliser les commandes d'administration de CoreHost Sumo
+    default: op

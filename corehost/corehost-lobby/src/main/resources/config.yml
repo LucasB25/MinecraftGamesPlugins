@@ -1,4 +1,9 @@
 # Configuration de CoreHostLobby
+# 
+# // Permissions:
+# // - corehost.command.spawn : Permet d'utiliser la commande de spawn
+# // - corehost.command.friend : Permet d'utiliser les commandes d'amis
+# // - corehost.admin : Permet d'utiliser les commandes d'administration
 
 settings:
   prefix: "&8[&6CoreHost&8] &7"

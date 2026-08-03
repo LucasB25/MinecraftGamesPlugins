@@ -129,13 +129,12 @@ public class CoreHostProxy {
         org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml();
 
         if (!configFile.exists()) {
-            try (FileWriter writer = new FileWriter(configFile)) {
-                java.util.Map<String, Object> data = new java.util.LinkedHashMap<>();
-                data.put("settings", java.util.Map.of("prefix", "&8[&6CoreHost&8] &7"));
-                data.put("redis", java.util.Map.of("host", "127.0.0.1", "port", 6379, "password", ""));
-                data.put("discord", java.util.Map.of("bot-token", "", "bot-id", ""));
-                data.put("database", java.util.Map.of("host", "127.0.0.1", "port", 3306, "database", "corehost", "user", "root", "password", ""));
-                yaml.dump(data, writer);
+            try (java.io.InputStream in = getClass().getResourceAsStream("/config.yml")) {
+                if (in != null) {
+                    java.nio.file.Files.copy(in, configFile.toPath());
+                } else {
+                    logger.error("Default config.yml not found in resources!");
+                }
             } catch (IOException e) {
                 logger.error("Could not create default config.yml", e);
             }

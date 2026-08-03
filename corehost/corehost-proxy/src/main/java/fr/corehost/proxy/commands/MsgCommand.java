@@ -23,6 +23,11 @@ public class MsgCommand implements SimpleCommand {
     }
 
     @Override
+    public boolean hasPermission(final Invocation invocation) {
+        return invocation.source().hasPermission("corehost.command.msg");
+    }
+
+    @Override
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
         if (!(source instanceof Player)) {

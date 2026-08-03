@@ -1,0 +1,27 @@
+# // Permissions:
+# // - corehost.command.friend : Permet d'utiliser les commandes d'amis
+# // - corehost.command.party : Permet d'utiliser les commandes de groupe
+# // - corehost.command.msg : Permet d'envoyer des messages privés
+# // - corehost.command.reply : Permet de répondre aux messages privés
+# // - corehost.command.ignore : Permet d'ignorer un joueur
+# // - corehost.command.hub : Permet de retourner au hub
+# // - corehost.admin : Permet d'utiliser les commandes d'administration du proxy
+
+settings:
+  prefix: "&8[&6CoreHost&8] &7"
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+
+discord:
+  bot-token: ""
+  bot-id: ""
+
+database:
+  host: "127.0.0.1"
+  port: 3306
+  database: "corehost"
+  user: "root"
+  password: ""

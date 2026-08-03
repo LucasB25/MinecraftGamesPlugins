@@ -1,3 +1,5 @@
+# // Permissions:
+# // - corehost.admin : Permet d'utiliser les commandes d'administration de CoreHost Sumo
 settings:
   prefix: "&8[&eSumo&8] &7"
 

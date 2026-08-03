@@ -27,3 +27,14 @@ commands:
     description: Commande principale de CoreHost Lobby
     permission: corehost.admin
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
+
+permissions:
+  corehost.command.spawn:
+    description: Permet d'utiliser la commande de spawn
+    default: true
+  corehost.command.friend:
+    description: Permet d'utiliser les commandes d'amis
+    default: true
+  corehost.admin:
+    description: Permet d'utiliser les commandes d'administration
+    default: op

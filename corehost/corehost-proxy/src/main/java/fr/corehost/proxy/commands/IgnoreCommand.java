@@ -24,6 +24,11 @@ public class IgnoreCommand implements SimpleCommand {
     }
 
     @Override
+    public boolean hasPermission(final Invocation invocation) {
+        return invocation.source().hasPermission("corehost.command.ignore");
+    }
+
+    @Override
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
         if (!(source instanceof Player)) {

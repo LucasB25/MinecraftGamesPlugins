@@ -14,6 +14,8 @@ import java.util.UUID;
 public class ReportMessageCommand implements CommandExecutor {
 
     private final ReportManager reportManager;
+    private final java.util.Map<UUID, Long> cooldowns = new java.util.HashMap<>();
+    private static final long COOLDOWN_TIME = 5000L; // 5 seconds
 
     public ReportMessageCommand(ReportManager reportManager) {
         this.reportManager = reportManager;
@@ -27,6 +29,14 @@ public class ReportMessageCommand implements CommandExecutor {
         }
 
         Player reporter = (Player) sender;
+
+        if (cooldowns.containsKey(reporter.getUniqueId())) {
+            long timeLeft = (cooldowns.get(reporter.getUniqueId()) + COOLDOWN_TIME) - System.currentTimeMillis();
+            if (timeLeft > 0) {
+                reporter.sendMessage(Component.text("Veuillez patienter " + (timeLeft / 1000) + " secondes avant de signaler un autre message.", NamedTextColor.RED));
+                return true;
+            }
+        }
 
         if (args.length != 1) {
             reporter.sendMessage(Component.text("Erreur: Argument manquant.", NamedTextColor.RED));
@@ -73,6 +83,8 @@ public class ReportMessageCommand implements CommandExecutor {
         
         // Also log to console
         Bukkit.getConsoleSender().sendMessage(alertMessage);
+
+        cooldowns.put(reporter.getUniqueId(), System.currentTimeMillis());
 
         return true;
     }

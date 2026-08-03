@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import fr.corehost.api.database.DatabaseManager;
 import fr.corehost.api.redis.RedisManager;
+import com.google.gson.Gson;
 import redis.clients.jedis.Jedis;
 
 import java.sql.Connection;
@@ -23,11 +24,13 @@ public class ProfileManager {
     private final Logger logger;
     
     private final Cache<UUID, PlayerProfile> profileCache;
+    private final Gson gson;
 
     public ProfileManager(DatabaseManager databaseManager, RedisManager redisManager, Logger logger) {
         this.databaseManager = databaseManager;
         this.redisManager = redisManager;
         this.logger = logger;
+        this.gson = new Gson();
         
         this.profileCache = Caffeine.newBuilder()
                 .expireAfterAccess(30, TimeUnit.MINUTES)
@@ -47,7 +50,24 @@ public class ProfileManager {
         
         PlayerProfile profile = profileCache.getIfPresent(uuid);
         if (profile == null) {
-            profile = loadProfileFromStorage(uuid);
+            if (redisManager != null && redisManager.isConnected()) {
+                try (Jedis jedis = redisManager.getPool().getResource()) {
+                    String json = jedis.get("corehost:profile:data:" + uuid.toString());
+                    if (json != null) {
+                        profile = gson.fromJson(json, PlayerProfile.class);
+                    }
+                } catch (Exception e) {
+                    logger.severe("Failed to load profile from redis for " + uuid + ": " + e.getMessage());
+                }
+            }
+
+            if (profile == null) {
+                profile = loadProfileFromStorage(uuid);
+                if (profile != null) {
+                    saveProfileToRedis(profile);
+                }
+            }
+
             if (profile != null) {
                 profileCache.put(uuid, profile);
             }
@@ -158,6 +178,33 @@ public class ProfileManager {
             publishProfileUpdate(uuid);
         } catch (SQLException e) {
             logger.severe("Failed to add coins to " + uuid + ": " + e.getMessage());
+        }
+    }
+
+    public void saveProfileToRedis(PlayerProfile profile) {
+        if (redisManager != null && redisManager.isConnected()) {
+            try (Jedis jedis = redisManager.getPool().getResource()) {
+                // Expire in 1 hour (3600s) if not updated
+                jedis.setex("corehost:profile:data:" + profile.getUuid().toString(), 3600, gson.toJson(profile));
+            } catch (Exception e) {
+                logger.severe("Failed to save profile to redis for " + profile.getUuid() + ": " + e.getMessage());
+            }
+        }
+    }
+    
+    public void saveProfileToDatabase(PlayerProfile profile) {
+        if (databaseManager == null) return;
+        
+        try (Connection conn = databaseManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("UPDATE players SET name = ?, last_seen = ?, requests_blocked = ?, coins = ? WHERE uuid = ?")) {
+            stmt.setString(1, profile.getName());
+            stmt.setLong(2, profile.getLastSeen());
+            stmt.setBoolean(3, profile.isRequestsBlocked());
+            stmt.setInt(4, profile.getCoins());
+            stmt.setString(5, profile.getUuid().toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            logger.severe("Failed to save profile to database for " + profile.getUuid() + ": " + e.getMessage());
         }
     }
 }

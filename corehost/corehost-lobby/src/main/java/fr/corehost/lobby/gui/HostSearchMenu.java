@@ -135,10 +135,13 @@ public class HostSearchMenu implements CustomMenu {
                     ChatColor.GREEN + "► Cliquez pour rejoindre !"
             );
             
+            NamespacedKey serverKey = new NamespacedKey(plugin, "server_name");
+            
             ItemStack hostItem = new ItemBuilder(mat)
                 .setName(ChatColor.YELLOW + "Serveur " + host.getGameType())
                 .setLore(lore)
                 .addPersistentData(hostKey, PersistentDataType.STRING, host.getHostId().toString())
+                .addPersistentData(serverKey, PersistentDataType.STRING, host.getServerName())
                 .build();
             
             inventory.setItem(index, hostItem);

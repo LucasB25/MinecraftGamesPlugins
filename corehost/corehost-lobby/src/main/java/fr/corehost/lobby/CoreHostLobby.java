@@ -12,6 +12,8 @@ import fr.corehost.api.host.HostManager;
 import fr.corehost.api.friends.FriendManager;
 import fr.corehost.api.party.PartyManager;
 import fr.corehost.lobby.cloudnet.CloudNetServiceManager;
+import fr.corehost.lobby.parkour.ParkourManager;
+import fr.corehost.lobby.parkour.ParkourListener;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 
@@ -24,6 +26,7 @@ public class CoreHostLobby extends JavaPlugin {
     private CloudNetServiceManager cloudNetServiceManager;
     private fr.corehost.api.profile.ProfileManager profileManager;
     private fr.corehost.api.database.DatabaseManager databaseManager;
+    private ParkourManager parkourManager;
 
     @Override
     public void onEnable() {
@@ -72,6 +75,10 @@ public class CoreHostLobby extends JavaPlugin {
         pm.registerEvents(new fr.corehost.lobby.listeners.LobbyListener(this), this);
         pm.registerEvents(new AuthListener(this), this);
 
+        // Initialize Parkour
+        this.parkourManager = new ParkourManager(this);
+        pm.registerEvents(new ParkourListener(this.parkourManager), this);
+
         // Register Commands
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();
         if (getCommand("spawn") != null) getCommand("spawn").setExecutor(spawnCommand);
@@ -81,6 +88,9 @@ public class CoreHostLobby extends JavaPlugin {
 
         fr.corehost.lobby.commands.CoreHostCommand coreHostCommand = new fr.corehost.lobby.commands.CoreHostCommand(this);
         if (getCommand("corehost") != null) getCommand("corehost").setExecutor(coreHostCommand);
+        
+        fr.corehost.lobby.commands.AdminCommand adminCommand = new fr.corehost.lobby.commands.AdminCommand(this);
+        if (getCommand("admin") != null) getCommand("admin").setExecutor(adminCommand);
 
 
         
@@ -151,6 +161,10 @@ public class CoreHostLobby extends JavaPlugin {
 
     public CloudNetServiceManager getCloudNetServiceManager() {
         return cloudNetServiceManager;
+    }
+    
+    public ParkourManager getParkourManager() {
+        return parkourManager;
     }
 
     public void connectToServer(Player player, String serverName) {

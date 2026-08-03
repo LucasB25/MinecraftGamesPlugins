@@ -103,6 +103,10 @@ public class LobbyListener implements Listener {
             return;
         }
 
+        if (fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(player.getUniqueId())) {
+            return;
+        }
+
         ItemStack item = event.getItem();
 
         if (item == null || item.getType() == Material.AIR || !event.getAction().name().contains("RIGHT")) {
@@ -136,6 +140,10 @@ public class LobbyListener implements Listener {
             return;
         }
 
+        if (fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(player.getUniqueId())) {
+            return;
+        }
+
         // Always cancel clicks in lobby to prevent moving hotbar items
         event.setCancelled(true);
 
@@ -150,13 +158,18 @@ public class LobbyListener implements Listener {
     public void onInventoryDrag(InventoryDragEvent event) {
         // Prevent drag-splitting items in the lobby
         if (event.getWhoClicked() instanceof Player) {
-            event.setCancelled(true);
+            Player player = (Player) event.getWhoClicked();
+            if (!fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(player.getUniqueId())) {
+                event.setCancelled(true);
+            }
         }
     }
 
     @EventHandler
     public void onPlayerDropItem(PlayerDropItemEvent event) {
-        event.setCancelled(true);
+        if (!fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -184,6 +197,10 @@ public class LobbyListener implements Listener {
         Player player = event.getPlayer();
         pendingFriendAdd.remove(player.getUniqueId());
         pendingPartyInvite.remove(player.getUniqueId());
+        
+        if (plugin.getParkourManager() != null) {
+            plugin.getParkourManager().cancelParkour(player);
+        }
         
         if (plugin.getFriendManager() != null) {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -247,18 +264,25 @@ public class LobbyListener implements Listener {
     @EventHandler
     public void onEntityPickupItem(EntityPickupItemEvent event) {
         if (event.getEntity() instanceof Player) {
-            event.setCancelled(true);
+            Player player = (Player) event.getEntity();
+            if (!fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(player.getUniqueId())) {
+                event.setCancelled(true);
+            }
         }
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        event.setCancelled(true);
+        if (!fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        event.setCancelled(true);
+        if (!fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(event.getPlayer().getUniqueId())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler

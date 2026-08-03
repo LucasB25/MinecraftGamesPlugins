@@ -27,6 +27,11 @@ commands:
     description: Commande principale de CoreHost Lobby
     permission: corehost.admin
     permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
+  admin:
+    description: Toggle le mode build et créatif pour les administrateurs.
+    aliases: [build]
+    permission: corehost.admin
+    permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
 
 permissions:
   corehost.command.spawn:

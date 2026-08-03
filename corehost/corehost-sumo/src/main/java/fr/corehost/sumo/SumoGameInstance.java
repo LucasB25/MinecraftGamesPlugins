@@ -18,6 +18,7 @@ import fr.corehost.api.host.HostData;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.game.CoreHostGame;
 
+@SuppressWarnings("deprecation")
 public class SumoGameInstance {
 
     public enum GameState {

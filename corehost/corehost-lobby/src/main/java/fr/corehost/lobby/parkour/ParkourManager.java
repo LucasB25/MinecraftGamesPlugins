@@ -14,6 +14,7 @@ import fr.corehost.lobby.utils.Constants;
 
 import java.util.*;
 
+@SuppressWarnings("deprecation")
 public class ParkourManager {
 
     private final Map<String, ParkourCourse> courses;

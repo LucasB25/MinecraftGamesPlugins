@@ -7,6 +7,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import fr.corehost.staffmod.StaffModPlugin;
 
+@SuppressWarnings("deprecation")
 public class NametagManager {
 
     private final StaffModPlugin plugin;

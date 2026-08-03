@@ -40,7 +40,7 @@ public class PlayerProfileMenu implements CustomMenu {
             .setName(ChatColor.AQUA + "" + ChatColor.BOLD + player.getName())
             .setLore(
                 "",
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + ChatColor.GREEN + "Joueur",
+                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + fr.corehost.lobby.utils.LuckPermsHook.getPlayerPrefix(player),
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType,
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Coins : " + ChatColor.GOLD + coins + " ⛃",
                 ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Première connexion : " + ChatColor.WHITE + firstPlayedDate,

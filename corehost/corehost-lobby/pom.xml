@@ -33,6 +33,11 @@
             <artifactId>driver-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

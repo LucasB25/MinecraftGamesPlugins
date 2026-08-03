@@ -16,9 +16,12 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
             <scope>provided</scope>
         </dependency>
-        
         <!-- Guava is provided by Paper/Spigot, but explicit declaration helps with IDE support if needed.
              We will use the one bundled with the server. -->
     </dependencies>

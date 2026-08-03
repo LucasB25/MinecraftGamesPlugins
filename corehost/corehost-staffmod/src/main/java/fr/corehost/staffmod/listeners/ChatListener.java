@@ -45,16 +45,49 @@ public class ChatListener implements Listener {
                         .hoverEvent(HoverEvent.showText(Component.text("Signaler ce message", NamedTextColor.RED)))
                         .clickEvent(ClickEvent.runCommand("/staffmod_report " + messageId.toString()));
                 
-                // Render the original message
-                Component originalMessage = originalRenderer.render(source, sourceDisplayName, message, viewer);
+                // Determine player's prefix and color based on LuckPerms
+                String prefixText = "&7Joueurs";
+                try {
+                    net.luckperms.api.LuckPerms api = net.luckperms.api.LuckPermsProvider.get();
+                    net.luckperms.api.model.user.User user = api.getUserManager().getUser(source.getUniqueId());
+                    if (user != null) {
+                        String lpPrefix = user.getCachedData().getMetaData().getPrefix();
+                        if (lpPrefix != null) {
+                            prefixText = lpPrefix;
+                        } else {
+                            String group = user.getPrimaryGroup();
+                            if (group != null) {
+                                if (group.equalsIgnoreCase("default")) {
+                                    prefixText = "&7Joueurs";
+                                } else if (group.equalsIgnoreCase("admin") || group.equalsIgnoreCase("administrateur")) {
+                                    prefixText = "&c" + group.substring(0, 1).toUpperCase() + group.substring(1);
+                                } else if (group.equalsIgnoreCase("modo") || group.equalsIgnoreCase("moderateur")) {
+                                    prefixText = "&2" + group.substring(0, 1).toUpperCase() + group.substring(1);
+                                } else {
+                                    prefixText = "&b" + group.substring(0, 1).toUpperCase() + group.substring(1);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+
+                Component prefixComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize(prefixText);
+
+                // Format: [Prefix] PlayerName » Message
+                Component formattedMessage = Component.empty()
+                        .append(prefixComponent)
+                        .append(Component.text(" "))
+                        .append(Component.text(source.getName(), NamedTextColor.WHITE))
+                        .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
+                        .append(message.color(NamedTextColor.GRAY));
                 
                 // Do not show the warning triangle to the player who sent the message
                 if (viewer instanceof Player && ((Player) viewer).getUniqueId().equals(source.getUniqueId())) {
-                    return originalMessage;
+                    return formattedMessage;
                 }
                 
                 // Prepend the warning icon
-                return warningIcon.append(originalMessage);
+                return warningIcon.append(formattedMessage);
             }
         });
     }

@@ -70,6 +70,7 @@ public class FriendsMenu implements CustomMenu {
             // Preload data asynchronously to avoid lag spikes
             java.util.Map<UUID, String> friendNames = new java.util.HashMap<>();
             java.util.Map<UUID, Long> friendLastSeen = new java.util.HashMap<>();
+            java.util.Map<UUID, String> friendRanks = new java.util.HashMap<>();
 
             int asyncStart = page * 45;
             int asyncEnd = Math.min(asyncStart + 45, friends.size());
@@ -81,6 +82,7 @@ public class FriendsMenu implements CustomMenu {
                 if (!friendOnline.get(friendId)) {
                     friendLastSeen.put(friendId, plugin.getFriendManager().getLastSeen(friendId));
                 }
+                friendRanks.put(friendId, fr.corehost.lobby.utils.LuckPermsHook.getPlayerPrefix(friendId));
             }
 
             Bukkit.getScheduler().runTask(plugin, () -> {
@@ -113,7 +115,7 @@ public class FriendsMenu implements CustomMenu {
 
                     boolean isOnlineNetwork = friendOnline.getOrDefault(friendId, false);
 
-                    String rank = ChatColor.GRAY + "Joueur";
+                    String rank = friendRanks.getOrDefault(friendId, ChatColor.GRAY + "Joueur");
                     String accountType = (friendId.version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
 
                     List<String> lore = new ArrayList<>();

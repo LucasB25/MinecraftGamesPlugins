@@ -73,60 +73,66 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         // Ligne 14 : Profil
         objective.getScore(ChatColor.WHITE + " 👤 Profil :").setScore(14);
 
-        // Ligne 13 : Pseudo
+        // Ligne 13 : Grade
+        Team gradeTeam = board.registerNewTeam("grade");
+        gradeTeam.addEntry(ChatColor.LIGHT_PURPLE + "");
+        gradeTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Grade: " + LuckPermsHook.getPlayerPrefix(player));
+        objective.getScore(ChatColor.LIGHT_PURPLE + "").setScore(13);
+
+        // Ligne 12 : Pseudo
         Team pseudoTeam = board.registerNewTeam("pseudo");
         pseudoTeam.addEntry(ChatColor.AQUA + "");
         pseudoTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Pseudo: " + ChatColor.GREEN + player.getName());
-        objective.getScore(ChatColor.AQUA + "").setScore(13);
+        objective.getScore(ChatColor.AQUA + "").setScore(12);
 
-        // Ligne 12 : Coins
+        // Ligne 11 : Coins
         Team coinsTeam = board.registerNewTeam("coins");
         coinsTeam.addEntry(ChatColor.YELLOW + "");
         coinsTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Coins: " + ChatColor.YELLOW + "0 ⛃");
-        objective.getScore(ChatColor.YELLOW + "").setScore(12);
+        objective.getScore(ChatColor.YELLOW + "").setScore(11);
 
-        // Ligne 11 : Espace
-        objective.getScore(" ").setScore(11);
+        // Ligne 10 : Espace
+        objective.getScore(" ").setScore(10);
 
-        // Ligne 10 : Parkour
-        objective.getScore(ChatColor.WHITE + " 🏃 Parkour :").setScore(10);
+        // Ligne 9 : Parkour
+        objective.getScore(ChatColor.WHITE + " 🏃 Parkour :").setScore(9);
 
-        // Ligne 9 : Record Easy
+        // Ligne 8 : Record Easy
         Team recordEasyTeam = board.registerNewTeam("record_easy");
         recordEasyTeam.addEntry(ChatColor.RED + "");
         recordEasyTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Easy: " + ChatColor.RED + "Aucun");
-        objective.getScore(ChatColor.RED + "").setScore(9);
+        objective.getScore(ChatColor.RED + "").setScore(8);
 
-        // Ligne 8 : Record Hard
+        // Ligne 7 : Record Hard
         Team recordHardTeam = board.registerNewTeam("record_hard");
         recordHardTeam.addEntry(ChatColor.DARK_RED + "");
         recordHardTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Hard: " + ChatColor.RED + "Aucun");
-        objective.getScore(ChatColor.DARK_RED + "").setScore(8);
+        objective.getScore(ChatColor.DARK_RED + "").setScore(7);
 
-        // Ligne 7 : Espace
-        objective.getScore("  ").setScore(7);
+        // Ligne 6 : Espace
+        objective.getScore("  ").setScore(6);
         
-        // Ligne 6 : Serveur
-        objective.getScore(ChatColor.WHITE + " 🌍 Serveur :").setScore(6);
+        // Ligne 5 : Serveur
+        objective.getScore(ChatColor.WHITE + " 🌍 Serveur :").setScore(5);
 
-        // Ligne 5 : Joueurs en ligne
+        // Ligne 4 : Joueurs en ligne
         Team playersTeam = board.registerNewTeam("players_count");
         playersTeam.addEntry(ChatColor.GREEN + "");
         playersTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Joueurs: " + ChatColor.GREEN + "0");
-        objective.getScore(ChatColor.GREEN + "").setScore(5);
+        objective.getScore(ChatColor.GREEN + "").setScore(4);
 
-        // Ligne 4 : Têtes Progression
+        // Ligne 3 : Têtes Progression
         Team headTeam = board.registerNewTeam("heads");
-        headTeam.addEntry(ChatColor.LIGHT_PURPLE + "");
+        headTeam.addEntry(ChatColor.GOLD + "");
         headTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Têtes: " + ChatColor.GOLD + "0/0");
-        objective.getScore(ChatColor.LIGHT_PURPLE + "").setScore(4);
+        objective.getScore(ChatColor.GOLD + "").setScore(3);
 
-        // Ligne 3 : Séparateur bas
-        objective.getScore(ChatColor.GRAY + "" + ChatColor.DARK_GRAY + ChatColor.STRIKETHROUGH + "------------------------").setScore(3);
+        // Ligne 2 : Séparateur bas
+        objective.getScore(ChatColor.GRAY + "" + ChatColor.DARK_GRAY + ChatColor.STRIKETHROUGH + "------------------------").setScore(2);
 
-        // Ligne 2 : IP
+        // Ligne 1 : IP
         String ip = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("scoreboard.ip", "&eplay.corehost.fr"));
-        objective.getScore(ip).setScore(2);
+        objective.getScore(ip).setScore(1);
 
         // No Collision Team
         Team collisionTeam = board.registerNewTeam("npc_coll");
@@ -167,6 +173,12 @@ public class LobbyScoreboardManager implements PluginMessageListener {
     public void updateScoreboard(Player player) {
         Scoreboard board = scoreboards.get(player.getUniqueId());
         if (board == null) return;
+
+        // Mise à jour du grade
+        Team gradeTeam = board.getTeam("grade");
+        if (gradeTeam != null) {
+            gradeTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Grade: " + LuckPermsHook.getPlayerPrefix(player));
+        }
 
         // Mise à jour des joueurs
         Team playersTeam = board.getTeam("players_count");

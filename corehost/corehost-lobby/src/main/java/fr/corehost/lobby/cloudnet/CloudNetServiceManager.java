@@ -162,17 +162,4 @@ public class CloudNetServiceManager {
         });
     }
     
-    private void sendPlayerToServer(Player player, String serverName) {
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            try {
-                java.io.ByteArrayOutputStream b = new java.io.ByteArrayOutputStream();
-                java.io.DataOutputStream out = new java.io.DataOutputStream(b);
-                out.writeUTF("Connect");
-                out.writeUTF(serverName);
-                player.sendPluginMessage(plugin, "BungeeCord", b.toByteArray());
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
-    }
 }

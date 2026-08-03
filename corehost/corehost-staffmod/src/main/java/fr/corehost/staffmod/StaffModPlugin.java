@@ -19,6 +19,9 @@ public class StaffModPlugin extends JavaPlugin {
         // Register command
         getCommand("staffmod_report").setExecutor(new ReportMessageCommand(reportManager));
 
+        // Start global Nametag updater
+        new fr.corehost.staffmod.manager.NametagManager(this);
+
         getLogger().info("StaffMod a été activé avec succès !");
     }
 

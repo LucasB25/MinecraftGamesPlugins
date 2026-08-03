@@ -1,6 +1,5 @@
 package fr.corehost.lobby.parkour;
 
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
@@ -9,8 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import fr.corehost.lobby.utils.Constants;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

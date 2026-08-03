@@ -239,29 +239,5 @@ public class LobbyScoreboardManager implements PluginMessageListener {
             headTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Têtes: " + color + found + "/" + total);
         }
 
-        // Mise à jour des nametags
-        for (Player target : Bukkit.getOnlinePlayers()) {
-            String teamName = "nt_" + target.getName();
-            if (teamName.length() > 16) teamName = teamName.substring(0, 16);
-            
-            Team team = board.getTeam(teamName);
-            if (team == null) {
-                team = board.registerNewTeam(teamName);
-                team.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
-            }
-            
-            String prefix = LuckPermsHook.getPlayerPrefix(target);
-            if (prefix.length() > 63) prefix = prefix.substring(0, 63);
-            team.setPrefix(prefix + " ");
-            
-            String lastColors = ChatColor.getLastColors(prefix);
-            if (!lastColors.isEmpty()) {
-                team.setColor(ChatColor.getByChar(lastColors.charAt(lastColors.length() - 1)));
-            }
-            
-            if (!team.hasEntry(target.getName())) {
-                team.addEntry(target.getName());
-            }
-        }
     }
 }

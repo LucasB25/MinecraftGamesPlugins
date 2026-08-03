@@ -1,0 +1,16 @@
+name: CoreHost-StaffMod
+version: 1.0-SNAPSHOT
+main: fr.corehost.staffmod.StaffModPlugin
+api-version: 1.20
+commands:
+  staffmod_report:
+    description: Internal command to report a chat message
+    usage: /staffmod_report <uuid>
+    permission: staffmod.use
+permissions:
+  staffmod.use:
+    description: Allows clicking the triangle to report
+    default: true
+  staffmod.notify:
+    description: Receives reports from players
+    default: op

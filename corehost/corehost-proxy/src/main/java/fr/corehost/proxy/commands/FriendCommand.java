@@ -30,7 +30,7 @@ public class FriendCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("corehost.command.friend");
+        return true;
     }
 
     @Override
@@ -63,6 +63,11 @@ public class FriendCommand implements SimpleCommand {
         }
 
         Player player = (Player) source;
+
+        if (!player.hasPermission("corehost.command.friend")) {
+            player.sendMessage(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED));
+            return;
+        }
         String[] args = invocation.arguments();
 
         if (plugin.getFriendManager() == null) {

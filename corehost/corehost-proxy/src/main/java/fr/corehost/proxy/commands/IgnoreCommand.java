@@ -25,7 +25,7 @@ public class IgnoreCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("corehost.command.ignore");
+        return true;
     }
 
     @Override
@@ -37,6 +37,11 @@ public class IgnoreCommand implements SimpleCommand {
         }
 
         Player player = (Player) source;
+
+        if (!player.hasPermission("corehost.command.ignore")) {
+            player.sendMessage(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED));
+            return;
+        }
         String[] args = invocation.arguments();
 
         if (args.length != 1) {

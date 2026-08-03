@@ -24,7 +24,10 @@ public class MsgCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("corehost.command.msg");
+        // Always return true to prevent Velocity from denying signed commands.
+        // Denying a command with signable arguments (like /msg) kicks the player.
+        // Permission is checked inside execute() instead.
+        return true;
     }
 
     @Override
@@ -36,6 +39,11 @@ public class MsgCommand implements SimpleCommand {
         }
 
         Player player = (Player) source;
+
+        if (!player.hasPermission("corehost.command.msg")) {
+            player.sendMessage(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED));
+            return;
+        }
         String[] args = invocation.arguments();
 
         if (args.length < 2) {

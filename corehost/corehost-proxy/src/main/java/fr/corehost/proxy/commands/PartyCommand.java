@@ -32,7 +32,7 @@ public class PartyCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("corehost.command.party");
+        return true;
     }
 
     @Override
@@ -65,6 +65,11 @@ public class PartyCommand implements SimpleCommand {
         }
 
         Player player = (Player) source;
+
+        if (!player.hasPermission("corehost.command.party")) {
+            player.sendMessage(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED));
+            return;
+        }
         String[] args = invocation.arguments();
 
         if (args.length == 0) {

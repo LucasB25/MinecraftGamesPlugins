@@ -20,7 +20,7 @@ public class HubCommand implements SimpleCommand {
 
     @Override
     public boolean hasPermission(final Invocation invocation) {
-        return invocation.source().hasPermission("corehost.command.hub");
+        return true;
     }
 
     @Override
@@ -31,6 +31,11 @@ public class HubCommand implements SimpleCommand {
         }
 
         Player player = (Player) invocation.source();
+
+        if (!player.hasPermission("corehost.command.hub")) {
+            player.sendMessage(ProxyPrefix.message("Vous n'avez pas la permission.", NamedTextColor.RED));
+            return;
+        }
 
         // Check if the player is already on the Lobby server
         Optional<RegisteredServer> currentServer = player.getCurrentServer().map(serverConnection -> serverConnection.getServer());

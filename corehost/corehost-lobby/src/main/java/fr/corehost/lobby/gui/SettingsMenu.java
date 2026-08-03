@@ -9,12 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import fr.corehost.lobby.utils.Constants;
 import fr.corehost.lobby.utils.ItemBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SettingsMenu implements CustomMenu {
 

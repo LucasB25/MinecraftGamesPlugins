@@ -30,9 +30,36 @@ public class HeadHuntManager {
     private static final int COINS_PER_HEAD = 2;
     private static final int FINAL_BONUS = 10;
 
+    private final java.util.Map<UUID, Set<String>> cachedFoundHeads = new java.util.concurrent.ConcurrentHashMap<>();
+
     public HeadHuntManager(CoreHostLobby plugin) {
         this.plugin = plugin;
         loadHeads();
+        startParticleTask();
+    }
+
+    private void startParticleTask() {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                Set<String> found = cachedFoundHeads.get(player.getUniqueId());
+                if (found == null) continue;
+                
+                // Only spawn particles if player is in same world as heads (all heads are in lobby world)
+                for (Location head : heads) {
+                    if (!player.getWorld().equals(head.getWorld())) continue;
+                    
+                    // distance check to prevent sending packets too far
+                    if (player.getLocation().distanceSquared(head) > 2500) continue; // 50 blocks
+                    
+                    if (!found.contains(serializeLocation(head))) {
+                        // Spawn particle slightly above the block
+                        player.spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, 
+                            head.clone().add(0.5, 0.8, 0.5), 
+                            2, 0.2, 0.2, 0.2, 0);
+                    }
+                }
+            }
+        }, 20L, 20L);
     }
 
     private void loadHeads() {
@@ -128,8 +155,11 @@ public class HeadHuntManager {
                 }
                 plugin.getProfileManager().addCoins(player.getUniqueId(), COINS_PER_HEAD);
 
-                // Add to redis
+                // Add to redis and cache
                 jedis.sadd(redisKey, headId);
+                Set<String> cache = cachedFoundHeads.get(player.getUniqueId());
+                if (cache != null) cache.add(headId);
+                
                 long foundCount = jedis.scard(redisKey);
 
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
@@ -168,10 +198,28 @@ public class HeadHuntManager {
         if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
             try (Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
                 jedis.del("corehost:headhunt:" + uuid.toString());
+                Set<String> cache = cachedFoundHeads.get(uuid);
+                if (cache != null) cache.clear();
             } catch (Exception e) {
                 plugin.getLogger().severe("Erreur redis HeadHunt reset pour " + uuid + " : " + e.getMessage());
             }
         }
+    }
+
+    public void loadPlayerCache(UUID uuid) {
+        if (plugin.getRedisManager() == null || !plugin.getRedisManager().isConnected()) return;
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try (Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                Set<String> found = jedis.smembers("corehost:headhunt:" + uuid.toString());
+                cachedFoundHeads.put(uuid, found != null ? found : new java.util.HashSet<>());
+            } catch (Exception e) {
+                plugin.getLogger().severe("Erreur chargement cache HeadHunt pour " + uuid + " : " + e.getMessage());
+            }
+        });
+    }
+
+    public void unloadPlayerCache(UUID uuid) {
+        cachedFoundHeads.remove(uuid);
     }
 
     private boolean isSameBlock(Location l1, Location l2) {

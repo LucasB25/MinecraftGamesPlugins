@@ -96,6 +96,11 @@ public class LobbyListener implements Listener {
         if (plugin.getScoreboardManager() != null) {
             plugin.getScoreboardManager().setupScoreboard(player);
         }
+
+        // HeadHunt Cache
+        if (plugin.getHeadHuntManager() != null) {
+            plugin.getHeadHuntManager().loadPlayerCache(player.getUniqueId());
+        }
     }
 
     @EventHandler
@@ -214,6 +219,10 @@ public class LobbyListener implements Listener {
         
         if (plugin.getScoreboardManager() != null) {
             plugin.getScoreboardManager().removeScoreboard(player);
+        }
+        
+        if (plugin.getHeadHuntManager() != null) {
+            plugin.getHeadHuntManager().unloadPlayerCache(player.getUniqueId());
         }
     }
 

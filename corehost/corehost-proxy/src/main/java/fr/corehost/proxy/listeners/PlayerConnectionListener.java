@@ -71,6 +71,14 @@ public class PlayerConnectionListener {
             plugin.getServer().getScheduler().buildTask(plugin, () -> {
                 plugin.getFriendManager().updateLastSeen(player.getUniqueId());
                 plugin.getFriendManager().setOnline(player.getUniqueId(), false);
+                
+                // Save profile to MySQL database on quit
+                if (plugin.getProfileManager() != null) {
+                    fr.corehost.api.profile.PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                    if (profile != null) {
+                        plugin.getProfileManager().saveProfileToDatabase(profile);
+                    }
+                }
             }).schedule();
         }
     }

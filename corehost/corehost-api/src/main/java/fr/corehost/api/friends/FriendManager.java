@@ -171,8 +171,8 @@ public class FriendManager {
             stmt.executeUpdate();
             
             if (profileManager != null) {
-                profileManager.publishProfileUpdate(receiver);
-                profileManager.publishProfileUpdate(sender);
+                profileManager.syncAndInvalidateCache(receiver);
+                profileManager.syncAndInvalidateCache(sender);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -197,8 +197,8 @@ public class FriendManager {
             stmt.executeUpdate();
             
             if (profileManager != null) {
-                profileManager.publishProfileUpdate(player1);
-                profileManager.publishProfileUpdate(player2);
+                profileManager.syncAndInvalidateCache(player1);
+                profileManager.syncAndInvalidateCache(player2);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -215,7 +215,7 @@ public class FriendManager {
             stmt.executeUpdate();
             
             if (profileManager != null) {
-                profileManager.publishProfileUpdate(uuid);
+                profileManager.syncAndInvalidateCache(uuid);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -250,6 +250,10 @@ public class FriendManager {
             stmt.setLong(1, System.currentTimeMillis());
             stmt.setString(2, uuid.toString());
             stmt.executeUpdate();
+            
+            if (profileManager != null) {
+                profileManager.syncAndInvalidateCache(uuid);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

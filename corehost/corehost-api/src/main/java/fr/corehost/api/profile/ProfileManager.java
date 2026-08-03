@@ -163,6 +163,20 @@ public class ProfileManager {
     }
 
     /**
+     * Invalidates Redis cache and publishes an update message.
+     */
+    public void syncAndInvalidateCache(UUID uuid) {
+        if (redisManager != null && redisManager.isConnected()) {
+            try (Jedis jedis = redisManager.getPool().getResource()) {
+                jedis.del("corehost:profile:data:" + uuid.toString());
+            } catch (Exception e) {
+                logger.severe("Failed to invalidate redis profile data for " + uuid + ": " + e.getMessage());
+            }
+        }
+        publishProfileUpdate(uuid);
+    }
+
+    /**
      * Adds coins to a player and syncs it.
      */
     public void addCoins(UUID uuid, int amount) {
@@ -174,15 +188,7 @@ public class ProfileManager {
             stmt.setString(2, uuid.toString());
             stmt.executeUpdate();
             
-            // Invalidate Redis cache so next fetch comes from MySQL
-            if (redisManager != null && redisManager.isConnected()) {
-                try (Jedis jedis = redisManager.getPool().getResource()) {
-                    jedis.del("corehost:profile:data:" + uuid.toString());
-                }
-            }
-            
-            // Publish update to invalidate cache across the network
-            publishProfileUpdate(uuid);
+            syncAndInvalidateCache(uuid);
         } catch (SQLException e) {
             logger.severe("Failed to add coins to " + uuid + ": " + e.getMessage());
         }

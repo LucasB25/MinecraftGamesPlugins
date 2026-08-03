@@ -1,10 +1,16 @@
 package fr.corehost.lobby.parkour;
 
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitTask;
 import fr.corehost.lobby.CoreHostLobby;
+import fr.corehost.lobby.utils.Constants;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -127,7 +133,8 @@ public class ParkourManager {
             int currentCp = playerCheckpoints.getOrDefault(player.getUniqueId(), 0);
             if (cpIndex == currentCp) {
                 playerCheckpoints.put(player.getUniqueId(), currentCp + 1);
-                player.sendMessage("§eCheckpoint " + (currentCp + 1) + "/" + checkpoints.size() + " atteint !");
+                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Checkpoint " + ChatColor.WHITE + (currentCp + 1) + "/" + checkpoints.size() + ChatColor.YELLOW + " atteint !");
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2.0f);
                 // Mettre à jour la startLocation pour pouvoir y retourner
                 startLocations.put(player.getUniqueId(), player.getLocation());
             }
@@ -153,12 +160,17 @@ public class ParkourManager {
 
     public void startParkour(Player player) {
         if (activeSessions.containsKey(player.getUniqueId())) {
-            player.sendMessage("§eParkour recommencé !");
+            long lastStart = activeSessions.get(player.getUniqueId());
+            if (System.currentTimeMillis() - lastStart < 1000) {
+                return; // Anti-spam (empêche le double appel lit + plaque)
+            }
+            player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Parkour recommencé !");
             cancelTimeout(player);
         } else {
-            player.sendMessage("§aParkour commencé ! Vous avez 2 minutes.");
+            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Parkour commencé ! Vous avez " + ChatColor.WHITE + "2 minutes" + ChatColor.GREEN + ".");
         }
         
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 2.0f);
         
         activeSessions.put(player.getUniqueId(), System.currentTimeMillis());
         startLocations.put(player.getUniqueId(), player.getLocation());
@@ -169,7 +181,8 @@ public class ParkourManager {
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (activeSessions.containsKey(player.getUniqueId())) {
                 cancelParkour(player);
-                player.sendMessage("§cTemps écoulé (2 minutes) ! Parkour annulé.");
+                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Temps écoulé " + ChatColor.GRAY + "(2 minutes)" + ChatColor.RED + " ! Parkour annulé.");
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             }
         }, 120 * 20L);
         timeoutTasks.put(player.getUniqueId(), task);
@@ -190,26 +203,26 @@ public class ParkourManager {
     }
     
     private void giveReturnItem(Player player) {
-        org.bukkit.inventory.ItemStack returnItem = new org.bukkit.inventory.ItemStack(org.bukkit.Material.RED_BED);
-        org.bukkit.inventory.meta.ItemMeta meta = returnItem.getItemMeta();
+        ItemStack returnItem = new ItemStack(Material.RED_BED);
+        ItemMeta meta = returnItem.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName("§c§lRetour au dernier Checkpoint §7(Clic-Droit)");
+            meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Retour au Checkpoint " + ChatColor.GRAY + "(Clic-Droit)");
             returnItem.setItemMeta(meta);
         }
         player.getInventory().setItem(0, returnItem);
         
-        org.bukkit.inventory.ItemStack quitItem = new org.bukkit.inventory.ItemStack(org.bukkit.Material.OAK_DOOR);
-        org.bukkit.inventory.meta.ItemMeta quitMeta = quitItem.getItemMeta();
+        ItemStack quitItem = new ItemStack(Material.OAK_DOOR);
+        ItemMeta quitMeta = quitItem.getItemMeta();
         if (quitMeta != null) {
-            quitMeta.setDisplayName("§4§lQuitter le Parkour §7(Clic-Droit)");
+            quitMeta.setDisplayName(ChatColor.DARK_RED + "" + ChatColor.BOLD + "Quitter le Parkour " + ChatColor.GRAY + "(Clic-Droit)");
             quitItem.setItemMeta(quitMeta);
         }
         player.getInventory().setItem(1, quitItem);
     }
     
     private void removeReturnItem(Player player) {
-        player.getInventory().setItem(0, new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR));
-        player.getInventory().setItem(1, new org.bukkit.inventory.ItemStack(org.bukkit.Material.AIR));
+        player.getInventory().setItem(0, new ItemStack(Material.AIR));
+        player.getInventory().setItem(1, new ItemStack(Material.AIR));
     }
 
     public void endParkour(Player player) {
@@ -218,7 +231,8 @@ public class ParkourManager {
             int currentCp = playerCheckpoints.getOrDefault(player.getUniqueId(), 0);
             
             if (currentCp < requiredCheckpoints) {
-                player.sendMessage("§cVous n'avez pas validé tous les checkpoints ! (Manquant: " + (requiredCheckpoints - currentCp) + ")");
+                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Checkpoints manquants : " + ChatColor.WHITE + (requiredCheckpoints - currentCp) + "/" + requiredCheckpoints);
+                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 return;
             }
             
@@ -231,11 +245,13 @@ public class ParkourManager {
             long timeTaken = System.currentTimeMillis() - startTime;
             activeSessions.remove(player.getUniqueId());
 
-            player.sendMessage("§aBravo ! Vous avez terminé le parkour en §e" + (timeTaken / 1000.0) + "s §a!");
+            String formattedTime = String.format("%.2f", timeTaken / 1000.0);
+            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Bravo ! Parkour terminé en " + ChatColor.YELLOW + formattedTime + "s" + ChatColor.GREEN + " !");
+            player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.2f);
 
             if (!bestTimes.containsKey(player.getUniqueId()) || bestTimes.get(player.getUniqueId()) > timeTaken) {
                 bestTimes.put(player.getUniqueId(), timeTaken);
-                player.sendMessage("§6Nouveau record personnel !");
+                player.sendMessage(Constants.PREFIX + ChatColor.GOLD + "✦ Nouveau record personnel !");
                 saveTimes();
                 updateHologram();
             }
@@ -249,7 +265,7 @@ public class ParkourManager {
             startLocations.remove(player.getUniqueId());
             playerCheckpoints.remove(player.getUniqueId());
             activeSessions.remove(player.getUniqueId());
-            player.sendMessage("§cParkour annulé.");
+            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Parkour annulé.");
         }
     }
     
@@ -264,10 +280,12 @@ public class ParkourManager {
         if (hologram == null) return;
         
         List<String> lines = new ArrayList<>();
-        lines.add("§b§lTop 10 Parkour");
+        lines.add("");
+        lines.add(ChatColor.GOLD + "" + ChatColor.BOLD + "✦ Top 10 Parkour ✦");
+        lines.add("");
         
         if (bestTimes.isEmpty()) {
-            lines.add("§7Aucun record pour l'instant.");
+            lines.add(ChatColor.GRAY + "Aucun record pour l'instant.");
         } else {
             List<Map.Entry<UUID, Long>> sorted = bestTimes.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue())
@@ -278,12 +296,20 @@ public class ParkourManager {
             for (Map.Entry<UUID, Long> entry : sorted) {
                 String name = Bukkit.getOfflinePlayer(entry.getKey()).getName();
                 if (name == null) name = "Inconnu";
-                double seconds = entry.getValue() / 1000.0;
-                lines.add("§e" + rank + ". §f" + name + " §7- §a" + seconds + "s");
+                String formattedTime = String.format("%.2f", entry.getValue() / 1000.0);
+                
+                ChatColor rankColor;
+                if (rank == 1) rankColor = ChatColor.GOLD;
+                else if (rank == 2) rankColor = ChatColor.GRAY;
+                else if (rank == 3) rankColor = ChatColor.RED;
+                else rankColor = ChatColor.DARK_GRAY;
+                
+                lines.add(rankColor + "#" + rank + " " + ChatColor.WHITE + name + ChatColor.DARK_GRAY + " - " + ChatColor.GREEN + formattedTime + "s");
                 rank++;
             }
         }
         
+        lines.add("");
         hologram.update(lines);
     }
     

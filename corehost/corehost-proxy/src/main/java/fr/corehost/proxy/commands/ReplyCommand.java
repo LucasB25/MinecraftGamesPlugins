@@ -7,6 +7,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import fr.corehost.proxy.CoreHostProxy;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import fr.corehost.proxy.utils.ProxyPrefix;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -30,7 +31,7 @@ public class ReplyCommand implements SimpleCommand {
     public void execute(Invocation invocation) {
         CommandSource source = invocation.source();
         if (!(source instanceof Player)) {
-            source.sendMessage(Component.text("Cette commande est réservée aux joueurs.", NamedTextColor.RED));
+            source.sendMessage(ProxyPrefix.message("Cette commande est réservée aux joueurs.", NamedTextColor.RED));
             return;
         }
 
@@ -38,21 +39,21 @@ public class ReplyCommand implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length < 1) {
-            player.sendMessage(Component.text("Utilisation : /r <message>", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Utilisation : /r <message>", NamedTextColor.RED));
             return;
         }
 
         UUID targetUuid = plugin.getMessageManager().getLastMessaged(player.getUniqueId());
 
         if (targetUuid == null) {
-            player.sendMessage(Component.text("Vous n'avez personne à qui répondre.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous n'avez personne à qui répondre.", NamedTextColor.RED));
             return;
         }
 
         Optional<Player> targetOpt = proxy.getPlayer(targetUuid);
 
         if (targetOpt.isEmpty()) {
-            player.sendMessage(Component.text("Le joueur n'est plus connecté.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Le joueur n'est plus connecté.", NamedTextColor.RED));
             plugin.getMessageManager().removeLastMessaged(player.getUniqueId());
             return;
         }
@@ -60,12 +61,12 @@ public class ReplyCommand implements SimpleCommand {
         Player target = targetOpt.get();
 
         if (plugin.getMessageManager().isMessagesBlocked(target.getUniqueId())) {
-            player.sendMessage(Component.text("Ce joueur n'accepte pas les messages privés.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Ce joueur n'accepte pas les messages privés.", NamedTextColor.RED));
             return;
         }
 
         if (plugin.getMessageManager().isIgnoring(target.getUniqueId(), player.getUniqueId())) {
-            player.sendMessage(Component.text("Vous ne pouvez pas envoyer de message à ce joueur.", NamedTextColor.RED));
+            player.sendMessage(ProxyPrefix.message("Vous ne pouvez pas envoyer de message à ce joueur.", NamedTextColor.RED));
             return;
         }
 

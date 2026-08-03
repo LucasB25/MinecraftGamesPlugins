@@ -65,12 +65,12 @@ public class SumoGameInstance {
 
     public void addPlayer(Player player) {
         if (mapConfig == null || !mapConfig.isSetup()) {
-            player.sendMessage(ChatColor.RED + "Désolé, il y a un souci dans le mode de jeu : aucune carte n'est disponible ou configurée correctement.");
+            player.sendMessage(SUMO_PREFIX + ChatColor.RED + "Désolé, il y a un souci dans le mode de jeu : aucune carte n'est disponible ou configurée correctement.");
             return;
         }
 
         if (state != GameState.WAITING && state != GameState.STARTING) {
-            player.sendMessage(ChatColor.RED + "La partie a déjà commencé.");
+            player.sendMessage(SUMO_PREFIX + ChatColor.RED + "La partie a déjà commencé.");
             return;
         }
 
@@ -390,7 +390,7 @@ public class SumoGameInstance {
         }
     }
 
-    private static final String SUMO_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "Sumo" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+    public static final String SUMO_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "Sumo" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
 
     private void broadcast(String message) {
         for (UUID uuid : players) {

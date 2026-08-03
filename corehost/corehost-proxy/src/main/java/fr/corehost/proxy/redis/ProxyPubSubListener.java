@@ -9,6 +9,7 @@ import fr.corehost.api.host.HostData;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.api.party.PartyManager;
 import fr.corehost.proxy.CoreHostProxy;
+import fr.corehost.proxy.utils.ProxyPrefix;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import redis.clients.jedis.JedisPubSub;
@@ -67,9 +68,9 @@ public class ProxyPubSubListener extends JedisPubSub {
 
                 if (ownerOpt.isPresent()) {
                     Player owner = ownerOpt.get();
-                    owner.sendMessage(Component.text("Votre serveur Host ", NamedTextColor.GRAY)
+                    owner.sendMessage(ProxyPrefix.get().append(Component.text("Votre serveur Host ", NamedTextColor.GRAY)
                             .append(Component.text(targetHost.getGameType(), NamedTextColor.GOLD))
-                            .append(Component.text(" est prêt ! Téléportation en cours...", NamedTextColor.GRAY)));
+                            .append(Component.text(" est prêt ! Téléportation en cours...", NamedTextColor.GRAY))));
 
                     owner.createConnectionRequest(targetServer.get()).connect();
 
@@ -81,7 +82,7 @@ public class ProxyPubSubListener extends JedisPubSub {
                             for (UUID memberId : members) {
                                 if (!memberId.equals(ownerId)) {
                                     server.getPlayer(memberId).ifPresent(member -> {
-                                        member.sendMessage(Component.text("Le Host de la party est prêt ! Téléportation en cours...", NamedTextColor.GRAY));
+                                        member.sendMessage(ProxyPrefix.message("Le Host de la party est prêt ! Téléportation en cours...", NamedTextColor.GRAY));
                                         member.createConnectionRequest(targetServer.get()).connect();
                                     });
                                 }

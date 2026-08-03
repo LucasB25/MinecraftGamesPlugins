@@ -146,10 +146,10 @@ public class AuthListener implements Listener {
                     isPending2FA.remove(uuid);
                     if (is2FA) {
                         player.sendTitle(ChatColor.GREEN + "Accès Autorisé", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
-                        player.sendMessage(ChatColor.GREEN + "Authentification réussie !");
+                        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Authentification réussie !");
                     } else {
                         player.sendTitle(ChatColor.GREEN + "Liaison Réussie", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
-                        player.sendMessage(ChatColor.GREEN + "Votre compte a bien été lié à Discord !");
+                        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Votre compte a bien été lié à Discord !");
                     }
                     this.cancel();
                     actionbarTasks.remove(uuid);
@@ -237,9 +237,9 @@ public class AuthListener implements Listener {
             event.setCancelled(true);
             boolean is2FA = isPending2FA.getOrDefault(uuid, false);
             if (is2FA) {
-                event.getPlayer().sendMessage(ChatColor.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
             } else {
-                event.getPlayer().sendMessage(ChatColor.RED + "Vous devez lier votre compte Discord pour parler ! Code: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez lier votre compte Discord pour parler ! Code: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
             }
         }
     }
@@ -251,9 +251,9 @@ public class AuthListener implements Listener {
             event.setCancelled(true);
             boolean is2FA = isPending2FA.getOrDefault(uuid, false);
             if (is2FA) {
-                event.getPlayer().sendMessage(ChatColor.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
             } else {
-                event.getPlayer().sendMessage(ChatColor.RED + "Vous devez lier votre compte Discord pour faire des commandes ! Code: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez lier votre compte Discord pour faire des commandes ! Code: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
             }
         }
     }

@@ -23,8 +23,12 @@ public class ParkourHologram {
         for (String line : textLines) {
             ArmorStand as = (ArmorStand) location.getWorld().spawnEntity(currentLoc, EntityType.ARMOR_STAND);
             as.setVisible(false);
-            as.setCustomNameVisible(true);
-            as.setCustomName(line);
+            if (line == null || line.isEmpty()) {
+                as.setCustomNameVisible(false);
+            } else {
+                as.setCustomNameVisible(true);
+                as.setCustomName(line);
+            }
             as.setGravity(false);
             as.setMarker(true);
             as.addScoreboardTag("parkour_holo");

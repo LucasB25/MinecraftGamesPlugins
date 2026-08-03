@@ -1,13 +1,15 @@
 package fr.corehost.lobby.parkour;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import fr.corehost.lobby.utils.Constants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +34,7 @@ public class ParkourListener implements Listener {
                 if (event.getItem().getType() == Material.RED_BED) {
                     if (parkourManager.isInParkour(player)) {
                         parkourManager.returnToStart(player);
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.5f);
                         event.setCancelled(true);
                     }
                 } else if (event.getItem().getType() == Material.OAK_DOOR) {
@@ -42,6 +45,7 @@ public class ParkourListener implements Listener {
                         spawn.setZ(spawn.getBlockZ() + 0.5);
                         spawn.setYaw(spawn.getYaw() + 180f);
                         player.teleport(spawn);
+                        player.playSound(player.getLocation(), Sound.BLOCK_WOODEN_DOOR_CLOSE, 1.0f, 1.0f);
                         event.setCancelled(true);
                     }
                 }

@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import fr.corehost.lobby.CoreHostLobby;
+import fr.corehost.lobby.utils.Constants;
 
 public class AdminCommand implements TabExecutor {
 
@@ -29,14 +30,14 @@ public class AdminCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(Constants.PREFIX + ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
         Player player = (Player) sender;
 
         if (!player.hasPermission("corehost.admin")) {
-            player.sendMessage(ChatColor.RED + "Vous n'avez pas la permission d'exécuter cette commande.");
+            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Vous n'avez pas la permission d'exécuter cette commande.");
             return true;
         }
 
@@ -45,23 +46,23 @@ public class AdminCommand implements TabExecutor {
             switch (arg) {
                 case "sethologram":
                     plugin.getParkourManager().setHologramLocation(player.getLocation());
-                    player.sendMessage(ChatColor.GREEN + "Position de l'hologramme du parkour définie à votre position.");
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Position de l'hologramme du parkour définie à votre position.");
                     return true;
                 case "setstart":
                     plugin.getParkourManager().setStartPlate(player.getLocation().getBlock().getLocation());
-                    player.sendMessage(ChatColor.GREEN + "Plaque de départ définie.");
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de départ définie.");
                     return true;
                 case "setend":
                     plugin.getParkourManager().setEndPlate(player.getLocation().getBlock().getLocation());
-                    player.sendMessage(ChatColor.GREEN + "Plaque de fin définie.");
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de fin définie.");
                     return true;
                 case "addcheckpoint":
                     plugin.getParkourManager().addCheckpoint(player.getLocation().getBlock().getLocation());
-                    player.sendMessage(ChatColor.GREEN + "Checkpoint ajouté à votre position.");
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Checkpoint ajouté à votre position.");
                     return true;
                 case "clearcheckpoints":
                     plugin.getParkourManager().clearCheckpoints();
-                    player.sendMessage(ChatColor.GREEN + "Tous les checkpoints ont été supprimés.");
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Tous les checkpoints ont été supprimés.");
                     return true;
             }
         }
@@ -69,11 +70,11 @@ public class AdminCommand implements TabExecutor {
         if (buildModePlayers.contains(player.getUniqueId())) {
             buildModePlayers.remove(player.getUniqueId());
             player.setGameMode(GameMode.ADVENTURE);
-            player.sendMessage(ChatColor.RED + "Mode Admin (Build) désactivé.");
+            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Mode Admin (Build) désactivé.");
         } else {
             buildModePlayers.add(player.getUniqueId());
             player.setGameMode(GameMode.CREATIVE);
-            player.sendMessage(ChatColor.GREEN + "Mode Admin (Build) activé. Vous êtes en mode créatif.");
+            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Mode Admin (Build) activé. Vous êtes en mode créatif.");
         }
 
         return true;

@@ -9,6 +9,7 @@ import fr.corehost.proxy.CoreHostProxy;
 import fr.corehost.api.party.PartyManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import fr.corehost.proxy.utils.ProxyPrefix;
 
 import java.util.Optional;
 import java.util.Set;
@@ -44,9 +45,9 @@ public class PartyListener {
                         // Ne pas téléporter s'ils sont déjà sur le serveur en train d'y aller
                         if (!member.getCurrentServer().isPresent() || !member.getCurrentServer().get().getServer().equals(server)) {
                             member.createConnectionRequest(server).fireAndForget();
-                            member.sendMessage(Component.text("Le chef de groupe a rejoint le serveur ", NamedTextColor.YELLOW)
+                            member.sendMessage(ProxyPrefix.get().append(Component.text("Le chef de groupe a rejoint le serveur ", NamedTextColor.YELLOW)
                                     .append(Component.text(server.getServerInfo().getName(), NamedTextColor.GOLD))
-                                    .append(Component.text(". Vous le suivez.", NamedTextColor.YELLOW)));
+                                    .append(Component.text(". Vous le suivez.", NamedTextColor.YELLOW))));
                         }
                     }
                 }
@@ -69,7 +70,7 @@ public class PartyListener {
                 for (UUID memberUuid : members) {
                     if (!memberUuid.equals(leaderUuid)) {
                         plugin.getServer().getPlayer(memberUuid).ifPresent(member -> {
-                            member.sendMessage(Component.text("Le chef de groupe s'est déconnecté. Le groupe a été dissous.", NamedTextColor.RED));
+                            member.sendMessage(ProxyPrefix.message("Le chef de groupe s'est déconnecté. Le groupe a été dissous.", NamedTextColor.RED));
                         });
                     }
                 }
@@ -77,7 +78,7 @@ public class PartyListener {
                 // Un membre se déconnecte, il quitte le groupe.
                 partyManager.removeMember(playerUuid);
                 plugin.getServer().getPlayer(leaderUuid).ifPresent(leader -> {
-                    leader.sendMessage(Component.text(player.getUsername() + " s'est déconnecté et a quitté le groupe.", NamedTextColor.YELLOW));
+                    leader.sendMessage(ProxyPrefix.message(player.getUsername() + " s'est déconnecté et a quitté le groupe.", NamedTextColor.YELLOW));
                 });
             }
         }

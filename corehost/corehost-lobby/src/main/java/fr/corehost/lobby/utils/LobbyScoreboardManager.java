@@ -14,14 +14,46 @@ import fr.corehost.api.profile.PlayerProfile;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import org.bukkit.plugin.messaging.PluginMessageListener;
+import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
+import com.google.common.collect.Iterables;
 
-public class LobbyScoreboardManager {
+public class LobbyScoreboardManager implements PluginMessageListener {
 
     private final CoreHostLobby plugin;
     private final Map<UUID, Scoreboard> scoreboards = new HashMap<>();
 
+    private int globalPlayerCount = 0;
+
     public LobbyScoreboardManager(CoreHostLobby plugin) {
         this.plugin = plugin;
+        plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, "BungeeCord", this);
+        plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "BungeeCord");
+        
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            Player p = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
+            if (p != null) {
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF("PlayerCount");
+                out.writeUTF("ALL");
+                p.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
+            }
+        }, 20L, 40L);
+    }
+
+    @Override
+    public void onPluginMessageReceived(String channel, Player player, byte[] message) {
+        if (!channel.equals("BungeeCord")) return;
+        ByteArrayDataInput in = ByteStreams.newDataInput(message);
+        String subchannel = in.readUTF();
+        if (subchannel.equals("PlayerCount")) {
+            String server = in.readUTF();
+            if (server.equals("ALL")) {
+                this.globalPlayerCount = in.readInt();
+            }
+        }
     }
 
     public void setupScoreboard(Player player) {
@@ -35,53 +67,59 @@ public class LobbyScoreboardManager {
         Objective objective = board.registerNewObjective("lobbyboard", "dummy", title);
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-        // Ligne 14 : Séparateur haut
-        objective.getScore(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "------------------------").setScore(14);
+        // Ligne 15 : Séparateur haut
+        objective.getScore(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "------------------------").setScore(15);
 
-        // Ligne 13 : Profil
-        objective.getScore(ChatColor.WHITE + "👤 Profil :").setScore(13);
+        // Ligne 14 : Profil
+        objective.getScore(ChatColor.WHITE + " 👤 Profil :").setScore(14);
 
-        // Ligne 12 : Pseudo
+        // Ligne 13 : Pseudo
         Team pseudoTeam = board.registerNewTeam("pseudo");
         pseudoTeam.addEntry(ChatColor.AQUA + "");
-        pseudoTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Pseudo: " + ChatColor.GREEN + player.getName());
-        objective.getScore(ChatColor.AQUA + "").setScore(12);
+        pseudoTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Pseudo: " + ChatColor.GREEN + player.getName());
+        objective.getScore(ChatColor.AQUA + "").setScore(13);
 
-        // Ligne 11 : Coins
+        // Ligne 12 : Coins
         Team coinsTeam = board.registerNewTeam("coins");
         coinsTeam.addEntry(ChatColor.YELLOW + "");
-        coinsTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Coins: " + ChatColor.YELLOW + "0 ⛃");
-        objective.getScore(ChatColor.YELLOW + "").setScore(11);
+        coinsTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Coins: " + ChatColor.YELLOW + "0 ⛃");
+        objective.getScore(ChatColor.YELLOW + "").setScore(12);
 
-        // Ligne 10 : Espace
-        objective.getScore(" ").setScore(10);
+        // Ligne 11 : Espace
+        objective.getScore(" ").setScore(11);
 
-        // Ligne 9 : Parkour
-        objective.getScore(ChatColor.WHITE + "🏃 Parkour :").setScore(9);
+        // Ligne 10 : Parkour
+        objective.getScore(ChatColor.WHITE + " 🏃 Parkour :").setScore(10);
 
-        // Ligne 8 : Record Easy
+        // Ligne 9 : Record Easy
         Team recordEasyTeam = board.registerNewTeam("record_easy");
         recordEasyTeam.addEntry(ChatColor.RED + "");
-        recordEasyTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Easy: " + ChatColor.RED + "Aucun");
-        objective.getScore(ChatColor.RED + "").setScore(8);
+        recordEasyTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Easy: " + ChatColor.RED + "Aucun");
+        objective.getScore(ChatColor.RED + "").setScore(9);
 
-        // Ligne 7 : Record Hard
+        // Ligne 8 : Record Hard
         Team recordHardTeam = board.registerNewTeam("record_hard");
         recordHardTeam.addEntry(ChatColor.DARK_RED + "");
-        recordHardTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Hard: " + ChatColor.RED + "Aucun");
-        objective.getScore(ChatColor.DARK_RED + "").setScore(7);
+        recordHardTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Hard: " + ChatColor.RED + "Aucun");
+        objective.getScore(ChatColor.DARK_RED + "").setScore(8);
 
-        // Ligne 6 : Têtes
-        objective.getScore(ChatColor.WHITE + "🎁 Têtes :").setScore(6);
+        // Ligne 7 : Espace
+        objective.getScore("  ").setScore(7);
+        
+        // Ligne 6 : Serveur
+        objective.getScore(ChatColor.WHITE + " 🌍 Serveur :").setScore(6);
 
-        // Ligne 5 : Têtes Progression
+        // Ligne 5 : Joueurs en ligne
+        Team playersTeam = board.registerNewTeam("players_count");
+        playersTeam.addEntry(ChatColor.GREEN + "");
+        playersTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Joueurs: " + ChatColor.GREEN + "0");
+        objective.getScore(ChatColor.GREEN + "").setScore(5);
+
+        // Ligne 4 : Têtes Progression
         Team headTeam = board.registerNewTeam("heads");
         headTeam.addEntry(ChatColor.LIGHT_PURPLE + "");
-        headTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Trouvées: " + ChatColor.GOLD + "0/0");
-        objective.getScore(ChatColor.LIGHT_PURPLE + "").setScore(5);
-
-        // Ligne 4 : Espace
-        objective.getScore("   ").setScore(4);
+        headTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Têtes: " + ChatColor.GOLD + "0/0");
+        objective.getScore(ChatColor.LIGHT_PURPLE + "").setScore(4);
 
         // Ligne 3 : Séparateur bas
         objective.getScore(ChatColor.GRAY + "" + ChatColor.DARK_GRAY + ChatColor.STRIKETHROUGH + "------------------------").setScore(3);
@@ -130,6 +168,16 @@ public class LobbyScoreboardManager {
         Scoreboard board = scoreboards.get(player.getUniqueId());
         if (board == null) return;
 
+        // Mise à jour des joueurs
+        Team playersTeam = board.getTeam("players_count");
+        if (playersTeam != null) {
+            // Using globalPlayerCount updated via BungeeCord plugin messaging
+            // If proxy is not reachable, this will just display 0, or fallback to Bukkit size if wanted.
+            // A good fallback is Math.max(globalPlayerCount, Bukkit.getOnlinePlayers().size())
+            int displayCount = Math.max(globalPlayerCount, Bukkit.getOnlinePlayers().size());
+            playersTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Joueurs: " + ChatColor.GREEN + displayCount);
+        }
+
         // Mise à jour des coins
         Team coinsTeam = board.getTeam("coins");
         if (coinsTeam != null) {
@@ -140,7 +188,7 @@ public class LobbyScoreboardManager {
                     coins = profile.getCoins();
                 }
             }
-            coinsTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Coins: " + ChatColor.YELLOW + coins + " ⛃");
+            coinsTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Coins: " + ChatColor.YELLOW + coins + " ⛃");
         }
 
         // Fetch Parkour Times Asynchronously
@@ -164,7 +212,7 @@ public class LobbyScoreboardManager {
                             String formattedTime = String.format("%.2f", finalEasy / 1000.0);
                             recordText = ChatColor.YELLOW + formattedTime + "s";
                         }
-                        recordEasyTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Easy: " + recordText);
+                        recordEasyTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Easy: " + recordText);
                     }
                     
                     Team recordHardTeam = board.getTeam("record_hard");
@@ -174,7 +222,7 @@ public class LobbyScoreboardManager {
                             String formattedTime = String.format("%.2f", finalHard / 1000.0);
                             recordText = ChatColor.YELLOW + formattedTime + "s";
                         }
-                        recordHardTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Hard: " + recordText);
+                        recordHardTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Hard: " + recordText);
                     }
                 });
             });
@@ -190,7 +238,7 @@ public class LobbyScoreboardManager {
                 found = plugin.getHeadHuntManager().getFoundHeads(player.getUniqueId());
             }
             ChatColor color = (found >= total && total > 0) ? ChatColor.GREEN : ChatColor.GOLD;
-            headTeam.setPrefix(ChatColor.GRAY + "▶ " + ChatColor.WHITE + "Trouvées: " + color + found + "/" + total);
+            headTeam.setPrefix(ChatColor.GRAY + " ▪ " + ChatColor.WHITE + "Têtes: " + color + found + "/" + total);
         }
     }
 }

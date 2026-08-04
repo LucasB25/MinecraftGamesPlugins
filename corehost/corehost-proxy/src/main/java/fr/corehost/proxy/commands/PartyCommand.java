@@ -40,7 +40,7 @@ public class PartyCommand implements SimpleCommand {
         String[] args = invocation.arguments();
         if (args.length == 0 || args.length == 1) {
             String current = args.length == 0 ? "" : args[0].toLowerCase();
-            return Stream.of("invite", "accept", "deny", "leave", "kick", "disband", "list", "chat", "c")
+            return Stream.of("invite", "accept", "deny", "leave", "kick", "disband", "list", "chat", "c", "warp")
                     .filter(cmd -> cmd.startsWith(current))
                     .collect(Collectors.toList());
         } else if (args.length == 2) {
@@ -106,6 +106,9 @@ public class PartyCommand implements SimpleCommand {
             case "chat":
             case "c":
                 handleChat(player, leaderUuid, args);
+                break;
+            case "warp":
+                handleWarp(player, leaderUuid);
                 break;
             default:
                 sendHelp(player);
@@ -363,6 +366,21 @@ public class PartyCommand implements SimpleCommand {
         }
     }
 
+    private void handleWarp(Player player, UUID leaderUuid) {
+        if (leaderUuid == null || !leaderUuid.equals(player.getUniqueId())) {
+            player.sendMessage(ProxyPrefix.message("Vous devez être le chef de groupe pour modifier ce paramètre.", NamedTextColor.RED));
+            return;
+        }
+        boolean isEnabled = partyManager.isPartyWarpEnabled(leaderUuid);
+        partyManager.setPartyWarpEnabled(leaderUuid, !isEnabled);
+        
+        if (!isEnabled) {
+            sendMessageToParty(leaderUuid, ProxyPrefix.get().append(Component.text("Le téléport automatique de groupe a été ", NamedTextColor.YELLOW)).append(Component.text("activé", NamedTextColor.GREEN)).append(Component.text(".", NamedTextColor.YELLOW)));
+        } else {
+            sendMessageToParty(leaderUuid, ProxyPrefix.get().append(Component.text("Le téléport automatique de groupe a été ", NamedTextColor.YELLOW)).append(Component.text("désactivé", NamedTextColor.RED)).append(Component.text(".", NamedTextColor.YELLOW)));
+        }
+    }
+
     private void sendHelp(Player player) {
         player.sendMessage(Component.text("").color(NamedTextColor.DARK_GRAY)
                 .append(Component.text("====== ").color(NamedTextColor.DARK_GRAY))
@@ -377,6 +395,7 @@ public class PartyCommand implements SimpleCommand {
         player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party disband").color(NamedTextColor.YELLOW)).append(Component.text(" - Dissoudre le groupe").color(NamedTextColor.GRAY)));
         player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party list").color(NamedTextColor.YELLOW)).append(Component.text(" - Voir les membres").color(NamedTextColor.GRAY)));
         player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party chat <message>").color(NamedTextColor.YELLOW)).append(Component.text(" - Parler au groupe").color(NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ► ").color(NamedTextColor.DARK_GRAY).append(Component.text("/party warp").color(NamedTextColor.YELLOW)).append(Component.text(" - Activer/Désactiver le téléport").color(NamedTextColor.GRAY)));
         
         player.sendMessage(Component.text("============================").color(NamedTextColor.DARK_GRAY));
     }

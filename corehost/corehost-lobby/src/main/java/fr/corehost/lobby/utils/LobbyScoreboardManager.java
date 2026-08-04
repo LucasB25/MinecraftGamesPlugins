@@ -164,6 +164,24 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         scoreboards.put(player.getUniqueId(), board);
         
         updateScoreboard(player);
+        
+        // Fetch times immediately for new player
+        if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                    Double easy = jedis.zscore("corehost:parkour:easy", player.getUniqueId().toString());
+                    Double hard = jedis.zscore("corehost:parkour:hard", player.getUniqueId().toString());
+                    if (easy != null) easyTimes.put(player.getUniqueId(), easy);
+                    if (hard != null) hardTimes.put(player.getUniqueId(), hard);
+                    
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        if (player.isOnline()) {
+                            updateScoreboard(player);
+                        }
+                    });
+                } catch (Exception ignored) {}
+            });
+        }
     }
 
     public void removeScoreboard(Player player) {

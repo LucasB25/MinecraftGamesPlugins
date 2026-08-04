@@ -33,6 +33,16 @@ public class PartyListener {
         
         UUID leaderUuid = partyManager.getPartyLeader(playerUuid);
         if (leaderUuid != null && leaderUuid.equals(playerUuid)) {
+            // Check if auto warp is enabled
+            if (!partyManager.isPartyWarpEnabled(leaderUuid)) {
+                return;
+            }
+            
+            // Do not warp if the destination is a lobby, to prevent pulling players out of games
+            if (server.getServerInfo().getName().toLowerCase().contains("lobby")) {
+                return;
+            }
+
             // Le joueur est chef de groupe. On emmène les membres avec lui.
             Set<UUID> members = partyManager.getPartyMembers(leaderUuid);
             

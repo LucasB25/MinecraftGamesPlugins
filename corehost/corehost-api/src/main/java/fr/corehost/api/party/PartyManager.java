@@ -23,6 +23,7 @@ public class PartyManager {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             jedis.set("corehost:party:leader_of:" + leader.toString(), leader.toString());
             jedis.sadd("corehost:party:members:" + leader.toString(), leader.toString());
+            jedis.set("corehost:party:settings:warp_enabled:" + leader.toString(), "true");
         }
     }
 
@@ -136,6 +137,29 @@ public class PartyManager {
             } else {
                 jedis.del("corehost:party:settings:invites_blocked:" + player.toString());
             }
+        }
+    }
+
+    /**
+     * Active ou désactive le téléport automatique pour ce groupe.
+     */
+    public void setPartyWarpEnabled(UUID leader, boolean enabled) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            if (enabled) {
+                jedis.set("corehost:party:settings:warp_enabled:" + leader.toString(), "true");
+            } else {
+                jedis.set("corehost:party:settings:warp_enabled:" + leader.toString(), "false");
+            }
+        }
+    }
+
+    /**
+     * Vérifie si le téléport automatique est activé.
+     */
+    public boolean isPartyWarpEnabled(UUID leader) {
+        try (Jedis jedis = redisManager.getPool().getResource()) {
+            String val = jedis.get("corehost:party:settings:warp_enabled:" + leader.toString());
+            return val == null || val.equals("true"); // Default to true
         }
     }
 }

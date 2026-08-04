@@ -42,4 +42,4 @@ permissions:
     default: true
   corehost.admin:
     description: Permet d'utiliser les commandes d'administration
-    default: op
+    default: false

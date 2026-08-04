@@ -87,13 +87,6 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         // Ligne 15 : Séparateur haut
         objective.getScore(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                    ").setScore(15);
 
-        // Anti-Collision Team
-        Team collisionTeam = board.registerNewTeam("collision");
-        collisionTeam.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
-        for (Player online : Bukkit.getOnlinePlayers()) {
-            collisionTeam.addEntry(online.getName());
-        }
-
         // Ligne 14 : Section Profil
         objective.getScore(" " + ChatColor.GOLD + "✦ Profil").setScore(14);
 
@@ -203,16 +196,6 @@ public class LobbyScoreboardManager implements PluginMessageListener {
     public void updateScoreboard(Player player) {
         Scoreboard board = scoreboards.get(player.getUniqueId());
         if (board == null) return;
-
-        // Mise à jour de l'anti-collision pour les nouveaux joueurs
-        Team collisionTeam = board.getTeam("collision");
-        if (collisionTeam != null) {
-            for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!collisionTeam.hasEntry(online.getName())) {
-                    collisionTeam.addEntry(online.getName());
-                }
-            }
-        }
 
         // Mise à jour du grade
         Team gradeTeam = board.getTeam("grade");

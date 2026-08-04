@@ -76,6 +76,26 @@ public class RedisManager {
         } catch (JedisException ignored) {}
     }
     
+    public void hset(String key, String field, String value) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.hset(key, field, value);
+        } catch (JedisException ignored) {}
+    }
+    
+    public void hdel(String key, String field) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.hdel(key, field);
+        } catch (JedisException ignored) {}
+    }
+    
+    public java.util.Map<String, String> hgetAll(String key) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.hgetAll(key);
+        } catch (JedisException e) {
+            return java.util.Collections.emptyMap();
+        }
+    }
+    
     public void subscribe(JedisPubSub jedisPubSub, String... channels) {
         new Thread(() -> {
             try (Jedis jedis = jedisPool.getResource()) {

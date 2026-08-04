@@ -19,4 +19,4 @@ commands:
 permissions:
   corehost.admin:
     description: Permet d'utiliser les commandes d'administration de CoreHost Sumo
-    default: op
+    default: false

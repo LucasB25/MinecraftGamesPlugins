@@ -1,0 +1,13 @@
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+
+# -----------------------------------------------------
+# Permissions du plugin CoreHost-StaffMod :
+# -----------------------------------------------------
+# - staffmod.use         : Permet de cliquer sur le triangle pour signaler un message (default: true)
+# - staffmod.mod         : Permet d'utiliser /mod et d'ouvrir le menu de modération (default: false)
+# - staffmod.staffchat   : Permet de lire et écrire dans le /sc (Staff Chat) (default: false)
+# - staffmod.vanish.see  : Permet de voir les joueurs en vanish (default: false)
+# -----------------------------------------------------

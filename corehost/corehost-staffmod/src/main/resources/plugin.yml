@@ -5,10 +5,18 @@ api-version: 1.20
 commands:
   staffmod_report:
     description: Internal command to report a chat message
+  mod:
+    description: Open the moderation GUI
 permissions:
   staffmod.use:
     description: Allows clicking the triangle to report
     default: true
-  staffmod.notify:
-    description: Receives reports from players
-    default: op
+  staffmod.mod:
+    description: Allows opening the /mod GUI
+    default: false
+  staffmod.staffchat:
+    description: Allows reading and writing in staff chat
+    default: false
+  staffmod.vanish.see:
+    description: Allows seeing vanished players
+    default: false

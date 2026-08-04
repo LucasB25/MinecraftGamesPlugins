@@ -22,6 +22,11 @@
             <artifactId>api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>fr.corehost</groupId>
+            <artifactId>corehost-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <!-- Guava is provided by Paper/Spigot, but explicit declaration helps with IDE support if needed.
              We will use the one bundled with the server. -->
     </dependencies>
@@ -35,7 +40,24 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <encoding>UTF-8</encoding>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

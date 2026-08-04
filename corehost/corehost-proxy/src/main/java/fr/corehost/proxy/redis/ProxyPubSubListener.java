@@ -97,6 +97,25 @@ public class ProxyPubSubListener extends JedisPubSub {
                 if (plugin.getProfileManager() != null) {
                     plugin.getProfileManager().addCoins(UUID.fromString(uuidStr), amount);
                 }
+            } else if ("TELEPORT_STAFF".equals(action)) {
+                String staffUuidStr = json.get("staffUuid").getAsString();
+                String targetName = json.get("targetName").getAsString();
+                
+                Optional<Player> staffOpt = server.getPlayer(UUID.fromString(staffUuidStr));
+                Optional<Player> targetOpt = server.getPlayer(targetName);
+                
+                if (staffOpt.isPresent() && targetOpt.isPresent()) {
+                    Player staff = staffOpt.get();
+                    Player target = targetOpt.get();
+                    
+                    if (staff.getCurrentServer().isPresent() && target.getCurrentServer().isPresent()) {
+                        RegisteredServer targetServer = target.getCurrentServer().get().getServer();
+                        
+                        if (!staff.getCurrentServer().get().getServer().getServerInfo().getName().equals(targetServer.getServerInfo().getName())) {
+                            staff.createConnectionRequest(targetServer).connect();
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             plugin.getLogger().error("Erreur PubSub Proxy: ", e);

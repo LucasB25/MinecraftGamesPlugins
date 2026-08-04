@@ -36,8 +36,8 @@ public class ChatListener implements Listener {
                 // Get plain text of the message for caching
                 String plainTextMsg = PlainTextComponentSerializer.plainText().serialize(message);
                 
-                // Cache the message and get the unique ID
-                UUID messageId = reportManager.cacheMessage(source.getName(), plainTextMsg);
+                // Cache the message locally and get the unique ID
+                UUID messageId = reportManager.cacheLocalMessage(source.getName(), plainTextMsg);
                 
                 // Create the warning triangle component
                 Component warningIcon = Component.text("⚠ ")
@@ -83,6 +83,15 @@ public class ChatListener implements Listener {
                 
                 // Do not show the warning triangle to the player who sent the message
                 if (viewer instanceof Player && ((Player) viewer).getUniqueId().equals(source.getUniqueId())) {
+                    return formattedMessage;
+                }
+                
+                // Only show warning icon to those who have permission (and console shouldn't get clickable text if possible, but we check permission)
+                if (viewer instanceof org.bukkit.command.ConsoleCommandSender) {
+                    return formattedMessage;
+                }
+                
+                if (viewer instanceof Player && !((Player) viewer).hasPermission("staffmod.use")) {
                     return formattedMessage;
                 }
                 

@@ -51,7 +51,7 @@ public class ReportMessageCommand implements CommandExecutor {
             return true;
         }
 
-        ReportManager.CachedMessage cachedMessage = reportManager.getMessage(messageId);
+        ReportManager.CachedMessage cachedMessage = reportManager.getLocalMessage(messageId);
 
         if (cachedMessage == null) {
             reporter.sendMessage(Component.text("Erreur: Ce message a expiré ou n'existe plus.", NamedTextColor.RED));
@@ -68,21 +68,8 @@ public class ReportMessageCommand implements CommandExecutor {
                 .append(Component.text(cachedMessage.getSenderName(), NamedTextColor.YELLOW))
                 .append(Component.text(".", NamedTextColor.GREEN)));
 
-        // Notify staff members
-        Component alertMessage = Component.text("[StaffMod] ", NamedTextColor.DARK_RED)
-                .append(Component.text(reporter.getName() + " a signalé un message de ", NamedTextColor.RED))
-                .append(Component.text(cachedMessage.getSenderName(), NamedTextColor.YELLOW))
-                .append(Component.text(":\n", NamedTextColor.RED))
-                .append(Component.text(cachedMessage.getContent(), NamedTextColor.GRAY));
-
-        for (Player online : Bukkit.getOnlinePlayers()) {
-            if (online.hasPermission("staffmod.notify")) {
-                online.sendMessage(alertMessage);
-            }
-        }
-        
-        // Also log to console
-        Bukkit.getConsoleSender().sendMessage(alertMessage);
+        // Create global active report
+        reportManager.createActiveReport(messageId, cachedMessage, "server");
 
         cooldowns.put(reporter.getUniqueId(), System.currentTimeMillis());
 

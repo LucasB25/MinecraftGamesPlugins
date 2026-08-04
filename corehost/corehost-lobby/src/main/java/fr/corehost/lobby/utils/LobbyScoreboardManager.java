@@ -19,11 +19,14 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import com.google.common.collect.Iterables;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LobbyScoreboardManager implements PluginMessageListener {
 
     private final CoreHostLobby plugin;
     private final Map<UUID, Scoreboard> scoreboards = new HashMap<>();
+    private final Map<UUID, Double> easyTimes = new ConcurrentHashMap<>();
+    private final Map<UUID, Double> hardTimes = new ConcurrentHashMap<>();
 
     private int globalPlayerCount = 0;
 
@@ -41,6 +44,20 @@ public class LobbyScoreboardManager implements PluginMessageListener {
                 p.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
             }
         }, 20L, 40L);
+
+        // Fetch Parkour Times periodically (every 10 seconds)
+        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
+            if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                    for (UUID uuid : scoreboards.keySet()) {
+                        Double easy = jedis.zscore("corehost:parkour:easy", uuid.toString());
+                        Double hard = jedis.zscore("corehost:parkour:hard", uuid.toString());
+                        if (easy != null) easyTimes.put(uuid, easy);
+                        if (hard != null) hardTimes.put(uuid, hard);
+                    }
+                } catch (Exception ignored) {}
+            }
+        }, 20L, 200L);
     }
 
     @Override
@@ -152,6 +169,8 @@ public class LobbyScoreboardManager implements PluginMessageListener {
     public void removeScoreboard(Player player) {
         player.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
         scoreboards.remove(player.getUniqueId());
+        easyTimes.remove(player.getUniqueId());
+        hardTimes.remove(player.getUniqueId());
     }
 
     public void updateAll() {
@@ -206,41 +225,27 @@ public class LobbyScoreboardManager implements PluginMessageListener {
             coinsTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Coins: " + ChatColor.GOLD + coins + " ⛃");
         }
 
-        // Fetch Parkour Times Asynchronously
-        if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                Double easyTime = null;
-                Double hardTime = null;
-                try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
-                    easyTime = jedis.zscore("corehost:parkour:easy", player.getUniqueId().toString());
-                    hardTime = jedis.zscore("corehost:parkour:hard", player.getUniqueId().toString());
-                } catch (Exception ignored) {}
-                
-                final Double finalEasy = easyTime;
-                final Double finalHard = hardTime;
-                
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    Team recordEasyTeam = board.getTeam("record_easy");
-                    if (recordEasyTeam != null) {
-                        String recordText = ChatColor.RED + "Aucun";
-                        if (finalEasy != null) {
-                            String formattedTime = String.format("%.2f", finalEasy / 1000.0);
-                            recordText = ChatColor.YELLOW + formattedTime + "s";
-                        }
-                        recordEasyTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Easy: " + recordText);
-                    }
-                    
-                    Team recordHardTeam = board.getTeam("record_hard");
-                    if (recordHardTeam != null) {
-                        String recordText = ChatColor.RED + "Aucun";
-                        if (finalHard != null) {
-                            String formattedTime = String.format("%.2f", finalHard / 1000.0);
-                            recordText = ChatColor.YELLOW + formattedTime + "s";
-                        }
-                        recordHardTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Hard: " + recordText);
-                    }
-                });
-            });
+        // Update Parkour Times from cache
+        Team recordEasyTeam = board.getTeam("record_easy");
+        if (recordEasyTeam != null) {
+            String recordText = ChatColor.RED + "Aucun";
+            Double easy = easyTimes.get(player.getUniqueId());
+            if (easy != null) {
+                String formattedTime = String.format("%.2f", easy / 1000.0);
+                recordText = ChatColor.YELLOW + formattedTime + "s";
+            }
+            recordEasyTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Easy: " + recordText);
+        }
+        
+        Team recordHardTeam = board.getTeam("record_hard");
+        if (recordHardTeam != null) {
+            String recordText = ChatColor.RED + "Aucun";
+            Double hard = hardTimes.get(player.getUniqueId());
+            if (hard != null) {
+                String formattedTime = String.format("%.2f", hard / 1000.0);
+                recordText = ChatColor.YELLOW + formattedTime + "s";
+            }
+            recordHardTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Hard: " + recordText);
         }
 
         // Mise à jour des têtes

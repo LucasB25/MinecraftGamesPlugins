@@ -96,22 +96,7 @@ public class ParkourManager {
                                 UUID uuid = UUID.fromString(key);
                                 long time = plugin.getConfig().getLong(path + ".times." + key);
                                 
-                                // Insert to Redis
-                                try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
-                                    jedis.zadd("corehost:parkour:" + course.getId(), (double) time, uuid.toString());
-                                }
-                                
-                                // Insert to MySQL
-                                try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
-                                     java.sql.PreparedStatement stmt = conn.prepareStatement(
-                                         "INSERT INTO parkour_records (uuid, course_id, best_time) VALUES (?, ?, ?) " +
-                                         "ON DUPLICATE KEY UPDATE best_time = LEAST(best_time, ?)")) {
-                                    stmt.setString(1, uuid.toString());
-                                    stmt.setString(2, course.getId());
-                                    stmt.setLong(3, time);
-                                    stmt.setLong(4, time);
-                                    stmt.executeUpdate();
-                                }
+                                saveRecord(uuid, course.getId(), time);
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -131,7 +116,7 @@ public class ParkourManager {
         }
     }
     
-    // saveTimes is no longer needed in config format
+    // Removed dead comment
     
     public void setStartPlate(String courseId, Location loc) {
         ParkourCourse course = courses.get(courseId);
@@ -332,24 +317,7 @@ public class ParkourManager {
                         
                         if (currentBest == null || timeTaken < currentBest) {
                             isNewRecord = true;
-                            // Save to Redis
-                            jedis.zadd("corehost:parkour:" + course.getId(), (double) timeTaken, player.getUniqueId().toString());
-                            
-                            // Save to MySQL
-                            if (plugin.getDatabaseManager() != null) {
-                                try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
-                                     java.sql.PreparedStatement stmt = conn.prepareStatement(
-                                         "INSERT INTO parkour_records (uuid, course_id, best_time) VALUES (?, ?, ?) " +
-                                         "ON DUPLICATE KEY UPDATE best_time = LEAST(best_time, ?)")) {
-                                    stmt.setString(1, player.getUniqueId().toString());
-                                    stmt.setString(2, course.getId());
-                                    stmt.setLong(3, timeTaken);
-                                    stmt.setLong(4, timeTaken);
-                                    stmt.executeUpdate();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                            saveRecord(player.getUniqueId(), course.getId(), timeTaken);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -394,5 +362,30 @@ public class ParkourManager {
     
     public ActiveParkourSession getSession(Player player) {
         return activeSessions.get(player.getUniqueId());
+    }
+
+    private void saveRecord(UUID uuid, String courseId, long time) {
+        // Insert to Redis
+        try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+            jedis.zadd("corehost:parkour:" + courseId, (double) time, uuid.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // Insert to MySQL
+        if (plugin.getDatabaseManager() != null) {
+            try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
+                 java.sql.PreparedStatement stmt = conn.prepareStatement(
+                     "INSERT INTO parkour_records (uuid, course_id, best_time) VALUES (?, ?, ?) " +
+                     "ON DUPLICATE KEY UPDATE best_time = LEAST(best_time, ?)")) {
+                stmt.setString(1, uuid.toString());
+                stmt.setString(2, courseId);
+                stmt.setLong(3, time);
+                stmt.setLong(4, time);
+                stmt.executeUpdate();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

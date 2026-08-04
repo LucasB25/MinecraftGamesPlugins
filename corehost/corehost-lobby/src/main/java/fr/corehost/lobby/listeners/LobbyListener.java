@@ -360,8 +360,8 @@ public class LobbyListener implements Listener {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        if (player.getLocation().getY() < 0) {
+        if (event.getTo() != null && event.getTo().getY() < 0) {
+            Player player = event.getPlayer();
             org.bukkit.Location spawn = player.getWorld().getSpawnLocation().clone();
             spawn.setX(spawn.getBlockX() + 0.5);
             spawn.setZ(spawn.getBlockZ() + 0.5);

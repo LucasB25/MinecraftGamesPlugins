@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -42,6 +43,24 @@ public class IsolationListener implements Listener {
         
         // Disable global join message
         event.setJoinMessage(null);
+    }
+
+    @EventHandler
+    public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
+        Player player = event.getPlayer();
+        String newWorld = player.getWorld().getName();
+
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (online.equals(player)) continue;
+
+            if (!online.getWorld().getName().equals(newWorld)) {
+                online.hidePlayer(plugin, player);
+                player.hidePlayer(plugin, online);
+            } else {
+                online.showPlayer(plugin, player);
+                player.showPlayer(plugin, online);
+            }
+        }
     }
 
     @EventHandler

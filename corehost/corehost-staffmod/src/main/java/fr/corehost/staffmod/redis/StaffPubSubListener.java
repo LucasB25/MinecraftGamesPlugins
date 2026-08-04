@@ -23,8 +23,15 @@ public class StaffPubSubListener extends JedisPubSub {
             if ("STAFF_CHAT".equals(action)) {
                 String sender = json.get("sender").getAsString();
                 String content = json.get("message").getAsString();
+                String rank = json.has("rank") ? json.get("rank").getAsString() : "";
+                
+                Component prefixComponent = Component.empty();
+                if (!rank.isEmpty()) {
+                    prefixComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize(rank + " ");
+                }
                 
                 Component scMessage = Component.text("[SC] ", NamedTextColor.BLUE)
+                        .append(prefixComponent)
                         .append(Component.text(sender + " » ", NamedTextColor.AQUA))
                         .append(Component.text(content, NamedTextColor.WHITE));
                         

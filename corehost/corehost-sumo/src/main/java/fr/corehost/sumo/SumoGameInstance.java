@@ -431,4 +431,8 @@ public class SumoGameInstance {
     public int getRoundTime() {
         return roundTime;
     }
+
+    public CoreHostSumo getPlugin() {
+        return plugin;
+    }
 }

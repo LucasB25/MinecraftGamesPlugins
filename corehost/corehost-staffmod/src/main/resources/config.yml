@@ -3,6 +3,9 @@ redis:
   port: 6379
   password: ""
 
+settings:
+  prefix: "&8[&cStaff&8] &7"
+
 # -----------------------------------------------------
 # Permissions du plugin CoreHost-StaffMod :
 # -----------------------------------------------------

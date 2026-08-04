@@ -5,7 +5,6 @@ import fr.corehost.staffmod.gui.ModGUI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -28,7 +27,7 @@ public class ModCommand implements TabExecutor {
         Player player = (Player) sender;
 
         if (!player.hasPermission("staffmod.mod")) {
-            player.sendMessage(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED)));
             return true;
         }
 
@@ -46,11 +45,11 @@ public class ModCommand implements TabExecutor {
                 return true;
             } else if (args[0].equalsIgnoreCase("sc")) {
                 if (!player.hasPermission("staffmod.staffchat")) {
-                    player.sendMessage(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED));
+                    player.sendMessage(plugin.getPrefix().append(Component.text("Vous n'avez pas la permission.", NamedTextColor.RED)));
                     return true;
                 }
                 if (args.length == 1) {
-                    player.sendMessage(Component.text("Usage: /mod sc <message>", NamedTextColor.RED));
+                    player.sendMessage(plugin.getPrefix().append(Component.text("Usage: /mod sc <message>", NamedTextColor.RED)));
                     return true;
                 }
                 
@@ -61,6 +60,25 @@ public class ModCommand implements TabExecutor {
                 com.google.gson.JsonObject json = new com.google.gson.JsonObject();
                 json.addProperty("action", "STAFF_CHAT");
                 json.addProperty("sender", player.getName());
+                
+                String rankText = "";
+                try {
+                    net.luckperms.api.LuckPerms api = net.luckperms.api.LuckPermsProvider.get();
+                    net.luckperms.api.model.user.User user = api.getUserManager().getUser(player.getUniqueId());
+                    if (user != null) {
+                        String lpPrefix = user.getCachedData().getMetaData().getPrefix();
+                        if (lpPrefix != null) {
+                            rankText = lpPrefix;
+                        } else {
+                            String group = user.getPrimaryGroup();
+                            if (group != null) {
+                                rankText = group.substring(0, 1).toUpperCase() + group.substring(1);
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+                json.addProperty("rank", rankText);
+                
                 json.addProperty("message", message);
 
                 if (plugin.getRedisManager() != null) {

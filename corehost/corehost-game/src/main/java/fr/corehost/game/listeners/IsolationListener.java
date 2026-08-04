@@ -43,6 +43,9 @@ public class IsolationListener implements Listener {
         
         // Disable global join message
         event.setJoinMessage(null);
+        
+        // Disable collisions
+        joined.setCollidable(false);
     }
 
     @EventHandler

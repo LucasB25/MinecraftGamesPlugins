@@ -35,7 +35,7 @@ public class ModManager {
             player.setFlying(true);
             player.setFlySpeed(0.2f);
             
-            player.sendMessage(Component.text("Mode Moderation active !", NamedTextColor.GREEN));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Mode Moderation active !", NamedTextColor.GREEN)));
         } else {
             modPlayers.remove(uuid);
             if (plugin.getRedisManager() != null) {
@@ -46,7 +46,7 @@ public class ModManager {
             player.setFlying(false);
             player.setFlySpeed(0.1f);
             
-            player.sendMessage(Component.text("Mode Moderation desactive !", NamedTextColor.RED));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Mode Moderation desactive !", NamedTextColor.RED)));
         }
     }
 

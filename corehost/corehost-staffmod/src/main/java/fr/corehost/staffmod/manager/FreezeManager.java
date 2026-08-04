@@ -29,13 +29,13 @@ public class FreezeManager {
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().setEx("corehost:freeze:" + uuid.toString(), "true", 86400);
             }
-            player.sendMessage(Component.text("Vous avez ete gele par un moderateur !", NamedTextColor.RED));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Vous avez ete gele par un moderateur !", NamedTextColor.RED)));
         } else {
             frozenPlayers.remove(uuid);
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().del("corehost:freeze:" + uuid.toString());
             }
-            player.sendMessage(Component.text("Vous avez ete degele.", NamedTextColor.GREEN));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Vous avez ete degele.", NamedTextColor.GREEN)));
         }
     }
 

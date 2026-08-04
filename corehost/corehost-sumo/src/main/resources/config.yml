@@ -18,3 +18,7 @@ database:
   database: "corehost"
   user: "root"
   password: ""
+
+scoreboard:
+  title: "&6&lSUMO"
+  ip: "&eplay.corehost.fr"

@@ -34,6 +34,7 @@ public class SumoListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        player.setCollidable(false);
         String worldName = player.getWorld().getName();
         
         // If joining a sumo world, add them to the instance

@@ -26,8 +26,9 @@ public class SumoScoreboardManager {
         ScoreboardManager manager = Bukkit.getScoreboardManager();
         if (manager == null) return;
 
+        String title = ChatColor.translateAlternateColorCodes('&', instance.getPlugin().getConfig().getString("scoreboard.title", "&6&lSUMO"));
         Scoreboard board = manager.getNewScoreboard();
-        Objective objective = board.registerNewObjective("sumoboard", "dummy", ChatColor.GOLD + "" + ChatColor.BOLD + "SUMO");
+        Objective objective = board.registerNewObjective("sumoboard", "dummy", title);
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         // Ligne 11 : Séparateur haut
@@ -76,7 +77,8 @@ public class SumoScoreboardManager {
         objective.getScore(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                     ").setScore(2);
 
         // Ligne 1 : IP
-        objective.getScore(ChatColor.YELLOW + "play.corehost.fr").setScore(1);
+        String ip = ChatColor.translateAlternateColorCodes('&', instance.getPlugin().getConfig().getString("scoreboard.ip", "&eplay.corehost.fr"));
+        objective.getScore(ip).setScore(1);
 
         player.setScoreboard(board);
         scoreboards.put(player.getUniqueId(), board);

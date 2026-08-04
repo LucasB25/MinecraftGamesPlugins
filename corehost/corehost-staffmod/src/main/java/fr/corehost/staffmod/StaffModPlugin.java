@@ -9,6 +9,8 @@ import fr.corehost.staffmod.manager.ModManager;
 import fr.corehost.staffmod.manager.ReportManager;
 import fr.corehost.staffmod.manager.VanishManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class StaffModPlugin extends JavaPlugin {
 
@@ -17,10 +19,15 @@ public class StaffModPlugin extends JavaPlugin {
     private VanishManager vanishManager;
     private FreezeManager freezeManager;
     private ModManager modManager;
+    
+    private Component prefix;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        
+        String rawPrefix = getConfig().getString("settings.prefix", "&8[&cStaff&8] &7");
+        this.prefix = LegacyComponentSerializer.legacyAmpersand().deserialize(rawPrefix);
         
         String redisHost = getConfig().getString("redis.host", "127.0.0.1");
         int redisPort = getConfig().getInt("redis.port", 6379);
@@ -83,5 +90,9 @@ public class StaffModPlugin extends JavaPlugin {
 
     public ModManager getModManager() {
         return modManager;
+    }
+    
+    public Component getPrefix() {
+        return prefix;
     }
 }

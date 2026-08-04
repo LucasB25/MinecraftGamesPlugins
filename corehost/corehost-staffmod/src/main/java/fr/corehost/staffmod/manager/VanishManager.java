@@ -36,7 +36,7 @@ public class VanishManager {
                     online.hidePlayer(plugin, player);
                 }
             }
-            player.sendMessage(Component.text("Invisibilite (Vanish) active !", NamedTextColor.GREEN));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilite (Vanish) active !", NamedTextColor.GREEN)));
         } else {
             vanishedPlayers.remove(uuid);
             if (plugin.getRedisManager() != null) {
@@ -46,7 +46,7 @@ public class VanishManager {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 online.showPlayer(plugin, player);
             }
-            player.sendMessage(Component.text("Invisibilite (Vanish) desactive !", NamedTextColor.RED));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilite (Vanish) desactive !", NamedTextColor.RED)));
         }
     }
 

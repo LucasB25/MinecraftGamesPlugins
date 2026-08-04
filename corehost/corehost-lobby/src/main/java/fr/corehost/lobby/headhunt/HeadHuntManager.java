@@ -4,6 +4,7 @@ import fr.corehost.lobby.CoreHostLobby;
 import fr.corehost.lobby.utils.Constants;
 import fr.corehost.api.profile.PlayerProfile;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -144,7 +145,7 @@ public class HeadHuntManager {
                 boolean alreadyFound = jedis.sismember(redisKey, headId);
 
                 if (alreadyFound) {
-                    player.sendMessage(Constants.PREFIX + "§cVous avez déjà trouvé cette tête !");
+                    player.sendMessage(Constants.PREFIX + ChatColor.RED + "Vous avez déjà trouvé cette tête !");
                     return;
                 }
 
@@ -163,7 +164,7 @@ public class HeadHuntManager {
                 long foundCount = jedis.scard(redisKey);
 
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.5f);
-                player.sendMessage(Constants.PREFIX + "§aVous avez trouvé une tête cachée ! §e+" + COINS_PER_HEAD + " Coins §7(" + foundCount + "/" + getTotalHeads() + ")");
+                player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Vous avez trouvé une tête cachée ! " + ChatColor.YELLOW + "+" + COINS_PER_HEAD + " Coins " + ChatColor.GRAY + "(" + foundCount + "/" + getTotalHeads() + ")");
 
                 // Check final bonus
                 if (foundCount >= getTotalHeads() && getTotalHeads() > 0) {
@@ -171,7 +172,7 @@ public class HeadHuntManager {
                         profile.setCoins(profile.getCoins() + FINAL_BONUS);
                     }
                     plugin.getProfileManager().addCoins(player.getUniqueId(), FINAL_BONUS);
-                    player.sendMessage(Constants.PREFIX + "§a§lFélicitations ! §aVous avez trouvé toutes les têtes ! §e+" + FINAL_BONUS + " Coins Bonus");
+                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "" + ChatColor.BOLD + "Félicitations ! " + ChatColor.GREEN + "Vous avez trouvé toutes les têtes ! " + ChatColor.YELLOW + "+" + FINAL_BONUS + " Coins Bonus");
                     player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                 }
 

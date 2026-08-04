@@ -42,6 +42,7 @@ public class LobbyListener implements Listener {
 
     public static final java.util.Set<UUID> pendingFriendAdd = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
     public static final java.util.Set<UUID> pendingPartyInvite = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
+    public static final java.util.Set<UUID> hiddenPlayers = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
     private final CoreHostLobby plugin;
 
     public LobbyListener(CoreHostLobby plugin) {
@@ -92,6 +93,15 @@ public class LobbyListener implements Listener {
             profile.setItemMeta(profileMeta);
         }
         player.getInventory().setItem(8, profile);
+        // Slot 7: Visibility
+        ItemStack visibility = new ItemStack(Material.LIME_DYE);
+        ItemMeta visMeta = visibility.getItemMeta();
+        if (visMeta != null) {
+            visMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Joueurs : Visibles " + ChatColor.GRAY + "(Clic-Droit)");
+            visibility.setItemMeta(visMeta);
+        }
+        player.getInventory().setItem(7, visibility);
+
         // Scoreboard
         if (plugin.getScoreboardManager() != null) {
             plugin.getScoreboardManager().setupScoreboard(player);
@@ -100,6 +110,14 @@ public class LobbyListener implements Listener {
         // HeadHunt Cache
         if (plugin.getHeadHuntManager() != null) {
             plugin.getHeadHuntManager().loadPlayerCache(player.getUniqueId());
+        }
+
+        // Hide this new player from anyone who has players hidden
+        for (UUID hiddenId : hiddenPlayers) {
+            Player p = Bukkit.getPlayer(hiddenId);
+            if (p != null && p.isOnline()) {
+                p.hidePlayer(plugin, player);
+            }
         }
     }
 
@@ -126,7 +144,7 @@ public class LobbyListener implements Listener {
             return;
         }
         
-        if (item.getType() == Material.COMPASS || item.getType() == Material.PLAYER_HEAD) {
+        if (item.getType() == Material.COMPASS || item.getType() == Material.PLAYER_HEAD || item.getType() == Material.LIME_DYE || item.getType() == Material.GRAY_DYE) {
             event.setCancelled(true);
         }
 
@@ -136,6 +154,43 @@ public class LobbyListener implements Listener {
         } else if (item.getType() == Material.PLAYER_HEAD) {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
             new PlayerProfileMenu(plugin, player).open(player);
+        } else if (item.getType() == Material.LIME_DYE || item.getType() == Material.GRAY_DYE) {
+            if (player.hasCooldown(Material.LIME_DYE) || player.hasCooldown(Material.GRAY_DYE)) {
+                return;
+            }
+            player.setCooldown(Material.LIME_DYE, 60);
+            player.setCooldown(Material.GRAY_DYE, 60);
+
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+            if (hiddenPlayers.contains(player.getUniqueId())) {
+                // Currently hidden -> Make visible
+                hiddenPlayers.remove(player.getUniqueId());
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    player.showPlayer(plugin, p);
+                }
+                ItemStack visibility = new ItemStack(Material.LIME_DYE);
+                ItemMeta visMeta = visibility.getItemMeta();
+                if (visMeta != null) {
+                    visMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Joueurs : Visibles " + ChatColor.GRAY + "(Clic-Droit)");
+                    visibility.setItemMeta(visMeta);
+                }
+                player.getInventory().setItem(7, visibility);
+                player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Les joueurs sont maintenant visibles.");
+            } else {
+                // Currently visible -> Make hidden
+                hiddenPlayers.add(player.getUniqueId());
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    player.hidePlayer(plugin, p);
+                }
+                ItemStack visibility = new ItemStack(Material.GRAY_DYE);
+                ItemMeta visMeta = visibility.getItemMeta();
+                if (visMeta != null) {
+                    visMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Joueurs : Cachés " + ChatColor.GRAY + "(Clic-Droit)");
+                    visibility.setItemMeta(visMeta);
+                }
+                player.getInventory().setItem(7, visibility);
+                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Les joueurs sont maintenant cachés.");
+            }
         }
     }
 
@@ -206,6 +261,7 @@ public class LobbyListener implements Listener {
         Player player = event.getPlayer();
         pendingFriendAdd.remove(player.getUniqueId());
         pendingPartyInvite.remove(player.getUniqueId());
+        hiddenPlayers.remove(player.getUniqueId());
         
         if (plugin.getParkourManager() != null) {
             plugin.getParkourManager().cancelParkour(player);

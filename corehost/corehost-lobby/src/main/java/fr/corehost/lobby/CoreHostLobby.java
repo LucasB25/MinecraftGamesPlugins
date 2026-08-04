@@ -114,6 +114,9 @@ public class CoreHostLobby extends JavaPlugin {
         
         // Setup Worlds Security (Delayed by 1 tick to ensure worlds are fully loaded)
         getServer().getScheduler().runTask(this, this::setupWorlds);
+        
+        // Disable vanilla spawn protection to prevent annoying interaction messages
+        getServer().setSpawnRadius(0);
     }
 
     @SuppressWarnings("deprecation")

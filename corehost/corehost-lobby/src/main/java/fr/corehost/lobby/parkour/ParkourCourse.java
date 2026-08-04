@@ -114,7 +114,7 @@ public class ParkourCourse {
                 List<String> lines = new ArrayList<>();
                 lines.add("");
                 lines.add(ChatColor.GOLD + "" + ChatColor.BOLD + "✦ Top 10 Parkour - " + displayName + " ✦");
-                lines.add("");
+                lines.add(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                    ");
 
                 if (top10.isEmpty()) {
                     lines.add(ChatColor.GRAY + "Aucun record pour l'instant.");
@@ -137,7 +137,7 @@ public class ParkourCourse {
                         if (rank == 1) rankColor = ChatColor.GOLD;
                         else if (rank == 2) rankColor = ChatColor.GRAY;
                         else if (rank == 3) rankColor = ChatColor.RED;
-                        else rankColor = ChatColor.DARK_GRAY;
+                        else rankColor = ChatColor.GRAY;
 
                         lines.add(rankColor + "#" + rank + " " + ChatColor.WHITE + name + ChatColor.DARK_GRAY + " - " + ChatColor.GREEN + formattedTime + "s");
                         rank++;

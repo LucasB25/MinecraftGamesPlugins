@@ -285,7 +285,7 @@ public class ParkourManager {
         ItemStack quitItem = new ItemStack(Material.OAK_DOOR);
         ItemMeta quitMeta = quitItem.getItemMeta();
         if (quitMeta != null) {
-            quitMeta.setDisplayName(ChatColor.DARK_RED + "" + ChatColor.BOLD + "Quitter le Parkour " + ChatColor.GRAY + "(Clic-Droit)");
+            quitMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Quitter le Parkour " + ChatColor.GRAY + "(Clic-Droit)");
             quitItem.setItemMeta(quitMeta);
         }
         player.getInventory().setItem(1, quitItem);

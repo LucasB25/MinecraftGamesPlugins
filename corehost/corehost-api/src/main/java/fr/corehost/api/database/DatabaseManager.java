@@ -43,11 +43,12 @@ public class DatabaseManager {
             }
             
             // Alter table just in case the table already exists without coins column
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "ALTER TABLE players ADD COLUMN coins INT DEFAULT 0;")) {
-                stmt.executeUpdate();
-            } catch (SQLException ignored) {
-                // Column probably already exists
+            try (java.sql.ResultSet rs = conn.getMetaData().getColumns(null, null, "players", "coins")) {
+                if (!rs.next()) {
+                    try (PreparedStatement stmt = conn.prepareStatement("ALTER TABLE players ADD COLUMN coins INT DEFAULT 0;")) {
+                        stmt.executeUpdate();
+                    }
+                }
             }
             
             // Table for friends

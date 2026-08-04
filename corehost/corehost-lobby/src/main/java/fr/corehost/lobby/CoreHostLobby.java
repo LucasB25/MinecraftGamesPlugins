@@ -79,6 +79,7 @@ public class CoreHostLobby extends JavaPlugin {
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(new fr.corehost.lobby.listeners.LobbyListener(this), this);
         pm.registerEvents(new AuthListener(this), this);
+        pm.registerEvents(new fr.corehost.lobby.listeners.ProfileLoadListener(this), this);
 
         // Initialize Parkour
         this.parkourManager = new ParkourManager(this);

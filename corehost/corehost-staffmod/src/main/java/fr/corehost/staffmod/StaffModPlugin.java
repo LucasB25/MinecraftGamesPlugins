@@ -47,7 +47,7 @@ public class StaffModPlugin extends JavaPlugin {
         this.modManager = new ModManager(this);
         
         // Listen to global events
-        this.redisManager.subscribe(new fr.corehost.staffmod.redis.StaffPubSubListener(), "corehost:staff:events");
+        this.redisManager.subscribe(new fr.corehost.staffmod.redis.StaffPubSubListener(this), "corehost:staff:events");
 
         // Register event
         getServer().getPluginManager().registerEvents(new ChatListener(reportManager), this);

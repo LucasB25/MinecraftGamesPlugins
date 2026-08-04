@@ -7,10 +7,16 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import redis.clients.jedis.JedisPubSub;
+import java.util.UUID;
 
 public class StaffPubSubListener extends JedisPubSub {
 
     private final Gson gson = new Gson();
+    private final fr.corehost.staffmod.StaffModPlugin plugin;
+
+    public StaffPubSubListener(fr.corehost.staffmod.StaffModPlugin plugin) {
+        this.plugin = plugin;
+    }
 
     @Override
     public void onMessage(String channel, String message) {
@@ -41,6 +47,21 @@ public class StaffPubSubListener extends JedisPubSub {
                     }
                 }
                 Bukkit.getConsoleSender().sendMessage(scMessage);
+            } else if ("FREEZE_PLAYER".equals(action)) {
+                String targetName = json.get("target").getAsString();
+                Player target = Bukkit.getPlayerExact(targetName);
+                if (target != null && target.isOnline()) {
+                    // Update freeze state locally on the correct server
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        plugin.getFreezeManager().toggleFreeze(target);
+                    });
+                }
+            } else if ("STAFF_LIST_RESPONSE".equals(action)) {
+                String requesterStr = json.get("requesterUuid").getAsString();
+                UUID requesterUuid = UUID.fromString(requesterStr);
+                com.google.gson.JsonArray staffList = json.getAsJsonArray("staffList");
+                
+                fr.corehost.staffmod.gui.StaffListGUI.handleResponse(requesterUuid, staffList, plugin);
             }
         } catch (Exception e) {
             e.printStackTrace();

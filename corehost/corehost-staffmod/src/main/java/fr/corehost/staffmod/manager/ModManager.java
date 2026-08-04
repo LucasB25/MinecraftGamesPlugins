@@ -58,6 +58,21 @@ public class ModManager {
                 if ("false".equals(isM)) {
                     shouldMod = false;
                 }
+                
+                // Handle pending TP
+                String pendingTp = plugin.getRedisManager().get("corehost:pending_tp:" + player.getUniqueId().toString());
+                if (pendingTp != null) {
+                    plugin.getRedisManager().del("corehost:pending_tp:" + player.getUniqueId().toString());
+                    org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        Player target = org.bukkit.Bukkit.getPlayerExact(pendingTp);
+                        if (target != null && target.isOnline()) {
+                            player.teleport(target.getLocation());
+                            player.sendMessage(Component.text("Teleporte a " + target.getName(), NamedTextColor.GREEN));
+                        } else {
+                            player.sendMessage(Component.text("Le joueur s'est deconnecte entre temps.", NamedTextColor.RED));
+                        }
+                    }, 10L); // 10 ticks = 0.5 seconds
+                }
             }
             if (shouldMod) {
                 setModMode(player, true);

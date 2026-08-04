@@ -116,6 +116,27 @@ public class ProxyPubSubListener extends JedisPubSub {
                         }
                     }
                 }
+            } else if ("REQUEST_STAFF_LIST".equals(action)) {
+                String requesterUuid = json.get("requesterUuid").getAsString();
+                com.google.gson.JsonArray staffArray = new com.google.gson.JsonArray();
+                
+                for (Player p : server.getAllPlayers()) {
+                    if (p.hasPermission("staffmod.mod")) {
+                        JsonObject staffObj = new JsonObject();
+                        staffObj.addProperty("name", p.getUsername());
+                        staffObj.addProperty("server", p.getCurrentServer().isPresent() ? p.getCurrentServer().get().getServer().getServerInfo().getName() : "Inconnu");
+                        staffArray.add(staffObj);
+                    }
+                }
+                
+                JsonObject responseJson = new JsonObject();
+                responseJson.addProperty("action", "STAFF_LIST_RESPONSE");
+                responseJson.addProperty("requesterUuid", requesterUuid);
+                responseJson.add("staffList", staffArray);
+                
+                if (plugin.getRedisManager() != null) {
+                    plugin.getRedisManager().publish("corehost:staff:events", responseJson.toString());
+                }
             }
         } catch (Exception e) {
             plugin.getLogger().error("Erreur PubSub Proxy: ", e);

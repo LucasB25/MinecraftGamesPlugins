@@ -85,14 +85,30 @@ public class ModCommand implements TabExecutor {
                     plugin.getRedisManager().publish("corehost:staff:events", json.toString());
                 }
                 return true;
+            } else if (args[0].equalsIgnoreCase("ss")) {
+                if (!player.hasPermission("staffmod.mod")) return true;
+                if (args.length != 2) {
+                    player.sendMessage(plugin.getPrefix().append(Component.text("Usage: /mod ss <joueur>", NamedTextColor.RED)));
+                    return true;
+                }
+                
+                String targetName = args[1];
+                if (targetName.equalsIgnoreCase(player.getName())) {
+                    player.sendMessage(plugin.getPrefix().append(Component.text("Vous ne pouvez pas utiliser cela sur vous-même.", NamedTextColor.RED)));
+                    return true;
+                }
+                new fr.corehost.staffmod.gui.PlayerSSGUI(plugin, targetName).open(player);
+                return true;
             }
         }
 
         player.sendMessage(Component.text("----- Aide Moderation -----", NamedTextColor.GOLD));
-        player.sendMessage(Component.text("/mod on ", NamedTextColor.YELLOW).append(Component.text("- Active le mode moderation et le vanish", NamedTextColor.WHITE)));
-        player.sendMessage(Component.text("/mod off ", NamedTextColor.YELLOW).append(Component.text("- Desactive le mode moderation et le vanish", NamedTextColor.WHITE)));
-        player.sendMessage(Component.text("/mod gui ", NamedTextColor.YELLOW).append(Component.text("- Ouvre le menu de moderation", NamedTextColor.WHITE)));
+        player.sendMessage(Component.text("/mod on ", NamedTextColor.YELLOW).append(Component.text("- Active le mode moderation (Vanish & Bypass)", NamedTextColor.WHITE)));
+        player.sendMessage(Component.text("/mod off ", NamedTextColor.YELLOW).append(Component.text("- Desactive le mode moderation", NamedTextColor.WHITE)));
+        player.sendMessage(Component.text("/mod gui ", NamedTextColor.YELLOW).append(Component.text("- Ouvre le menu de moderation global", NamedTextColor.WHITE)));
         player.sendMessage(Component.text("/mod sc <msg> ", NamedTextColor.YELLOW).append(Component.text("- Envoyer un message dans le Staff Chat", NamedTextColor.WHITE)));
+        player.sendMessage(Component.text("/mod ss <joueur> ", NamedTextColor.YELLOW).append(Component.text("- Ouvre le menu d'actions sur un joueur", NamedTextColor.WHITE)));
+        player.sendMessage(Component.text("/staffmod_report <id> ", NamedTextColor.YELLOW).append(Component.text("- Gerer un signalement de chat", NamedTextColor.WHITE)));
         return true;
     }
 
@@ -104,6 +120,13 @@ public class ModCommand implements TabExecutor {
             if ("off".startsWith(args[0].toLowerCase())) completions.add("off");
             if ("gui".startsWith(args[0].toLowerCase())) completions.add("gui");
             if ("sc".startsWith(args[0].toLowerCase())) completions.add("sc");
+            if ("ss".startsWith(args[0].toLowerCase())) completions.add("ss");
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("ss") && sender.hasPermission("staffmod.mod")) {
+            for (Player online : org.bukkit.Bukkit.getOnlinePlayers()) {
+                if (online.getName().toLowerCase().startsWith(args[1].toLowerCase()) && !online.getName().equalsIgnoreCase(sender.getName())) {
+                    completions.add(online.getName());
+                }
+            }
         }
         return completions;
     }

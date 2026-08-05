@@ -151,7 +151,7 @@ public class GUIListener implements Listener {
                 player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 Player target = Bukkit.getPlayerExact(targetName);
                 if (target != null) {
-                    player.openInventory(target.getInventory());
+                    new fr.corehost.staffmod.gui.InvseeGUI(plugin, target).open(player);
                 } else {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur n'est pas sur ce serveur.", net.kyori.adventure.text.format.NamedTextColor.RED)));
                     player.closeInventory();
@@ -216,6 +216,15 @@ public class GUIListener implements Listener {
             } else if (slot == 29 || slot == 31 || slot == 33) { // History, Mute, Ban
                 player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.sendMessage(plugin.getPrefix().append(Component.text("Cette fonctionnalité arrive bientôt !", net.kyori.adventure.text.format.NamedTextColor.YELLOW)));
+                player.closeInventory();
+            }
+        }
+        else if (title.contains("Inventaire : ")) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() == null) return;
+            Player player = (Player) event.getWhoClicked();
+            if (event.getSlot() == 53) {
+                player.playSound(player.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.closeInventory();
             }
         }

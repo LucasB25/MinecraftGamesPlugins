@@ -3,8 +3,12 @@ package fr.corehost.staffmod.manager;
 import fr.corehost.staffmod.StaffModPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -41,6 +45,7 @@ public class VanishManager {
                     online.hidePlayer(plugin, player);
                 }
             }
+            updateVanishItem(player, true);
             if (notify && player.isOnline()) {
                 player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilité (Vanish) activée !", NamedTextColor.GREEN)));
             }
@@ -54,8 +59,23 @@ public class VanishManager {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 online.showPlayer(plugin, player);
             }
+            updateVanishItem(player, false);
             if (notify && player.isOnline()) {
                 player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilité (Vanish) désactivée !", NamedTextColor.RED)));
+            }
+        }
+    }
+
+    private void updateVanishItem(Player player, boolean vanish) {
+        if (plugin.getModManager() != null && plugin.getModManager().isModMode(player.getUniqueId())) {
+            ItemStack item = player.getInventory().getItem(7);
+            if (item != null && (item.getType() == Material.LIME_DYE || item.getType() == Material.GRAY_DYE)) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    meta.displayName(Component.text("Vanish : " + (vanish ? "ON" : "OFF"), vanish ? NamedTextColor.GREEN : NamedTextColor.GRAY, TextDecoration.BOLD));
+                    item.setItemMeta(meta);
+                    item.setType(vanish ? Material.LIME_DYE : Material.GRAY_DYE);
+                }
             }
         }
     }

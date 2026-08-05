@@ -8,7 +8,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,20 +28,17 @@ public class ChatListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
-        // Retrieve the current renderer (could be modified by EssentialsChat, VentureChat, etc.)
-        ChatRenderer originalRenderer = event.renderer();
+        Player source = event.getPlayer();
+        String plainTextMsg = PlainTextComponentSerializer.plainText().serialize(event.message());
+        
+        // Cache the message once for the entire chat event
+        final UUID messageId = reportManager.cacheLocalMessage(source.getName(), plainTextMsg);
 
         // Wrap the renderer
         event.renderer(new ChatRenderer() {
             @Override
-            public Component render(Player source, Component sourceDisplayName, Component message, Audience viewer) {
-                // Get plain text of the message for caching
-                String plainTextMsg = PlainTextComponentSerializer.plainText().serialize(message);
-                
-                // Cache the message locally and get the unique ID
-                UUID messageId = reportManager.cacheLocalMessage(source.getName(), plainTextMsg);
-                
-                // Create the warning triangle component
+            public Component render(Player sourcePlayer, Component sourceDisplayName, Component message, Audience viewer) {
+                // Create the warning triangle component using the pre-generated messageId
                 Component warningIcon = Component.text("⚠ ")
                         .color(NamedTextColor.YELLOW)
                         .hoverEvent(HoverEvent.showText(Component.text("Signaler ce message", NamedTextColor.RED)))
@@ -49,7 +48,7 @@ public class ChatListener implements Listener {
                 String prefixText = "&7Joueurs";
                 try {
                     net.luckperms.api.LuckPerms api = net.luckperms.api.LuckPermsProvider.get();
-                    net.luckperms.api.model.user.User user = api.getUserManager().getUser(source.getUniqueId());
+                    net.luckperms.api.model.user.User user = api.getUserManager().getUser(sourcePlayer.getUniqueId());
                     if (user != null) {
                         String lpPrefix = user.getCachedData().getMetaData().getPrefix();
                         if (lpPrefix != null) {
@@ -71,23 +70,23 @@ public class ChatListener implements Listener {
                     }
                 } catch (Exception ignored) {}
 
-                Component prefixComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize(prefixText);
+                Component prefixComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(prefixText);
 
                 // Format: [Prefix] PlayerName » Message
                 Component formattedMessage = Component.empty()
                         .append(prefixComponent)
                         .append(Component.text(" "))
-                        .append(Component.text(source.getName(), NamedTextColor.WHITE))
+                        .append(Component.text(sourcePlayer.getName(), NamedTextColor.WHITE))
                         .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
                         .append(message.color(NamedTextColor.GRAY));
                 
                 // Do not show the warning triangle to the player who sent the message
-                if (viewer instanceof Player && ((Player) viewer).getUniqueId().equals(source.getUniqueId())) {
+                if (viewer instanceof Player && ((Player) viewer).getUniqueId().equals(sourcePlayer.getUniqueId())) {
                     return formattedMessage;
                 }
                 
-                // Only show warning icon to those who have permission (and console shouldn't get clickable text if possible, but we check permission)
-                if (viewer instanceof org.bukkit.command.ConsoleCommandSender) {
+                // Console sender shouldn't get clickable text
+                if (viewer instanceof ConsoleCommandSender) {
                     return formattedMessage;
                 }
                 
@@ -101,3 +100,4 @@ public class ChatListener implements Listener {
         });
     }
 }
+

@@ -4,8 +4,10 @@ import fr.corehost.staffmod.StaffModPlugin;
 import fr.corehost.staffmod.manager.ReportManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -25,8 +27,8 @@ public class ReportGUI {
     }
 
     public void open(Player player) {
-        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
-        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Signalements Actifs", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Signalements Actifs", NamedTextColor.RED, TextDecoration.BOLD)));
         MenuUtils.fillBorder(inv);
         inv.setItem(45, MenuUtils.getCloseButton());
 
@@ -41,18 +43,20 @@ public class ReportGUI {
 
             ItemStack item = new ItemStack(Material.PAPER);
             ItemMeta meta = item.getItemMeta();
-            meta.displayName(Component.text(msg.getSenderName(), NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            
-            List<Component> lore = new ArrayList<>();
-            lore.add(Component.empty());
-            lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Message : ", NamedTextColor.GRAY)).append(Component.text(msg.getContent(), NamedTextColor.WHITE)));
-            lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Serveur : ", NamedTextColor.GRAY)).append(Component.text(msg.getServer(), NamedTextColor.WHITE)));
-            lore.add(Component.text("► Clic Gauche : Se téléporter", NamedTextColor.GREEN));
-            lore.add(Component.text("► Clic Droit : Marquer comme résolu", NamedTextColor.YELLOW));
-            lore.add(Component.text(entry.getKey().toString(), NamedTextColor.BLACK)); // Hidden ID
-            
-            meta.lore(lore);
-            item.setItemMeta(meta);
+            if (meta != null) {
+                meta.displayName(Component.text(msg.getSenderName(), NamedTextColor.GOLD, TextDecoration.BOLD));
+                
+                List<Component> lore = new ArrayList<>();
+                lore.add(Component.empty());
+                lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Message : ", NamedTextColor.GRAY)).append(Component.text(msg.getContent(), NamedTextColor.WHITE)));
+                lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Serveur : ", NamedTextColor.GRAY)).append(Component.text(msg.getServer(), NamedTextColor.WHITE)));
+                lore.add(Component.text("► Clic Gauche : Se téléporter", NamedTextColor.GREEN));
+                lore.add(Component.text("► Clic Droit : Marquer comme résolu", NamedTextColor.YELLOW));
+                lore.add(Component.text(entry.getKey().toString(), NamedTextColor.BLACK)); // Hidden ID
+                
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
             inv.setItem(slots[slotIndex++], item);
         }
 

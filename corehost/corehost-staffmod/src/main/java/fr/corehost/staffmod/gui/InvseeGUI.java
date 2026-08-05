@@ -6,6 +6,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -13,16 +14,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class InvseeGUI {
 
-    private final StaffModPlugin plugin;
     private final Player target;
 
     public InvseeGUI(StaffModPlugin plugin, Player target) {
-        this.plugin = plugin;
         this.target = target;
     }
 
     public void open(Player player) {
-        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
         Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY)
                 .append(Component.text("Inventaire : " + target.getName(), NamedTextColor.RED, TextDecoration.BOLD)));
 
@@ -75,3 +74,4 @@ public class InvseeGUI {
         return item;
     }
 }
+

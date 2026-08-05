@@ -1,13 +1,20 @@
 package fr.corehost.staffmod.commands;
 
+import com.google.gson.JsonObject;
 import fr.corehost.staffmod.StaffModPlugin;
+import fr.corehost.staffmod.gui.PlayerSSGUI;
+import fr.corehost.staffmod.gui.ReportGUI;
+import fr.corehost.staffmod.gui.StaffListGUI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.user.User;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
 import org.bukkit.command.TabExecutor;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +43,8 @@ public class ModCommand implements TabExecutor {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Le mode Modération est déjà activé !", NamedTextColor.RED)));
                     return true;
                 }
-                plugin.getModManager().setModMode(player, true);
                 plugin.getVanishManager().setVanished(player, true);
+                plugin.getModManager().setModMode(player, true);
                 return true;
             } else if (args[0].equalsIgnoreCase("off")) {
                 if (!plugin.getModManager().isModMode(player.getUniqueId())) {
@@ -48,10 +55,10 @@ public class ModCommand implements TabExecutor {
                 plugin.getVanishManager().setVanished(player, false);
                 return true;
             } else if (args[0].equalsIgnoreCase("reports")) {
-                new fr.corehost.staffmod.gui.ReportGUI(plugin).open(player);
+                new ReportGUI(plugin).open(player);
                 return true;
             } else if (args[0].equalsIgnoreCase("staff")) {
-                new fr.corehost.staffmod.gui.StaffListGUI(plugin).open(player);
+                new StaffListGUI(plugin).open(player);
                 return true;
             } else if (args[0].equalsIgnoreCase("sc")) {
                 if (!player.hasPermission("staffmod.staffchat")) {
@@ -67,14 +74,14 @@ public class ModCommand implements TabExecutor {
                 System.arraycopy(args, 1, msgArgs, 0, msgArgs.length);
                 String message = String.join(" ", msgArgs);
 
-                com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+                JsonObject json = new JsonObject();
                 json.addProperty("action", "STAFF_CHAT");
                 json.addProperty("sender", player.getName());
                 
                 String rankText = "";
                 try {
-                    net.luckperms.api.LuckPerms api = net.luckperms.api.LuckPermsProvider.get();
-                    net.luckperms.api.model.user.User user = api.getUserManager().getUser(player.getUniqueId());
+                    LuckPerms api = LuckPermsProvider.get();
+                    User user = api.getUserManager().getUser(player.getUniqueId());
                     if (user != null) {
                         String lpPrefix = user.getCachedData().getMetaData().getPrefix();
                         if (lpPrefix != null) {
@@ -88,7 +95,6 @@ public class ModCommand implements TabExecutor {
                     }
                 } catch (Exception ignored) {}
                 json.addProperty("rank", rankText);
-                
                 json.addProperty("message", message);
 
                 if (plugin.getRedisManager() != null) {
@@ -107,7 +113,7 @@ public class ModCommand implements TabExecutor {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Vous ne pouvez pas utiliser cela sur vous-même.", NamedTextColor.RED)));
                     return true;
                 }
-                new fr.corehost.staffmod.gui.PlayerSSGUI(plugin, targetName).open(player);
+                new PlayerSSGUI(plugin, targetName).open(player);
                 return true;
             }
         }
@@ -136,7 +142,7 @@ public class ModCommand implements TabExecutor {
             if ("sc".startsWith(args[0].toLowerCase())) completions.add("sc");
             if ("ss".startsWith(args[0].toLowerCase())) completions.add("ss");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("ss") && sender.hasPermission("staffmod.mod")) {
-            for (Player online : org.bukkit.Bukkit.getOnlinePlayers()) {
+            for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online.getName().toLowerCase().startsWith(args[1].toLowerCase()) && !online.getName().equalsIgnoreCase(sender.getName())) {
                     completions.add(online.getName());
                 }
@@ -145,3 +151,4 @@ public class ModCommand implements TabExecutor {
         return completions;
     }
 }
+

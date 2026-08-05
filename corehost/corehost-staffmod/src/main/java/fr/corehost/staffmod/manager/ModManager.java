@@ -3,10 +3,23 @@ package fr.corehost.staffmod.manager;
 import fr.corehost.staffmod.StaffModPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -14,6 +27,8 @@ public class ModManager {
 
     private final StaffModPlugin plugin;
     private final Set<UUID> modPlayers = new HashSet<>();
+    private final Map<UUID, ItemStack[]> savedInventories = new HashMap<>();
+    private final Map<UUID, ItemStack[]> savedArmor = new HashMap<>();
 
     public ModManager(StaffModPlugin plugin) {
         this.plugin = plugin;
@@ -22,9 +37,6 @@ public class ModManager {
     public boolean isModMode(UUID uuid) {
         return modPlayers.contains(uuid);
     }
-
-    private final java.util.Map<UUID, org.bukkit.inventory.ItemStack[]> savedInventories = new java.util.HashMap<>();
-    private final java.util.Map<UUID, org.bukkit.inventory.ItemStack[]> savedArmor = new java.util.HashMap<>();
 
     public void setModMode(Player player, boolean mod) {
         setModMode(player, mod, true);
@@ -40,9 +52,20 @@ public class ModManager {
                 return;
             }
             modPlayers.add(uuid);
-            player.setMetadata("modmode", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
+            player.setMetadata("modmode", new FixedMetadataValue(plugin, true));
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().setEx("corehost:modmode:" + uuid.toString(), "true", 86400);
+            }
+
+            // Annuler le parkour si en cours dans le Lobby
+            org.bukkit.plugin.Plugin lobbyPlugin = org.bukkit.Bukkit.getPluginManager().getPlugin("CoreHost-Lobby");
+            if (lobbyPlugin != null && lobbyPlugin.isEnabled()) {
+                try {
+                    Object parkourMgr = lobbyPlugin.getClass().getMethod("getParkourManager").invoke(lobbyPlugin);
+                    if (parkourMgr != null) {
+                        parkourMgr.getClass().getMethod("cancelParkour", Player.class).invoke(parkourMgr, player);
+                    }
+                } catch (Exception ignored) {}
             }
             
             // Save Inventory
@@ -91,11 +114,11 @@ public class ModManager {
             player.setFlying(false);
             player.setFlySpeed(0.1f);
 
-            // Give Lobby Items
+            // Give Lobby Items if in Lobby world
             giveLobbyItems(player);
 
-            // Teleport to Lobby spawn
-            org.bukkit.Location spawn = player.getWorld().getSpawnLocation().clone();
+            // Teleport to spawn location
+            Location spawn = player.getWorld().getSpawnLocation().clone();
             spawn.setX(spawn.getBlockX() + 0.5);
             spawn.setZ(spawn.getBlockZ() + 0.5);
             spawn.setYaw(spawn.getYaw() + 180f);
@@ -108,34 +131,34 @@ public class ModManager {
     }
 
     private void giveLobbyItems(Player player) {
-        org.bukkit.inventory.Inventory inv = player.getInventory();
+        Inventory inv = player.getInventory();
 
         // Slot 4: Jouer (Compass)
-        org.bukkit.inventory.ItemStack searchHost = new org.bukkit.inventory.ItemStack(org.bukkit.Material.COMPASS);
-        org.bukkit.inventory.meta.ItemMeta searchMeta = searchHost.getItemMeta();
+        ItemStack searchHost = new ItemStack(Material.COMPASS);
+        ItemMeta searchMeta = searchHost.getItemMeta();
         if (searchMeta != null) {
-            searchMeta.displayName(Component.text("Jouer ", NamedTextColor.AQUA, net.kyori.adventure.text.format.TextDecoration.BOLD)
+            searchMeta.displayName(Component.text("Jouer ", NamedTextColor.AQUA, TextDecoration.BOLD)
                 .append(Component.text("(Clic-Droit)", NamedTextColor.GRAY)));
             searchHost.setItemMeta(searchMeta);
         }
         inv.setItem(4, searchHost);
 
         // Slot 7: Visibility (Lime Dye)
-        org.bukkit.inventory.ItemStack visibility = new org.bukkit.inventory.ItemStack(org.bukkit.Material.LIME_DYE);
-        org.bukkit.inventory.meta.ItemMeta visMeta = visibility.getItemMeta();
+        ItemStack visibility = new ItemStack(Material.LIME_DYE);
+        ItemMeta visMeta = visibility.getItemMeta();
         if (visMeta != null) {
-            visMeta.displayName(Component.text("Joueurs : Visibles ", NamedTextColor.GREEN, net.kyori.adventure.text.format.TextDecoration.BOLD)
+            visMeta.displayName(Component.text("Joueurs : Visibles ", NamedTextColor.GREEN, TextDecoration.BOLD)
                 .append(Component.text("(Clic-Droit)", NamedTextColor.GRAY)));
             visibility.setItemMeta(visMeta);
         }
         inv.setItem(7, visibility);
 
         // Slot 8: Profile (Player Head)
-        org.bukkit.inventory.ItemStack profile = new org.bukkit.inventory.ItemStack(org.bukkit.Material.PLAYER_HEAD);
-        org.bukkit.inventory.meta.SkullMeta profileMeta = (org.bukkit.inventory.meta.SkullMeta) profile.getItemMeta();
+        ItemStack profile = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta profileMeta = (SkullMeta) profile.getItemMeta();
         if (profileMeta != null) {
             profileMeta.setOwningPlayer(player);
-            profileMeta.displayName(Component.text("Mon Profil ", NamedTextColor.LIGHT_PURPLE, net.kyori.adventure.text.format.TextDecoration.BOLD)
+            profileMeta.displayName(Component.text("Mon Profil ", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD)
                 .append(Component.text("(Clic-Droit)", NamedTextColor.GRAY)));
             profile.setItemMeta(profileMeta);
         }
@@ -143,15 +166,15 @@ public class ModManager {
     }
 
     private void giveModItems(Player player) {
-        org.bukkit.inventory.Inventory inv = player.getInventory();
+        Inventory inv = player.getInventory();
         
         // Epée KB 1
-        org.bukkit.inventory.ItemStack kb1 = new org.bukkit.inventory.ItemStack(org.bukkit.Material.WOODEN_SWORD);
-        org.bukkit.inventory.meta.ItemMeta kb1Meta = kb1.getItemMeta();
+        ItemStack kb1 = new ItemStack(Material.WOODEN_SWORD);
+        ItemMeta kb1Meta = kb1.getItemMeta();
         if (kb1Meta != null) {
-            kb1Meta.displayName(Component.text("Knockback I", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            kb1Meta.addEnchant(org.bukkit.enchantments.Enchantment.KNOCKBACK, 1, true);
-            kb1Meta.lore(java.util.Arrays.asList(
+            kb1Meta.displayName(Component.text("Knockback I", NamedTextColor.RED, TextDecoration.BOLD));
+            kb1Meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
+            kb1Meta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Repousser légèrement un suspect", NamedTextColor.GRAY)),
                 Component.empty(),
@@ -162,12 +185,12 @@ public class ModManager {
         inv.setItem(0, kb1);
         
         // Epée KB 2
-        org.bukkit.inventory.ItemStack kb2 = new org.bukkit.inventory.ItemStack(org.bukkit.Material.STONE_SWORD);
-        org.bukkit.inventory.meta.ItemMeta kb2Meta = kb2.getItemMeta();
+        ItemStack kb2 = new ItemStack(Material.STONE_SWORD);
+        ItemMeta kb2Meta = kb2.getItemMeta();
         if (kb2Meta != null) {
-            kb2Meta.displayName(Component.text("Knockback II", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            kb2Meta.addEnchant(org.bukkit.enchantments.Enchantment.KNOCKBACK, 2, true);
-            kb2Meta.lore(java.util.Arrays.asList(
+            kb2Meta.displayName(Component.text("Knockback II", NamedTextColor.RED, TextDecoration.BOLD));
+            kb2Meta.addEnchant(Enchantment.KNOCKBACK, 2, true);
+            kb2Meta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Éjecter un suspect", NamedTextColor.GRAY)),
                 Component.empty(),
@@ -178,11 +201,11 @@ public class ModManager {
         inv.setItem(1, kb2);
         
         // Boussole
-        org.bukkit.inventory.ItemStack compass = new org.bukkit.inventory.ItemStack(org.bukkit.Material.COMPASS);
-        org.bukkit.inventory.meta.ItemMeta compassMeta = compass.getItemMeta();
+        ItemStack compass = new ItemStack(Material.COMPASS);
+        ItemMeta compassMeta = compass.getItemMeta();
         if (compassMeta != null) {
-            compassMeta.displayName(Component.text("Téléportation Aléatoire", NamedTextColor.AQUA, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            compassMeta.lore(java.util.Arrays.asList(
+            compassMeta.displayName(Component.text("Téléportation Aléatoire", NamedTextColor.AQUA, TextDecoration.BOLD));
+            compassMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Se téléporter sur un joueur aléatoire", NamedTextColor.GRAY)),
                 Component.empty(),
@@ -193,11 +216,11 @@ public class ModManager {
         inv.setItem(2, compass);
         
         // Glace (Freeze)
-        org.bukkit.inventory.ItemStack freeze = new org.bukkit.inventory.ItemStack(org.bukkit.Material.PACKED_ICE);
-        org.bukkit.inventory.meta.ItemMeta freezeMeta = freeze.getItemMeta();
+        ItemStack freeze = new ItemStack(Material.PACKED_ICE);
+        ItemMeta freezeMeta = freeze.getItemMeta();
         if (freezeMeta != null) {
-            freezeMeta.displayName(Component.text("Geler un Joueur", NamedTextColor.AQUA, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            freezeMeta.lore(java.util.Arrays.asList(
+            freezeMeta.displayName(Component.text("Geler un Joueur", NamedTextColor.AQUA, TextDecoration.BOLD));
+            freezeMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Immobiliser ou libérer un suspect", NamedTextColor.GRAY)),
                 Component.empty(),
@@ -208,11 +231,11 @@ public class ModManager {
         inv.setItem(3, freeze);
         
         // Livre (SS)
-        org.bukkit.inventory.ItemStack book = new org.bukkit.inventory.ItemStack(org.bukkit.Material.BOOK);
-        org.bukkit.inventory.meta.ItemMeta bookMeta = book.getItemMeta();
+        ItemStack book = new ItemStack(Material.BOOK);
+        ItemMeta bookMeta = book.getItemMeta();
         if (bookMeta != null) {
-            bookMeta.displayName(Component.text("Inspecter (SS)", NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            bookMeta.lore(java.util.Arrays.asList(
+            bookMeta.displayName(Component.text("Inspecter (SS)", NamedTextColor.GOLD, TextDecoration.BOLD));
+            bookMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Ouvrir le menu de modération d'un joueur", NamedTextColor.GRAY)),
                 Component.empty(),
@@ -224,11 +247,11 @@ public class ModManager {
         
         // Vanish
         boolean isVanished = plugin.getVanishManager().isVanished(player.getUniqueId());
-        org.bukkit.inventory.ItemStack vanish = new org.bukkit.inventory.ItemStack(isVanished ? org.bukkit.Material.LIME_DYE : org.bukkit.Material.GRAY_DYE);
-        org.bukkit.inventory.meta.ItemMeta vanishMeta = vanish.getItemMeta();
+        ItemStack vanish = new ItemStack(isVanished ? Material.LIME_DYE : Material.GRAY_DYE);
+        ItemMeta vanishMeta = vanish.getItemMeta();
         if (vanishMeta != null) {
-            vanishMeta.displayName(Component.text("Vanish : " + (isVanished ? "ON" : "OFF"), isVanished ? NamedTextColor.GREEN : NamedTextColor.GRAY, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            vanishMeta.lore(java.util.Arrays.asList(
+            vanishMeta.displayName(Component.text("Vanish : " + (isVanished ? "ON" : "OFF"), isVanished ? NamedTextColor.GREEN : NamedTextColor.GRAY, TextDecoration.BOLD));
+            vanishMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Activer ou désactiver l'invisibilité", NamedTextColor.GRAY)),
                 Component.empty(),
@@ -239,11 +262,11 @@ public class ModManager {
         inv.setItem(7, vanish);
         
         // Quitter
-        org.bukkit.inventory.ItemStack leave = new org.bukkit.inventory.ItemStack(org.bukkit.Material.RED_BED);
-        org.bukkit.inventory.meta.ItemMeta leaveMeta = leave.getItemMeta();
+        ItemStack leave = new ItemStack(Material.RED_BED);
+        ItemMeta leaveMeta = leave.getItemMeta();
         if (leaveMeta != null) {
-            leaveMeta.displayName(Component.text("Quitter le Mode Modération", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            leaveMeta.lore(java.util.Arrays.asList(
+            leaveMeta.displayName(Component.text("Quitter le Mode Modération", NamedTextColor.RED, TextDecoration.BOLD));
+            leaveMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Désactiver le mode modération", NamedTextColor.GRAY)),
                 Component.empty(),
@@ -255,35 +278,43 @@ public class ModManager {
     }
 
     public void handleJoin(Player player) {
-        if (player.hasPermission("staffmod.mod")) {
-            if (plugin.getRedisManager() != null) {
-                plugin.getRedisManager().setEx("corehost:modmode:" + player.getUniqueId().toString(), "false", 86400);
+        if (plugin.getRedisManager() != null) {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                if (player.hasPermission("staffmod.mod")) {
+                    plugin.getRedisManager().setEx("corehost:modmode:" + player.getUniqueId().toString(), "false", 86400);
+                }
                 
-                // Handle pending TP
+                // Handle pending TP asynchronously
                 String pendingTp = plugin.getRedisManager().get("corehost:pending_tp:" + player.getUniqueId().toString());
                 if (pendingTp != null) {
                     plugin.getRedisManager().del("corehost:pending_tp:" + player.getUniqueId().toString());
-                    org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        Player target = org.bukkit.Bukkit.getPlayerExact(pendingTp);
-                        if (target != null && target.isOnline()) {
-                            player.teleport(target.getLocation());
-                            player.sendMessage(plugin.getPrefix().append(Component.text("Téléporté à " + target.getName(), NamedTextColor.GREEN)));
-                        } else {
-                            player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur s'est déconnecté entre-temps.", NamedTextColor.RED)));
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        if (player.isOnline()) {
+                            Player target = Bukkit.getPlayerExact(pendingTp);
+                            if (target != null && target.isOnline()) {
+                                player.teleport(target.getLocation());
+                                player.sendMessage(plugin.getPrefix().append(Component.text("Téléporté à " + target.getName(), NamedTextColor.GREEN)));
+                            } else {
+                                player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur s'est déconnecté entre-temps.", NamedTextColor.RED)));
+                            }
                         }
                     }, 10L); // 10 ticks = 0.5 seconds
                 }
-            }
-            // A la connexion, on s'assure que le mode modération passe en OFF silencieusement
-            if (isModMode(player.getUniqueId())) {
-                setModMode(player, false, false);
-            }
+            });
+        }
+        
+        if (player.hasPermission("staffmod.mod") && isModMode(player.getUniqueId())) {
+            setModMode(player, false, false);
         }
     }
 
     public void handleQuit(Player player) {
         if (isModMode(player.getUniqueId())) {
             setModMode(player, false, false);
+        } else {
+            savedInventories.remove(player.getUniqueId());
+            savedArmor.remove(player.getUniqueId());
         }
     }
 }
+

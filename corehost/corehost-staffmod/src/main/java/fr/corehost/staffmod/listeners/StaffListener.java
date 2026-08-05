@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 public class StaffListener implements Listener {
 
@@ -38,7 +39,7 @@ public class StaffListener implements Listener {
     }
 
     @EventHandler
-    public void onQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+    public void onQuit(PlayerQuitEvent event) {
         modManager.handleQuit(event.getPlayer());
         vanishManager.handleQuit(event.getPlayer());
         freezeManager.handleQuit(event.getPlayer());
@@ -70,7 +71,7 @@ public class StaffListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (modManager.isModMode(event.getPlayer().getUniqueId()) || freezeManager.isFrozen(event.getPlayer().getUniqueId())) {
+        if (freezeManager.isFrozen(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }

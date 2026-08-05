@@ -211,6 +211,10 @@ public class ParkourManager {
     }
     
     public void startParkour(Player player, ParkourCourse course) {
+        if (isPlayerInModMode(player)) {
+            return;
+        }
+
         if (activeSessions.containsKey(player.getUniqueId())) {
             ActiveParkourSession currentSession = activeSessions.get(player.getUniqueId());
             if (currentSession.getCourse() == course) {
@@ -387,5 +391,21 @@ public class ParkourManager {
                 e.printStackTrace();
             }
         }
+    }
+
+    public boolean isPlayerInModMode(Player player) {
+        org.bukkit.plugin.Plugin staffPlugin = org.bukkit.Bukkit.getPluginManager().getPlugin("CoreHost-StaffMod");
+        if (staffPlugin != null && staffPlugin.isEnabled()) {
+            try {
+                Object modManager = staffPlugin.getClass().getMethod("getModManager").invoke(staffPlugin);
+                if (modManager != null) {
+                    Object result = modManager.getClass().getMethod("isModMode", UUID.class).invoke(modManager, player.getUniqueId());
+                    if (result instanceof Boolean) {
+                        return (Boolean) result;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        return false;
     }
 }

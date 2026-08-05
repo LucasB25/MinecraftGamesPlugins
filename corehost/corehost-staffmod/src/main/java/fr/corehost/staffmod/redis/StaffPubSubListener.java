@@ -1,20 +1,25 @@
 package fr.corehost.staffmod.redis;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import fr.corehost.staffmod.StaffModPlugin;
+import fr.corehost.staffmod.gui.StaffListGUI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import redis.clients.jedis.JedisPubSub;
+
 import java.util.UUID;
 
 public class StaffPubSubListener extends JedisPubSub {
 
     private final Gson gson = new Gson();
-    private final fr.corehost.staffmod.StaffModPlugin plugin;
+    private final StaffModPlugin plugin;
 
-    public StaffPubSubListener(fr.corehost.staffmod.StaffModPlugin plugin) {
+    public StaffPubSubListener(StaffModPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -33,10 +38,10 @@ public class StaffPubSubListener extends JedisPubSub {
                 
                 Component prefixComponent = Component.empty();
                 if (!rank.isEmpty()) {
-                    prefixComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize(rank + " ");
+                    prefixComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(rank + " ");
                 }
                 
-                Component scTag = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&cStaffChat&8] &7");
+                Component scTag = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&cStaffChat&8] &7");
                 
                 Component scMessage = scTag
                         .append(prefixComponent)
@@ -44,30 +49,31 @@ public class StaffPubSubListener extends JedisPubSub {
                         .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
                         .append(Component.text(content, NamedTextColor.WHITE));
                         
-                for (Player online : Bukkit.getOnlinePlayers()) {
-                    if (online.hasPermission("staffmod.staffchat")) {
-                        online.sendMessage(scMessage);
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    for (Player online : Bukkit.getOnlinePlayers()) {
+                        if (online.hasPermission("staffmod.staffchat")) {
+                            online.sendMessage(scMessage);
+                        }
                     }
-                }
-                Bukkit.getConsoleSender().sendMessage(scMessage);
+                    Bukkit.getConsoleSender().sendMessage(scMessage);
+                });
             } else if ("FREEZE_PLAYER".equals(action)) {
                 String targetName = json.get("target").getAsString();
-                Player target = Bukkit.getPlayerExact(targetName);
-                if (target != null && target.isOnline()) {
-                    // Update freeze state locally on the correct server
-                    Bukkit.getScheduler().runTask(plugin, () -> {
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    Player target = Bukkit.getPlayerExact(targetName);
+                    if (target != null && target.isOnline()) {
                         plugin.getFreezeManager().toggleFreeze(target);
-                    });
-                }
+                    }
+                });
             } else if ("STAFF_LIST_RESPONSE".equals(action)) {
                 String requesterStr = json.get("requesterUuid").getAsString();
                 UUID requesterUuid = UUID.fromString(requesterStr);
-                com.google.gson.JsonArray staffList = json.getAsJsonArray("staffList");
+                JsonArray staffList = json.getAsJsonArray("staffList");
                 
-                fr.corehost.staffmod.gui.StaffListGUI.handleResponse(requesterUuid, staffList, plugin);
+                StaffListGUI.handleResponse(requesterUuid, staffList, plugin);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            plugin.getLogger().warning("Erreur dans StaffPubSubListener: " + e.getMessage());
         }
     }
 }

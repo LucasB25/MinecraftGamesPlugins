@@ -2,10 +2,14 @@ package fr.corehost.staffmod.gui;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MenuUtils {
 
@@ -60,7 +64,7 @@ public class MenuUtils {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.displayName(Component.text("◄ Retour", NamedTextColor.RED));
-            java.util.List<Component> lore = new java.util.ArrayList<>();
+            List<Component> lore = new ArrayList<>();
             lore.add(Component.text("Fermer ou retourner", NamedTextColor.GRAY));
             meta.lore(lore);
             item.setItemMeta(meta);
@@ -92,8 +96,8 @@ public class MenuUtils {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("Fermer", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD));
-            java.util.List<Component> lore = new java.util.ArrayList<>();
+            meta.displayName(Component.text("Fermer", NamedTextColor.RED, TextDecoration.BOLD));
+            List<Component> lore = new ArrayList<>();
             lore.add(Component.text("Fermer le menu", NamedTextColor.GRAY));
             meta.lore(lore);
             item.setItemMeta(meta);
@@ -101,3 +105,4 @@ public class MenuUtils {
         return item;
     }
 }
+

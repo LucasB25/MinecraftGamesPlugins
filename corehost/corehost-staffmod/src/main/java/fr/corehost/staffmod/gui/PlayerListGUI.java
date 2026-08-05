@@ -3,12 +3,17 @@ package fr.corehost.staffmod.gui;
 import fr.corehost.staffmod.StaffModPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PlayerListGUI {
 
@@ -19,8 +24,8 @@ public class PlayerListGUI {
     }
 
     public void open(Player player) {
-        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
-        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération - Joueurs", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération - Joueurs", NamedTextColor.RED, TextDecoration.BOLD)));
         MenuUtils.fillBorder(inv);
         inv.setItem(45, MenuUtils.getCloseButton());
 
@@ -32,14 +37,14 @@ public class PlayerListGUI {
             if (online.getUniqueId().equals(player.getUniqueId())) continue;
 
             ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-            org.bukkit.inventory.meta.SkullMeta meta = (org.bukkit.inventory.meta.SkullMeta) item.getItemMeta();
+            SkullMeta meta = (SkullMeta) item.getItemMeta();
             if (meta != null) {
                 meta.setOwningPlayer(online);
                 boolean isFrozen = plugin.getFreezeManager().isFrozen(online.getUniqueId());
                 
-                meta.displayName(Component.text(online.getName(), isFrozen ? NamedTextColor.RED : NamedTextColor.GREEN, net.kyori.adventure.text.format.TextDecoration.BOLD));
+                meta.displayName(Component.text(online.getName(), isFrozen ? NamedTextColor.RED : NamedTextColor.GREEN, TextDecoration.BOLD));
                 
-                java.util.List<Component> lore = new java.util.ArrayList<>();
+                List<Component> lore = new ArrayList<>();
                 lore.add(Component.empty());
                 lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Statut : ", NamedTextColor.GRAY)).append(Component.text(isFrozen ? "Gelé" : "Actif", isFrozen ? NamedTextColor.RED : NamedTextColor.GREEN)));
                 lore.add(Component.empty());

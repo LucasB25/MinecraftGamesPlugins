@@ -53,9 +53,26 @@ public class ParkourListener implements Listener {
 
         Block block = event.getClickedBlock();
         if (block == null) return;
+
+        long currentTime = System.currentTimeMillis();
+
+        if (parkourManager.isPlayerInModMode(player)) {
+            ParkourCourse startedCourse = parkourManager.getCourseByStartPlate(block.getLocation());
+            if (startedCourse != null || parkourManager.isInParkour(player)) {
+                event.setCancelled(true);
+                if (parkourManager.isInParkour(player)) {
+                    parkourManager.cancelParkour(player);
+                }
+                long lastMsg = interactCooldown.getOrDefault(player.getUniqueId(), 0L);
+                if (currentTime - lastMsg > 3000) {
+                    player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + org.bukkit.ChatColor.RED + "Vous ne pouvez pas participer au parkour en mode Modération !");
+                    interactCooldown.put(player.getUniqueId(), currentTime);
+                }
+                return;
+            }
+        }
         
         // Cooldown de 2 secondes
-        long currentTime = System.currentTimeMillis();
         if (interactCooldown.containsKey(player.getUniqueId())) {
             long lastInteract = interactCooldown.get(player.getUniqueId());
             if (currentTime - lastInteract < 2000) {

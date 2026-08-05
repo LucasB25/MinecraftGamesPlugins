@@ -3,6 +3,7 @@ package fr.corehost.staffmod.manager;
 import fr.corehost.staffmod.StaffModPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;
@@ -45,11 +46,17 @@ public class FreezeManager {
 
     public void handleJoin(Player player) {
         if (plugin.getRedisManager() != null) {
-            String isF = plugin.getRedisManager().get("corehost:freeze:" + player.getUniqueId().toString());
-            if ("true".equals(isF)) {
-                frozenPlayers.add(player.getUniqueId());
-                player.sendMessage(Component.text("Vous êtes toujours gelé !", NamedTextColor.RED));
-            }
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                String isF = plugin.getRedisManager().get("corehost:freeze:" + player.getUniqueId().toString());
+                if ("true".equals(isF)) {
+                    frozenPlayers.add(player.getUniqueId());
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        if (player.isOnline()) {
+                            player.sendMessage(Component.text("Vous êtes toujours gelé !", NamedTextColor.RED));
+                        }
+                    });
+                }
+            });
         }
     }
 

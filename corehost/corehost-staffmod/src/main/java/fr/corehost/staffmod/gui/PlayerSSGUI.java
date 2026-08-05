@@ -3,12 +3,18 @@ package fr.corehost.staffmod.gui;
 import fr.corehost.staffmod.StaffModPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.Arrays;
 
@@ -23,24 +29,24 @@ public class PlayerSSGUI {
     }
 
     public void open(Player player) {
-        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
-        Inventory inv = Bukkit.createInventory(null, 45, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération : " + targetName, NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        Inventory inv = Bukkit.createInventory(null, 45, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération : " + targetName, NamedTextColor.RED, TextDecoration.BOLD)));
         MenuUtils.fillBorder(inv);
         inv.setItem(36, MenuUtils.getCloseButton());
 
         // Center: Player Head
         ItemStack headItem = new ItemStack(Material.PLAYER_HEAD);
-        org.bukkit.inventory.meta.SkullMeta skullMeta = (org.bukkit.inventory.meta.SkullMeta) headItem.getItemMeta();
+        SkullMeta skullMeta = (SkullMeta) headItem.getItemMeta();
         if (skullMeta != null) {
             skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(targetName));
-            skullMeta.displayName(Component.text("Joueur : ", NamedTextColor.GRAY).append(Component.text(targetName, NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+            skullMeta.displayName(Component.text("Joueur : ", NamedTextColor.GRAY).append(Component.text(targetName, NamedTextColor.GOLD, TextDecoration.BOLD)));
             
             Player targetPlayer = Bukkit.getPlayerExact(targetName);
             if (targetPlayer != null && targetPlayer.isOnline()) {
                 String rankText = "Aucun";
                 try {
-                    net.luckperms.api.LuckPerms api = net.luckperms.api.LuckPermsProvider.get();
-                    net.luckperms.api.model.user.User user = api.getUserManager().getUser(targetPlayer.getUniqueId());
+                    LuckPerms api = LuckPermsProvider.get();
+                    User user = api.getUserManager().getUser(targetPlayer.getUniqueId());
                     if (user != null) {
                         String group = user.getPrimaryGroup();
                         if (group != null) {
@@ -74,7 +80,7 @@ public class PlayerSSGUI {
         ItemStack invItem = new ItemStack(Material.CHEST);
         ItemMeta invMeta = invItem.getItemMeta();
         if (invMeta != null) {
-            invMeta.displayName(Component.text("Inventaire", NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            invMeta.displayName(Component.text("Inventaire", NamedTextColor.GOLD, TextDecoration.BOLD));
             invMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Consulter l'inventaire principal", NamedTextColor.GRAY)),
@@ -89,7 +95,7 @@ public class PlayerSSGUI {
         ItemStack ecItem = new ItemStack(Material.ENDER_CHEST);
         ItemMeta ecMeta = ecItem.getItemMeta();
         if (ecMeta != null) {
-            ecMeta.displayName(Component.text("Enderchest", NamedTextColor.LIGHT_PURPLE, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            ecMeta.displayName(Component.text("Enderchest", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD));
             ecMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Consulter le coffre de l'Ender", NamedTextColor.GRAY)),
@@ -104,7 +110,7 @@ public class PlayerSSGUI {
         ItemStack tpItem = new ItemStack(Material.ENDER_PEARL);
         ItemMeta tpMeta = tpItem.getItemMeta();
         if (tpMeta != null) {
-            tpMeta.displayName(Component.text("Téléportation", NamedTextColor.AQUA, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            tpMeta.displayName(Component.text("Téléportation", NamedTextColor.AQUA, TextDecoration.BOLD));
             tpMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Se téléporter sur le serveur du joueur", NamedTextColor.GRAY)),
@@ -119,7 +125,7 @@ public class PlayerSSGUI {
         ItemStack freezeItem = new ItemStack(Material.PACKED_ICE);
         ItemMeta freezeMeta = freezeItem.getItemMeta();
         if (freezeMeta != null) {
-            freezeMeta.displayName(Component.text("Geler le Joueur", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            freezeMeta.displayName(Component.text("Geler le Joueur", NamedTextColor.RED, TextDecoration.BOLD));
             freezeMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Immobiliser ou libérer le joueur", NamedTextColor.GRAY)),
@@ -134,7 +140,7 @@ public class PlayerSSGUI {
         ItemStack historyItem = new ItemStack(Material.BOOK);
         ItemMeta historyMeta = historyItem.getItemMeta();
         if (historyMeta != null) {
-            historyMeta.displayName(Component.text("Historique", NamedTextColor.GRAY, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            historyMeta.displayName(Component.text("Historique", NamedTextColor.GRAY, TextDecoration.BOLD));
             historyMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Historique des sanctions du joueur", NamedTextColor.GRAY)),
@@ -149,7 +155,7 @@ public class PlayerSSGUI {
         ItemStack muteItem = new ItemStack(Material.REDSTONE_BLOCK);
         ItemMeta muteMeta = muteItem.getItemMeta();
         if (muteMeta != null) {
-            muteMeta.displayName(Component.text("Rendre Muet", NamedTextColor.GRAY, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            muteMeta.displayName(Component.text("Rendre Muet", NamedTextColor.GRAY, TextDecoration.BOLD));
             muteMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Rendre muet temporairement", NamedTextColor.GRAY)),
@@ -164,7 +170,7 @@ public class PlayerSSGUI {
         ItemStack banItem = new ItemStack(Material.BARRIER);
         ItemMeta banMeta = banItem.getItemMeta();
         if (banMeta != null) {
-            banMeta.displayName(Component.text("Bannir", NamedTextColor.GRAY, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            banMeta.displayName(Component.text("Bannir", NamedTextColor.GRAY, TextDecoration.BOLD));
             banMeta.lore(Arrays.asList(
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Bannir le joueur du réseau", NamedTextColor.GRAY)),
@@ -178,3 +184,4 @@ public class PlayerSSGUI {
         player.openInventory(inv);
     }
 }
+

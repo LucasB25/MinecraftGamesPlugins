@@ -6,8 +6,10 @@ import com.google.gson.JsonObject;
 import fr.corehost.staffmod.StaffModPlugin;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -29,8 +31,8 @@ public class StaffListGUI {
     }
 
     public void open(Player player) {
-        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
-        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Staff en Ligne", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Staff en Ligne", NamedTextColor.RED, TextDecoration.BOLD)));
         MenuUtils.fillBorder(inv);
         inv.setItem(45, MenuUtils.getCloseButton());
         
@@ -75,25 +77,27 @@ public class StaffListGUI {
                     
                     ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
-                    meta.setOwningPlayer(Bukkit.getOfflinePlayer(name));
-                    meta.displayName(Component.text(name, NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD));
-                    
-                    // Optionnel : vérifier si on le trouve en vanish localement
-                    boolean isVanishedLocal = false;
-                    Player localTarget = Bukkit.getPlayerExact(name);
-                    if (localTarget != null) {
-                        isVanishedLocal = plugin.getVanishManager().isVanished(localTarget.getUniqueId());
-                    }
+                    if (meta != null) {
+                        meta.setOwningPlayer(Bukkit.getOfflinePlayer(name));
+                        meta.displayName(Component.text(name, NamedTextColor.GOLD, TextDecoration.BOLD));
+                        
+                        // Optionnel : vérifier si on le trouve en vanish localement
+                        boolean isVanishedLocal = false;
+                        Player localTarget = Bukkit.getPlayerExact(name);
+                        if (localTarget != null) {
+                            isVanishedLocal = plugin.getVanishManager().isVanished(localTarget.getUniqueId());
+                        }
 
-                    meta.lore(Arrays.asList(
-                        Component.empty(),
-                        Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Serveur : ", NamedTextColor.GRAY)).append(Component.text(serverName, NamedTextColor.WHITE)),
-                        Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Vanish local : ", NamedTextColor.GRAY)).append(Component.text(isVanishedLocal ? "Oui" : "Non", isVanishedLocal ? NamedTextColor.GREEN : NamedTextColor.RED)),
-                        Component.empty(),
-                        Component.text("► Clic pour se téléporter", NamedTextColor.YELLOW)
-                    ));
-                    
-                    head.setItemMeta(meta);
+                        meta.lore(Arrays.asList(
+                            Component.empty(),
+                            Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Serveur : ", NamedTextColor.GRAY)).append(Component.text(serverName, NamedTextColor.WHITE)),
+                            Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Vanish local : ", NamedTextColor.GRAY)).append(Component.text(isVanishedLocal ? "Oui" : "Non", isVanishedLocal ? NamedTextColor.GREEN : NamedTextColor.RED)),
+                            Component.empty(),
+                            Component.text("► Clic pour se téléporter", NamedTextColor.YELLOW)
+                        ));
+                        
+                        head.setItemMeta(meta);
+                    }
                     inv.setItem(slots[slotIndex++], head);
                 }
             }
@@ -104,3 +108,4 @@ public class StaffListGUI {
         openGuis.remove(uuid);
     }
 }
+

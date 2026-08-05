@@ -1,14 +1,24 @@
 package fr.corehost.staffmod.manager;
 
+import fr.corehost.staffmod.StaffModPlugin;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
-import fr.corehost.staffmod.StaffModPlugin;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @SuppressWarnings("deprecation")
-public class NametagManager {
+public class NametagManager implements Listener {
 
     private final StaffModPlugin plugin;
 
@@ -21,15 +31,48 @@ public class NametagManager {
         Bukkit.getScheduler().runTaskTimer(plugin, this::updateNametags, 20L, 20L); // Update every second
     }
 
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        removeNametagTeam(event.getPlayer());
+    }
+
+    public void cleanup() {
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            removeNametagTeam(online);
+        }
+    }
+
+    private void removeNametagTeam(Player player) {
+        String teamName = getTeamName(player);
+        for (Player viewer : Bukkit.getOnlinePlayers()) {
+            Scoreboard board = viewer.getScoreboard();
+            if (board != null) {
+                Team team = board.getTeam(teamName);
+                if (team != null) {
+                    team.unregister();
+                }
+            }
+        }
+    }
+
+    private String getTeamName(Player player) {
+        String name = player.getName();
+        String teamName = "nt_" + name;
+        if (teamName.length() > 16) {
+            teamName = teamName.substring(0, 16);
+        }
+        return teamName;
+    }
+
     private void updateNametags() {
-        java.util.Map<java.util.UUID, String> prefixes = new java.util.HashMap<>();
+        Map<UUID, String> prefixes = new HashMap<>();
         
         // 1. Fetch prefixes for all online players once
         for (Player target : Bukkit.getOnlinePlayers()) {
             String prefixText = "&7Joueurs ";
             try {
-                net.luckperms.api.LuckPerms api = net.luckperms.api.LuckPermsProvider.get();
-                net.luckperms.api.model.user.User user = api.getUserManager().getUser(target.getUniqueId());
+                LuckPerms api = LuckPermsProvider.get();
+                User user = api.getUserManager().getUser(target.getUniqueId());
                 if (user != null) {
                     String lpPrefix = user.getCachedData().getMetaData().getPrefix();
                     if (lpPrefix != null) {
@@ -62,8 +105,7 @@ public class NametagManager {
             if (board == null) continue;
 
             for (Player target : Bukkit.getOnlinePlayers()) {
-                String teamName = "nt_" + target.getName();
-                if (teamName.length() > 16) teamName = teamName.substring(0, 16);
+                String teamName = getTeamName(target);
 
                 Team team = board.getTeam(teamName);
                 if (team == null) {
@@ -76,7 +118,10 @@ public class NametagManager {
 
                 String lastColors = ChatColor.getLastColors(prefix);
                 if (!lastColors.isEmpty()) {
-                    team.setColor(ChatColor.getByChar(lastColors.charAt(lastColors.length() - 1)));
+                    ChatColor color = ChatColor.getByChar(lastColors.charAt(lastColors.length() - 1));
+                    if (color != null) {
+                        team.setColor(color);
+                    }
                 }
 
                 if (!team.hasEntry(target.getName())) {
@@ -86,3 +131,4 @@ public class NametagManager {
         }
     }
 }
+

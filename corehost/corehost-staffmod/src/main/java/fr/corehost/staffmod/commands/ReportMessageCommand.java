@@ -1,19 +1,24 @@
 package fr.corehost.staffmod.commands;
 
+import fr.corehost.staffmod.StaffModPlugin;
 import fr.corehost.staffmod.manager.ReportManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class ReportMessageCommand implements CommandExecutor {
 
     private final ReportManager reportManager;
-    private final java.util.Map<UUID, Long> cooldowns = new java.util.HashMap<>();
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
     private static final long COOLDOWN_TIME = 5000L; // 5 seconds
 
     public ReportMessageCommand(ReportManager reportManager) {
@@ -22,7 +27,7 @@ public class ReportMessageCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        fr.corehost.staffmod.StaffModPlugin plugin = org.bukkit.plugin.java.JavaPlugin.getPlugin(fr.corehost.staffmod.StaffModPlugin.class);
+        StaffModPlugin plugin = JavaPlugin.getPlugin(StaffModPlugin.class);
 
         if (!(sender instanceof Player)) {
             sender.sendMessage("Seul un joueur peut signaler un message.");
@@ -69,11 +74,13 @@ public class ReportMessageCommand implements CommandExecutor {
                 .append(Component.text(cachedMessage.getSenderName(), NamedTextColor.YELLOW))
                 .append(Component.text(".", NamedTextColor.GREEN))));
 
-        // Create global active report
-        reportManager.createActiveReport(messageId, cachedMessage, "server");
+        // Create global active report with server name
+        String serverName = plugin.getConfig().getString("settings.server_name", Bukkit.getServer().getName());
+        reportManager.createActiveReport(messageId, cachedMessage, serverName);
 
         cooldowns.put(reporter.getUniqueId(), System.currentTimeMillis());
 
         return true;
     }
 }
+

@@ -1,24 +1,30 @@
 package fr.corehost.staffmod;
+
+import fr.corehost.api.redis.RedisManager;
 import fr.corehost.staffmod.commands.ModCommand;
 import fr.corehost.staffmod.commands.ReportMessageCommand;
 import fr.corehost.staffmod.gui.GUIListener;
 import fr.corehost.staffmod.listeners.ChatListener;
+import fr.corehost.staffmod.listeners.ModInteractListener;
 import fr.corehost.staffmod.listeners.StaffListener;
 import fr.corehost.staffmod.manager.FreezeManager;
 import fr.corehost.staffmod.manager.ModManager;
+import fr.corehost.staffmod.manager.NametagManager;
 import fr.corehost.staffmod.manager.ReportManager;
 import fr.corehost.staffmod.manager.VanishManager;
-import org.bukkit.plugin.java.JavaPlugin;
+import fr.corehost.staffmod.redis.StaffPubSubListener;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class StaffModPlugin extends JavaPlugin {
 
     private ReportManager reportManager;
-    private fr.corehost.api.redis.RedisManager redisManager;
+    private RedisManager redisManager;
     private VanishManager vanishManager;
     private FreezeManager freezeManager;
     private ModManager modManager;
+    private NametagManager nametagManager;
     
     private Component prefix;
 
@@ -33,7 +39,7 @@ public class StaffModPlugin extends JavaPlugin {
         int redisPort = getConfig().getInt("redis.port", 6379);
         String redisPassword = getConfig().getString("redis.password", "");
         
-        this.redisManager = new fr.corehost.api.redis.RedisManager(redisHost, redisPort, redisPassword);
+        this.redisManager = new RedisManager(redisHost, redisPort, redisPassword);
         
         if (!this.redisManager.isConnected()) {
             getLogger().severe("Impossible de se connecter à Redis depuis StaffMod !");
@@ -47,33 +53,37 @@ public class StaffModPlugin extends JavaPlugin {
         this.modManager = new ModManager(this);
         
         // Listen to global events
-        this.redisManager.subscribe(new fr.corehost.staffmod.redis.StaffPubSubListener(this), "corehost:staff:events");
+        this.redisManager.subscribe(new StaffPubSubListener(this), "corehost:staff:events");
 
-        // Register event
+        // Register events
         getServer().getPluginManager().registerEvents(new ChatListener(reportManager), this);
         getServer().getPluginManager().registerEvents(new StaffListener(modManager, freezeManager, vanishManager), this);
         getServer().getPluginManager().registerEvents(new GUIListener(this), this);
-        getServer().getPluginManager().registerEvents(new fr.corehost.staffmod.listeners.ModInteractListener(this), this);
+        getServer().getPluginManager().registerEvents(new ModInteractListener(this), this);
 
-        // Register command
+        // Register commands
         getCommand("staffmod_report").setExecutor(new ReportMessageCommand(reportManager));
         getCommand("mod").setExecutor(new ModCommand(this));
 
-        // Start global Nametag updater
-        new fr.corehost.staffmod.manager.NametagManager(this);
+        // Start global Nametag manager
+        this.nametagManager = new NametagManager(this);
+        getServer().getPluginManager().registerEvents(this.nametagManager, this);
 
         getLogger().info("StaffMod a été activé avec succès !");
     }
 
     @Override
     public void onDisable() {
+        if (this.nametagManager != null) {
+            this.nametagManager.cleanup();
+        }
         if (this.redisManager != null) {
             this.redisManager.close();
         }
         getLogger().info("StaffMod a été désactivé.");
     }
     
-    public fr.corehost.api.redis.RedisManager getRedisManager() {
+    public RedisManager getRedisManager() {
         return redisManager;
     }
     
@@ -97,3 +107,4 @@ public class StaffModPlugin extends JavaPlugin {
         return prefix;
     }
 }
+

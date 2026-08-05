@@ -39,6 +39,11 @@ public class CloudNetServiceManager {
     public void createHost(Player player, String gameType, int bestOf) {
         String prefix = Constants.PREFIX;
         
+        if (player.hasMetadata("modmode")) {
+            player.sendMessage(prefix + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            return;
+        }
+
         if (!isCloudNetEnabled || plugin.getHostManager() == null) {
             player.sendMessage(prefix + ChatColor.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");
             return;

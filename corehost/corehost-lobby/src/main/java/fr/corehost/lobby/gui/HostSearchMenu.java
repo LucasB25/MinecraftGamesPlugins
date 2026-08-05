@@ -176,6 +176,11 @@ public class HostSearchMenu implements CustomMenu {
             player.sendMessage(prefix + "Rafraîchissement de la liste des serveurs...");
             drawHosts();
         } else if (clicked.getType() == Material.NETHER_STAR) {
+            if (player.hasMetadata("modmode")) {
+                player.sendMessage(prefix + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+                player.closeInventory();
+                return;
+            }
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             new HostCreateMenu().open(player);
         } else if (clicked.getType() == Material.HOPPER && event.getSlot() == 45) {
@@ -205,6 +210,11 @@ public class HostSearchMenu implements CustomMenu {
             if (meta != null && meta.getPersistentDataContainer().has(serverKey, PersistentDataType.STRING)) {
                 String serverName = meta.getPersistentDataContainer().get(serverKey, PersistentDataType.STRING);
                 if (serverName != null) {
+                    if (player.hasMetadata("modmode")) {
+                        player.sendMessage(prefix + ChatColor.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
+                        player.closeInventory();
+                        return;
+                    }
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
                     player.sendMessage(prefix + "Connexion au serveur " + ChatColor.GREEN + serverName + ChatColor.GRAY + "...");
                     plugin.connectToServer(player, serverName);

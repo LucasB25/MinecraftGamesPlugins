@@ -201,6 +201,10 @@ public class CoreHostLobby extends JavaPlugin {
     }
 
     public void connectToServer(Player player, String serverName) {
+        if (player.hasMetadata("modmode")) {
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + org.bukkit.ChatColor.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
+            return;
+        }
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF("Connect");
         out.writeUTF(serverName);

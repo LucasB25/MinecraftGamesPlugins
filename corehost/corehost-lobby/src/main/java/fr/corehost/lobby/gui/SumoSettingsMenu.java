@@ -73,6 +73,10 @@ public class SumoSettingsMenu implements CustomMenu {
     }
 
     public void open(Player player) {
+        if (player.hasMetadata("modmode")) {
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            return;
+        }
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
         player.openInventory(inventory);
     }
@@ -84,6 +88,11 @@ public class SumoSettingsMenu implements CustomMenu {
 
     @Override
     public void onClick(InventoryClickEvent event, Player player) {
+        if (player.hasMetadata("modmode")) {
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            player.closeInventory();
+            return;
+        }
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType() == Material.AIR || clicked.getType().name().contains("GLASS_PANE")) return;
 

@@ -24,6 +24,10 @@ public class VanishManager {
     }
 
     public void setVanished(Player player, boolean vanish) {
+        setVanished(player, vanish, true);
+    }
+
+    public void setVanished(Player player, boolean vanish, boolean notify) {
         UUID uuid = player.getUniqueId();
         if (vanish) {
             if (isVanished(uuid)) return;
@@ -37,7 +41,7 @@ public class VanishManager {
                     online.hidePlayer(plugin, player);
                 }
             }
-            if (player.isOnline()) {
+            if (notify && player.isOnline()) {
                 player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilité (Vanish) activée !", NamedTextColor.GREEN)));
             }
         } else {
@@ -50,7 +54,7 @@ public class VanishManager {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 online.showPlayer(plugin, player);
             }
-            if (player.isOnline()) {
+            if (notify && player.isOnline()) {
                 player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilité (Vanish) désactivée !", NamedTextColor.RED)));
             }
         }
@@ -70,22 +74,18 @@ public class VanishManager {
         }
 
         if (player.hasPermission("staffmod.mod")) {
-            boolean shouldVanish = false;
             if (plugin.getRedisManager() != null) {
-                String isV = plugin.getRedisManager().get("corehost:vanish:" + player.getUniqueId().toString());
-                if ("true".equals(isV)) {
-                    shouldVanish = true;
-                }
+                plugin.getRedisManager().setEx("corehost:vanish:" + player.getUniqueId().toString(), "false", 86400);
             }
-            if (shouldVanish) {
-                setVanished(player, true);
+            if (isVanished(player.getUniqueId())) {
+                setVanished(player, false, false);
             }
         }
     }
 
     public void handleQuit(Player player) {
         if (isVanished(player.getUniqueId())) {
-            setVanished(player, false);
+            setVanished(player, false, false);
         } else {
             vanishedPlayers.remove(player.getUniqueId());
         }

@@ -27,10 +27,14 @@ public class ModManager {
     private final java.util.Map<UUID, org.bukkit.inventory.ItemStack[]> savedArmor = new java.util.HashMap<>();
 
     public void setModMode(Player player, boolean mod) {
+        setModMode(player, mod, true);
+    }
+
+    public void setModMode(Player player, boolean mod, boolean notify) {
         UUID uuid = player.getUniqueId();
         if (mod) {
             if (isModMode(uuid)) {
-                if (player.isOnline()) {
+                if (notify && player.isOnline()) {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Le mode Modération est déjà activé !", NamedTextColor.RED)));
                 }
                 return;
@@ -55,10 +59,12 @@ public class ModManager {
             player.setFlying(true);
             player.setFlySpeed(0.2f);
             
-            player.sendMessage(plugin.getPrefix().append(Component.text("Mode Modération activé !", NamedTextColor.GREEN)));
+            if (notify && player.isOnline()) {
+                player.sendMessage(plugin.getPrefix().append(Component.text("Mode Modération activé !", NamedTextColor.GREEN)));
+            }
         } else {
             if (!isModMode(uuid)) {
-                if (player.isOnline()) {
+                if (notify && player.isOnline()) {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Le mode Modération est déjà désactivé !", NamedTextColor.RED)));
                 }
                 return;
@@ -95,7 +101,7 @@ public class ModManager {
             spawn.setYaw(spawn.getYaw() + 180f);
             player.teleport(spawn);
             
-            if (player.isOnline()) {
+            if (notify && player.isOnline()) {
                 player.sendMessage(plugin.getPrefix().append(Component.text("Mode Modération désactivé !", NamedTextColor.RED)));
             }
         }
@@ -250,12 +256,8 @@ public class ModManager {
 
     public void handleJoin(Player player) {
         if (player.hasPermission("staffmod.mod")) {
-            boolean shouldMod = false;
             if (plugin.getRedisManager() != null) {
-                String isM = plugin.getRedisManager().get("corehost:modmode:" + player.getUniqueId().toString());
-                if ("true".equals(isM)) {
-                    shouldMod = true;
-                }
+                plugin.getRedisManager().setEx("corehost:modmode:" + player.getUniqueId().toString(), "false", 86400);
                 
                 // Handle pending TP
                 String pendingTp = plugin.getRedisManager().get("corehost:pending_tp:" + player.getUniqueId().toString());
@@ -272,15 +274,16 @@ public class ModManager {
                     }, 10L); // 10 ticks = 0.5 seconds
                 }
             }
-            if (shouldMod) {
-                setModMode(player, true);
+            // A la connexion, on s'assure que le mode modération passe en OFF silencieusement
+            if (isModMode(player.getUniqueId())) {
+                setModMode(player, false, false);
             }
         }
     }
 
     public void handleQuit(Player player) {
         if (isModMode(player.getUniqueId())) {
-            setModMode(player, false);
+            setModMode(player, false, false);
         }
     }
 }

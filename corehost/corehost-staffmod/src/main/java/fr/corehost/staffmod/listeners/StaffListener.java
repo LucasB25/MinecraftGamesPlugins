@@ -49,7 +49,7 @@ public class StaffListener implements Listener {
         if (freezeManager.isFrozen(event.getPlayer().getUniqueId())) {
             if (event.getFrom().getX() != event.getTo().getX() || event.getFrom().getZ() != event.getTo().getZ()) {
                 event.setCancelled(true);
-                event.getPlayer().sendActionBar(Component.text("Vous etes gele !", NamedTextColor.RED));
+                event.getPlayer().sendActionBar(Component.text("Vous êtes gelé !", NamedTextColor.RED));
             }
         }
     }

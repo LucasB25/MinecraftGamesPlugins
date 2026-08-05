@@ -23,14 +23,17 @@ public class PlayerSSGUI {
     }
 
     public void open(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 45, Component.text("Mod: " + targetName, NamedTextColor.DARK_RED));
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        Inventory inv = Bukkit.createInventory(null, 45, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération : " + targetName, NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+        MenuUtils.fillBorder(inv);
+        inv.setItem(36, MenuUtils.getCloseButton());
 
         // Center: Player Head
         ItemStack headItem = new ItemStack(Material.PLAYER_HEAD);
         org.bukkit.inventory.meta.SkullMeta skullMeta = (org.bukkit.inventory.meta.SkullMeta) headItem.getItemMeta();
         if (skullMeta != null) {
             skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(targetName));
-            skullMeta.displayName(Component.text("Joueur: ", NamedTextColor.GRAY).append(Component.text(targetName, NamedTextColor.GOLD)));
+            skullMeta.displayName(Component.text("Joueur : ", NamedTextColor.GRAY).append(Component.text(targetName, NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD)));
             
             Player targetPlayer = Bukkit.getPlayerExact(targetName);
             if (targetPlayer != null && targetPlayer.isOnline()) {
@@ -50,65 +53,127 @@ public class PlayerSSGUI {
                 String accountType = isPremium ? "Premium" : "Crack";
 
                 skullMeta.lore(Arrays.asList(
-                    Component.text("Statut: En Ligne", NamedTextColor.GREEN),
-                    Component.text("Grade: " + rankText, NamedTextColor.AQUA),
-                    Component.text("Compte: " + accountType, isPremium ? NamedTextColor.GOLD : NamedTextColor.GRAY),
-                    Component.text("Ping: " + targetPlayer.getPing() + " ms", NamedTextColor.GRAY),
-                    Component.text("Vie: " + (int)targetPlayer.getHealth() + "/20", NamedTextColor.RED)
+                    Component.empty(),
+                    Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Statut : ", NamedTextColor.GRAY)).append(Component.text("En Ligne", NamedTextColor.GREEN)),
+                    Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Grade : ", NamedTextColor.GRAY)).append(Component.text(rankText, NamedTextColor.AQUA)),
+                    Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Compte : ", NamedTextColor.GRAY)).append(Component.text(accountType, isPremium ? NamedTextColor.GOLD : NamedTextColor.GRAY)),
+                    Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Ping : ", NamedTextColor.GRAY)).append(Component.text(targetPlayer.getPing() + " ms", NamedTextColor.WHITE)),
+                    Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Santé : ", NamedTextColor.GRAY)).append(Component.text((int)targetPlayer.getHealth() + "/20 ❤", NamedTextColor.RED))
                 ));
             } else {
                 skullMeta.lore(Arrays.asList(
-                    Component.text("Statut: Autre serveur ou Hors-Ligne", NamedTextColor.YELLOW)
+                    Component.empty(),
+                    Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Statut : ", NamedTextColor.GRAY)).append(Component.text("Autre serveur ou Hors-Ligne", NamedTextColor.YELLOW))
                 ));
             }
             headItem.setItemMeta(skullMeta);
         }
-        inv.setItem(22, headItem);
+        inv.setItem(13, headItem);
 
-        // 1. Invsee (Slot 12)
+        // 1. Invsee (Slot 19)
         ItemStack invItem = new ItemStack(Material.CHEST);
         ItemMeta invMeta = invItem.getItemMeta();
-        invMeta.displayName(Component.text("Voir l'inventaire", NamedTextColor.YELLOW));
-        invMeta.lore(Arrays.asList(Component.text("Cliquez pour ouvrir l'inventaire", NamedTextColor.GRAY)));
-        invItem.setItemMeta(invMeta);
-        inv.setItem(12, invItem);
+        if (invMeta != null) {
+            invMeta.displayName(Component.text("Inventaire", NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            invMeta.lore(Arrays.asList(
+                Component.empty(),
+                Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Consulter l'inventaire principal", NamedTextColor.GRAY)),
+                Component.empty(),
+                Component.text("► Cliquez pour ouvrir", NamedTextColor.YELLOW)
+            ));
+            invItem.setItemMeta(invMeta);
+        }
+        inv.setItem(19, invItem);
 
-        // 2. Freeze (Slot 14)
-        ItemStack freezeItem = new ItemStack(Material.PACKED_ICE);
-        ItemMeta freezeMeta = freezeItem.getItemMeta();
-        freezeMeta.displayName(Component.text("Geler (Freeze)", NamedTextColor.AQUA));
-        freezeMeta.lore(Arrays.asList(Component.text("Geler/Dégeler le joueur", NamedTextColor.GRAY)));
-        freezeItem.setItemMeta(freezeMeta);
-        inv.setItem(14, freezeItem);
+        // 2. Enderchest (Slot 20)
+        ItemStack ecItem = new ItemStack(Material.ENDER_CHEST);
+        ItemMeta ecMeta = ecItem.getItemMeta();
+        if (ecMeta != null) {
+            ecMeta.displayName(Component.text("Enderchest", NamedTextColor.LIGHT_PURPLE, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            ecMeta.lore(Arrays.asList(
+                Component.empty(),
+                Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Consulter le coffre de l'Ender", NamedTextColor.GRAY)),
+                Component.empty(),
+                Component.text("► Cliquez pour ouvrir", NamedTextColor.YELLOW)
+            ));
+            ecItem.setItemMeta(ecMeta);
+        }
+        inv.setItem(20, ecItem);
 
-        // 3. Teleport (Slot 30)
+        // 3. Teleport (Slot 21)
         ItemStack tpItem = new ItemStack(Material.ENDER_PEARL);
         ItemMeta tpMeta = tpItem.getItemMeta();
-        tpMeta.displayName(Component.text("Se téléporter (TP)", NamedTextColor.LIGHT_PURPLE));
-        tpMeta.lore(Arrays.asList(Component.text("Rejoindre le serveur du joueur", NamedTextColor.GRAY)));
-        tpItem.setItemMeta(tpMeta);
-        inv.setItem(30, tpItem);
-        
-        // 4. Sanctions History (Slot 32)
+        if (tpMeta != null) {
+            tpMeta.displayName(Component.text("Téléportation", NamedTextColor.AQUA, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            tpMeta.lore(Arrays.asList(
+                Component.empty(),
+                Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Se téléporter sur le serveur du joueur", NamedTextColor.GRAY)),
+                Component.empty(),
+                Component.text("► Cliquez pour vous téléporter", NamedTextColor.YELLOW)
+            ));
+            tpItem.setItemMeta(tpMeta);
+        }
+        inv.setItem(21, tpItem);
+
+        // 4. Freeze (Slot 23)
+        ItemStack freezeItem = new ItemStack(Material.PACKED_ICE);
+        ItemMeta freezeMeta = freezeItem.getItemMeta();
+        if (freezeMeta != null) {
+            freezeMeta.displayName(Component.text("Geler le Joueur", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            freezeMeta.lore(Arrays.asList(
+                Component.empty(),
+                Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Immobiliser ou libérer le joueur", NamedTextColor.GRAY)),
+                Component.empty(),
+                Component.text("► Cliquez pour basculer le freeze", NamedTextColor.YELLOW)
+            ));
+            freezeItem.setItemMeta(freezeMeta);
+        }
+        inv.setItem(23, freezeItem);
+
+        // 7. Sanctions History (Slot 29)
         ItemStack historyItem = new ItemStack(Material.BOOK);
         ItemMeta historyMeta = historyItem.getItemMeta();
-        historyMeta.displayName(Component.text("Historique des Sanctions", NamedTextColor.GOLD));
-        historyMeta.lore(Arrays.asList(Component.text("Bientôt", NamedTextColor.GRAY)));
-        historyItem.setItemMeta(historyMeta);
-        inv.setItem(32, historyItem);
+        if (historyMeta != null) {
+            historyMeta.displayName(Component.text("Historique", NamedTextColor.GRAY, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            historyMeta.lore(Arrays.asList(
+                Component.empty(),
+                Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Historique des sanctions du joueur", NamedTextColor.GRAY)),
+                Component.empty(),
+                Component.text("(Bientôt disponible)", NamedTextColor.DARK_GRAY)
+            ));
+            historyItem.setItemMeta(historyMeta);
+        }
+        inv.setItem(29, historyItem);
         
-        // 5. Mute/Ban Actions
+        // 8. Mute Action (Slot 31)
         ItemStack muteItem = new ItemStack(Material.REDSTONE_BLOCK);
         ItemMeta muteMeta = muteItem.getItemMeta();
-        muteMeta.displayName(Component.text("TempMute (Bientôt)", NamedTextColor.RED));
-        muteItem.setItemMeta(muteMeta);
-        inv.setItem(38, muteItem);
+        if (muteMeta != null) {
+            muteMeta.displayName(Component.text("Rendre Muet", NamedTextColor.GRAY, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            muteMeta.lore(Arrays.asList(
+                Component.empty(),
+                Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Rendre muet temporairement", NamedTextColor.GRAY)),
+                Component.empty(),
+                Component.text("(Bientôt disponible)", NamedTextColor.DARK_GRAY)
+            ));
+            muteItem.setItemMeta(muteMeta);
+        }
+        inv.setItem(31, muteItem);
         
+        // 9. Ban Action (Slot 33)
         ItemStack banItem = new ItemStack(Material.BARRIER);
         ItemMeta banMeta = banItem.getItemMeta();
-        banMeta.displayName(Component.text("TempBan (Bientôt)", NamedTextColor.DARK_RED));
-        banItem.setItemMeta(banMeta);
-        inv.setItem(42, banItem);
+        if (banMeta != null) {
+            banMeta.displayName(Component.text("Bannir", NamedTextColor.GRAY, net.kyori.adventure.text.format.TextDecoration.BOLD));
+            banMeta.lore(Arrays.asList(
+                Component.empty(),
+                Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Bannir le joueur du réseau", NamedTextColor.GRAY)),
+                Component.empty(),
+                Component.text("(Bientôt disponible)", NamedTextColor.DARK_GRAY)
+            ));
+            banItem.setItemMeta(banMeta);
+        }
+        inv.setItem(33, banItem);
 
         player.openInventory(inv);
     }

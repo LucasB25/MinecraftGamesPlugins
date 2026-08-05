@@ -26,6 +26,7 @@ public class VanishManager {
     public void setVanished(Player player, boolean vanish) {
         UUID uuid = player.getUniqueId();
         if (vanish) {
+            if (isVanished(uuid)) return;
             vanishedPlayers.add(uuid);
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().setEx("corehost:vanish:" + uuid.toString(), "true", 86400);
@@ -36,8 +37,11 @@ public class VanishManager {
                     online.hidePlayer(plugin, player);
                 }
             }
-            player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilite (Vanish) active !", NamedTextColor.GREEN)));
+            if (player.isOnline()) {
+                player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilité (Vanish) activée !", NamedTextColor.GREEN)));
+            }
         } else {
+            if (!isVanished(uuid)) return;
             vanishedPlayers.remove(uuid);
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().setEx("corehost:vanish:" + uuid.toString(), "false", 86400);
@@ -46,7 +50,9 @@ public class VanishManager {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 online.showPlayer(plugin, player);
             }
-            player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilite (Vanish) desactive !", NamedTextColor.RED)));
+            if (player.isOnline()) {
+                player.sendMessage(plugin.getPrefix().append(Component.text("Invisibilité (Vanish) désactivée !", NamedTextColor.RED)));
+            }
         }
     }
 
@@ -63,13 +69,12 @@ public class VanishManager {
             }
         }
 
-        // Par defaut, le vanish est actif pour les membres du staff (sauf si explicitement mis a false)
         if (player.hasPermission("staffmod.mod")) {
-            boolean shouldVanish = true;
+            boolean shouldVanish = false;
             if (plugin.getRedisManager() != null) {
                 String isV = plugin.getRedisManager().get("corehost:vanish:" + player.getUniqueId().toString());
-                if ("false".equals(isV)) {
-                    shouldVanish = false;
+                if ("true".equals(isV)) {
+                    shouldVanish = true;
                 }
             }
             if (shouldVanish) {
@@ -79,6 +84,10 @@ public class VanishManager {
     }
 
     public void handleQuit(Player player) {
-        vanishedPlayers.remove(player.getUniqueId());
+        if (isVanished(player.getUniqueId())) {
+            setVanished(player, false);
+        } else {
+            vanishedPlayers.remove(player.getUniqueId());
+        }
     }
 }

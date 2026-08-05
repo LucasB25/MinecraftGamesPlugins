@@ -36,7 +36,7 @@ public class StaffModPlugin extends JavaPlugin {
         this.redisManager = new fr.corehost.api.redis.RedisManager(redisHost, redisPort, redisPassword);
         
         if (!this.redisManager.isConnected()) {
-            getLogger().severe("Impossible de se connecter a Redis depuis StaffMod !");
+            getLogger().severe("Impossible de se connecter à Redis depuis StaffMod !");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -53,6 +53,7 @@ public class StaffModPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ChatListener(reportManager), this);
         getServer().getPluginManager().registerEvents(new StaffListener(modManager, freezeManager, vanishManager), this);
         getServer().getPluginManager().registerEvents(new GUIListener(this), this);
+        getServer().getPluginManager().registerEvents(new fr.corehost.staffmod.listeners.ModInteractListener(this), this);
 
         // Register command
         getCommand("staffmod_report").setExecutor(new ReportMessageCommand(reportManager));
@@ -61,7 +62,7 @@ public class StaffModPlugin extends JavaPlugin {
         // Start global Nametag updater
         new fr.corehost.staffmod.manager.NametagManager(this);
 
-        getLogger().info("StaffMod a ete active avec succes !");
+        getLogger().info("StaffMod a été activé avec succès !");
     }
 
     @Override
@@ -69,7 +70,7 @@ public class StaffModPlugin extends JavaPlugin {
         if (this.redisManager != null) {
             this.redisManager.close();
         }
-        getLogger().info("StaffMod a ete desactive.");
+        getLogger().info("StaffMod a été désactivé.");
     }
     
     public fr.corehost.api.redis.RedisManager getRedisManager() {

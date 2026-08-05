@@ -36,9 +36,12 @@ public class StaffPubSubListener extends JedisPubSub {
                     prefixComponent = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize(rank + " ");
                 }
                 
-                Component scMessage = Component.text("[SC] ", NamedTextColor.BLUE)
+                Component scTag = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&cStaffChat&8] &7");
+                
+                Component scMessage = scTag
                         .append(prefixComponent)
-                        .append(Component.text(sender + " » ", NamedTextColor.AQUA))
+                        .append(Component.text(sender, NamedTextColor.RED))
+                        .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
                         .append(Component.text(content, NamedTextColor.WHITE));
                         
                 for (Player online : Bukkit.getOnlinePlayers()) {

@@ -29,13 +29,18 @@ public class StaffListGUI {
     }
 
     public void open(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 54, Component.text("Staff en Ligne", NamedTextColor.DARK_RED));
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Staff en Ligne", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+        MenuUtils.fillBorder(inv);
+        inv.setItem(45, MenuUtils.getCloseButton());
         
         // Add loading item
-        ItemStack loading = new ItemStack(Material.GLASS_PANE);
+        ItemStack loading = MenuUtils.getGrayFiller();
         loading.editMeta(meta -> meta.displayName(Component.text("Chargement du staff...", NamedTextColor.GRAY)));
-        for (int i = 0; i < 54; i++) {
-            inv.setItem(i, loading);
+        
+        int[] slots = {10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34, 37,38,39,40,41,42,43};
+        for (int slot : slots) {
+            inv.setItem(slot, loading);
         }
 
         player.openInventory(inv);
@@ -55,10 +60,14 @@ public class StaffListGUI {
             Inventory inv = openGuis.get(requester);
             if (inv != null) {
                 inv.clear(); // Remove loading panes
+                MenuUtils.fillBorder(inv);
+                inv.setItem(45, MenuUtils.getCloseButton());
                 
-                int slot = 0;
+                int[] slots = {10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34, 37,38,39,40,41,42,43};
+                int slotIndex = 0;
+                
                 for (JsonElement elem : staffList) {
-                    if (slot >= 54) break;
+                    if (slotIndex >= slots.length) break;
                     
                     JsonObject staffObj = elem.getAsJsonObject();
                     String name = staffObj.get("name").getAsString();
@@ -67,7 +76,7 @@ public class StaffListGUI {
                     ItemStack head = new ItemStack(Material.PLAYER_HEAD);
                     SkullMeta meta = (SkullMeta) head.getItemMeta();
                     meta.setOwningPlayer(Bukkit.getOfflinePlayer(name));
-                    meta.displayName(Component.text(name, NamedTextColor.GOLD));
+                    meta.displayName(Component.text(name, NamedTextColor.GOLD, net.kyori.adventure.text.format.TextDecoration.BOLD));
                     
                     // Optionnel : vérifier si on le trouve en vanish localement
                     boolean isVanishedLocal = false;
@@ -77,13 +86,15 @@ public class StaffListGUI {
                     }
 
                     meta.lore(Arrays.asList(
-                        Component.text("Serveur: " + serverName, NamedTextColor.GRAY),
-                        Component.text("Vanish local: " + (isVanishedLocal ? "Oui" : "Non"), isVanishedLocal ? NamedTextColor.GREEN : NamedTextColor.RED),
-                        Component.text("Clique pour te téléporter", NamedTextColor.YELLOW)
+                        Component.empty(),
+                        Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Serveur : ", NamedTextColor.GRAY)).append(Component.text(serverName, NamedTextColor.WHITE)),
+                        Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Vanish local : ", NamedTextColor.GRAY)).append(Component.text(isVanishedLocal ? "Oui" : "Non", isVanishedLocal ? NamedTextColor.GREEN : NamedTextColor.RED)),
+                        Component.empty(),
+                        Component.text("► Clic pour se téléporter", NamedTextColor.YELLOW)
                     ));
                     
                     head.setItemMeta(meta);
-                    inv.setItem(slot++, head);
+                    inv.setItem(slots[slotIndex++], head);
                 }
             }
         });

@@ -19,25 +19,36 @@ public class PlayerListGUI {
     }
 
     public void open(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 54, Component.text("Joueurs (Freeze)", NamedTextColor.DARK_AQUA));
+        player.playSound(player.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
+        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération - Joueurs", NamedTextColor.RED, net.kyori.adventure.text.format.TextDecoration.BOLD)));
+        MenuUtils.fillBorder(inv);
+        inv.setItem(45, MenuUtils.getCloseButton());
 
-        int slot = 0;
+        int[] slots = {10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34, 37,38,39,40,41,42,43};
+        int slotIndex = 0;
+        
         for (Player online : Bukkit.getOnlinePlayers()) {
-            if (slot >= 54) break;
+            if (slotIndex >= slots.length) break;
             if (online.getUniqueId().equals(player.getUniqueId())) continue;
 
             ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-            ItemMeta meta = item.getItemMeta();
-            boolean isFrozen = plugin.getFreezeManager().isFrozen(online.getUniqueId());
-            
-            meta.displayName(Component.text(online.getName(), isFrozen ? NamedTextColor.RED : NamedTextColor.GREEN));
-            
-            java.util.List<Component> lore = new java.util.ArrayList<>();
-            lore.add(Component.text("Clic pour ").append(Component.text(isFrozen ? "Degeler" : "Geler", isFrozen ? NamedTextColor.GREEN : NamedTextColor.RED)));
-            
-            meta.lore(lore);
-            item.setItemMeta(meta);
-            inv.setItem(slot++, item);
+            org.bukkit.inventory.meta.SkullMeta meta = (org.bukkit.inventory.meta.SkullMeta) item.getItemMeta();
+            if (meta != null) {
+                meta.setOwningPlayer(online);
+                boolean isFrozen = plugin.getFreezeManager().isFrozen(online.getUniqueId());
+                
+                meta.displayName(Component.text(online.getName(), isFrozen ? NamedTextColor.RED : NamedTextColor.GREEN, net.kyori.adventure.text.format.TextDecoration.BOLD));
+                
+                java.util.List<Component> lore = new java.util.ArrayList<>();
+                lore.add(Component.empty());
+                lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Statut : ", NamedTextColor.GRAY)).append(Component.text(isFrozen ? "Gelé" : "Actif", isFrozen ? NamedTextColor.RED : NamedTextColor.GREEN)));
+                lore.add(Component.empty());
+                lore.add(Component.text("► Clic pour ", NamedTextColor.YELLOW).append(Component.text(isFrozen ? "Dégeler" : "Geler", isFrozen ? NamedTextColor.GREEN : NamedTextColor.RED)));
+                
+                meta.lore(lore);
+                item.setItemMeta(meta);
+            }
+            inv.setItem(slots[slotIndex++], item);
         }
 
         player.openInventory(inv);

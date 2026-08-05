@@ -134,6 +134,10 @@ public class LobbyListener implements Listener {
             return;
         }
 
+        if (player.hasMetadata("modmode")) {
+            return;
+        }
+
         ItemStack item = event.getItem();
 
         if (item == null || item.getType() == Material.AIR || !event.getAction().name().contains("RIGHT")) {
@@ -144,6 +148,13 @@ public class LobbyListener implements Listener {
             return;
         }
         
+        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            String name = item.getItemMeta().getDisplayName();
+            if (name.contains("Téléportation") || name.contains("Vanish") || name.contains("Geler") || name.contains("Inspecter") || name.contains("Knockback") || name.contains("Modération")) {
+                return;
+            }
+        }
+
         if (item.getType() == Material.COMPASS || item.getType() == Material.PLAYER_HEAD || item.getType() == Material.LIME_DYE || item.getType() == Material.GRAY_DYE) {
             event.setCancelled(true);
         }
@@ -205,6 +216,10 @@ public class LobbyListener implements Listener {
         }
 
         if (fr.corehost.lobby.commands.AdminCommand.buildModePlayers.contains(player.getUniqueId())) {
+            return;
+        }
+
+        if (player.hasMetadata("modmode")) {
             return;
         }
 

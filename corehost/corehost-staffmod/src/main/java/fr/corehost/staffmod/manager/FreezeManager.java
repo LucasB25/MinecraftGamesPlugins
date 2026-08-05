@@ -29,13 +29,13 @@ public class FreezeManager {
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().setEx("corehost:freeze:" + uuid.toString(), "true", 86400);
             }
-            player.sendMessage(plugin.getPrefix().append(Component.text("Vous avez ete gele par un moderateur !", NamedTextColor.RED)));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Vous avez été gelé par un modérateur !", NamedTextColor.RED)));
         } else {
             frozenPlayers.remove(uuid);
             if (plugin.getRedisManager() != null) {
                 plugin.getRedisManager().del("corehost:freeze:" + uuid.toString());
             }
-            player.sendMessage(plugin.getPrefix().append(Component.text("Vous avez ete degele.", NamedTextColor.GREEN)));
+            player.sendMessage(plugin.getPrefix().append(Component.text("Vous avez été dégelé.", NamedTextColor.GREEN)));
         }
     }
 
@@ -48,7 +48,7 @@ public class FreezeManager {
             String isF = plugin.getRedisManager().get("corehost:freeze:" + player.getUniqueId().toString());
             if ("true".equals(isF)) {
                 frozenPlayers.add(player.getUniqueId());
-                player.sendMessage(Component.text("Vous etes toujours gele !", NamedTextColor.RED));
+                player.sendMessage(Component.text("Vous êtes toujours gelé !", NamedTextColor.RED));
             }
         }
     }

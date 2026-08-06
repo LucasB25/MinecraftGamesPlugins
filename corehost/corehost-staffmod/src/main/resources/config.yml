@@ -6,6 +6,18 @@ redis:
 settings:
   prefix: "&8[&cStaff&8] &7"
 
+chat:
+  forbidden_words:
+    - "fdp"
+    - "connard"
+    - "salope"
+    - "tg"
+    - "ntm"
+    - "bite"
+    - "pute"
+    - "enculé"
+    - "ez"
+
 # -----------------------------------------------------
 # Permissions du plugin CoreHost-StaffMod :
 # -----------------------------------------------------
@@ -13,4 +25,5 @@ settings:
 # - staffmod.mod         : Permet d'utiliser /mod et d'ouvrir le menu de modération (default: false)
 # - staffmod.staffchat   : Permet de lire et écrire dans le /sc (Staff Chat) (default: false)
 # - staffmod.vanish.see  : Permet de voir les joueurs en vanish (default: false)
+# - staffmod.bypasschat  : Permet d'ignorer le filtrage automatique du chat (default: false)
 # -----------------------------------------------------

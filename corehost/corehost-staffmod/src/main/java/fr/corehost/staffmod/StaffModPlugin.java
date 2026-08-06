@@ -56,7 +56,7 @@ public class StaffModPlugin extends JavaPlugin {
         this.redisManager.subscribe(new StaffPubSubListener(this), "corehost:staff:events");
 
         // Register events
-        getServer().getPluginManager().registerEvents(new ChatListener(reportManager), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         getServer().getPluginManager().registerEvents(new StaffListener(modManager, freezeManager, vanishManager), this);
         getServer().getPluginManager().registerEvents(new GUIListener(this), this);
         getServer().getPluginManager().registerEvents(new ModInteractListener(this), this);

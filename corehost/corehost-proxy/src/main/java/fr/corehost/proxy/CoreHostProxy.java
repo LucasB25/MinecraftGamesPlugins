@@ -168,6 +168,8 @@ public class CoreHostProxy {
                 if (data.containsKey("settings")) {
                     java.util.Map<String, Object> settingsData = (java.util.Map<String, Object>) data.get("settings");
                     if (settingsData.containsKey("prefix")) config.setPrefix(String.valueOf(settingsData.get("prefix")));
+                    if (settingsData.containsKey("party-limit-default")) config.setPartyLimitDefault(Integer.parseInt(String.valueOf(settingsData.get("party-limit-default"))));
+                    if (settingsData.containsKey("friend-limit-default")) config.setFriendLimitDefault(Integer.parseInt(String.valueOf(settingsData.get("friend-limit-default"))));
                 }
                 return config;
             } catch (Exception e) {

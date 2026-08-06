@@ -62,4 +62,13 @@ public class ProxyConfig {
 
     public String getDbPassword() { return dbPassword; }
     public void setDbPassword(String dbPassword) { this.dbPassword = dbPassword; }
+
+    private int partyLimitDefault = 4;
+    private int friendLimitDefault = 50;
+
+    public int getPartyLimitDefault() { return partyLimitDefault; }
+    public void setPartyLimitDefault(int partyLimitDefault) { this.partyLimitDefault = partyLimitDefault; }
+
+    public int getFriendLimitDefault() { return friendLimitDefault; }
+    public void setFriendLimitDefault(int friendLimitDefault) { this.friendLimitDefault = friendLimitDefault; }
 }

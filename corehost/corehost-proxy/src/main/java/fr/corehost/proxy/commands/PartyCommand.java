@@ -174,6 +174,15 @@ public class PartyCommand implements SimpleCommand {
         target.sendMessage(acceptButton.append(denyButton));
     }
 
+    private int getPartyLimit(Player player) {
+        for (int i = 200; i > 0; i--) {
+            if (player.hasPermission("corehost.party.limit." + i)) {
+                return i;
+            }
+        }
+        return plugin.getProxyConfig().getPartyLimitDefault();
+    }
+
     private void handleAccept(Player player, String[] args) {
         if (args.length < 2) {
             player.sendMessage(ProxyPrefix.message("Usage: /party accept <joueur>", NamedTextColor.RED));
@@ -209,6 +218,18 @@ public class PartyCommand implements SimpleCommand {
         if (senderLeader == null) {
             partyManager.createParty(senderUuid);
             senderLeader = senderUuid;
+        }
+        
+        Set<UUID> currentMembers = partyManager.getPartyMembers(senderLeader);
+        int limit = plugin.getProxyConfig().getPartyLimitDefault();
+        Optional<Player> leaderPlayerOpt = server.getPlayer(senderLeader);
+        if (leaderPlayerOpt.isPresent()) {
+            limit = getPartyLimit(leaderPlayerOpt.get());
+        }
+        
+        if (currentMembers.size() >= limit) {
+            player.sendMessage(ProxyPrefix.message("Ce groupe a atteint sa taille maximale de " + limit + " membres.", NamedTextColor.RED));
+            return;
         }
         
         partyManager.addMember(senderLeader, playerUuid);

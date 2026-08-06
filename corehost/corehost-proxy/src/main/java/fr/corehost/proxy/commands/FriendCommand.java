@@ -133,6 +133,15 @@ public class FriendCommand implements SimpleCommand {
         }
     }
 
+    private int getFriendLimit(Player player) {
+        for (int i = 200; i > 0; i--) {
+            if (player.hasPermission("corehost.friend.limit." + i)) {
+                return i;
+            }
+        }
+        return plugin.getProxyConfig().getFriendLimitDefault();
+    }
+
     private void handleAdd(Player player, UUID targetUuid, String targetName) {
         if (plugin.getFriendManager().areFriends(player.getUniqueId(), targetUuid)) {
             player.sendMessage(ProxyPrefix.message("Vous êtes déjà ami avec ce joueur.", NamedTextColor.RED));
@@ -149,6 +158,14 @@ public class FriendCommand implements SimpleCommand {
 
         if (plugin.getFriendManager().areFriendRequestsBlocked(targetUuid)) {
             player.sendMessage(ProxyPrefix.get().append(Component.text("Ce joueur n'accepte pas les demandes d'amis.").color(NamedTextColor.RED)));
+            return;
+        }
+
+        Set<String> playerFriends = plugin.getFriendManager().getFriends(player.getUniqueId());
+        int limit = getFriendLimit(player);
+
+        if (playerFriends.size() >= limit) {
+            player.sendMessage(ProxyPrefix.message("Vous avez atteint la limite de " + limit + " amis.", NamedTextColor.RED));
             return;
         }
 
@@ -182,8 +199,10 @@ public class FriendCommand implements SimpleCommand {
 
         // Check limit for player
         Set<String> playerFriends = plugin.getFriendManager().getFriends(player.getUniqueId());
-        if (playerFriends.size() >= 50) {
-            player.sendMessage(ProxyPrefix.message("Vous avez atteint la limite de 50 amis.", NamedTextColor.RED));
+        int limit = getFriendLimit(player);
+        
+        if (playerFriends.size() >= limit) {
+            player.sendMessage(ProxyPrefix.message("Vous avez atteint la limite de " + limit + " amis.", NamedTextColor.RED));
             return;
         }
 

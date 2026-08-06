@@ -20,16 +20,61 @@ import java.util.UUID;
 
 public class ChatListener implements Listener {
 
+    private final fr.corehost.staffmod.StaffModPlugin plugin;
     private final ReportManager reportManager;
+    private final java.util.Map<UUID, Long> lastMessageTime = new java.util.HashMap<>();
+    private final java.util.Map<UUID, String> lastMessageContent = new java.util.HashMap<>();
+    
+    private static final java.util.regex.Pattern URL_PATTERN = java.util.regex.Pattern.compile("(?i)\\b(?:https?://)?(?:www\\.)?[a-z0-9-]+\\.(?:com|org|net|fr|eu|io|gg)\\b");
+    private static final java.util.regex.Pattern IP_PATTERN = java.util.regex.Pattern.compile("\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b");
 
-    public ChatListener(ReportManager reportManager) {
-        this.reportManager = reportManager;
+    public ChatListener(fr.corehost.staffmod.StaffModPlugin plugin) {
+        this.plugin = plugin;
+        this.reportManager = plugin.getReportManager();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         Player source = event.getPlayer();
         String plainTextMsg = PlainTextComponentSerializer.plainText().serialize(event.message());
+        
+        if (!source.hasPermission("staffmod.bypasschat")) {
+            long now = System.currentTimeMillis();
+            if (lastMessageTime.containsKey(source.getUniqueId()) && (now - lastMessageTime.get(source.getUniqueId())) < 1500) {
+                source.sendMessage(Component.text("Veuillez patienter entre chaque message.", NamedTextColor.RED));
+                event.setCancelled(true);
+                return;
+            }
+            if (lastMessageContent.containsKey(source.getUniqueId()) && lastMessageContent.get(source.getUniqueId()).equalsIgnoreCase(plainTextMsg)) {
+                source.sendMessage(Component.text("Veuillez ne pas répéter le même message.", NamedTextColor.RED));
+                event.setCancelled(true);
+                return;
+            }
+            
+            lastMessageTime.put(source.getUniqueId(), now);
+            lastMessageContent.put(source.getUniqueId(), plainTextMsg);
+            
+            if (URL_PATTERN.matcher(plainTextMsg).find() || IP_PATTERN.matcher(plainTextMsg).find()) {
+                source.sendMessage(Component.text("Les liens et adresses IP sont interdits dans le chat.", NamedTextColor.RED));
+                event.setCancelled(true);
+                return;
+            }
+            
+            String lowerMsg = plainTextMsg.toLowerCase();
+            java.util.List<String> forbiddenWords = plugin.getConfig().getStringList("chat.forbidden_words");
+            if (forbiddenWords == null || forbiddenWords.isEmpty()) {
+                forbiddenWords = java.util.Arrays.asList("fdp", "connard", "salope", "tg", "ntm", "bite", "pute", "enculé", "ez");
+            }
+            
+            for (String word : forbiddenWords) {
+                if (lowerMsg.matches(".*\\b" + word + "\\b.*")) {
+                    source.sendMessage(Component.text("Votre message contient un vocabulaire inapproprié.", NamedTextColor.RED));
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+
         
         // Cache the message once for the entire chat event
         final UUID messageId = reportManager.cacheLocalMessage(source.getName(), plainTextMsg);

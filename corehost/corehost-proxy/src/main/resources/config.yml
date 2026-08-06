@@ -6,9 +6,13 @@
 # // - corehost.command.ignore : Permet d'ignorer un joueur
 # // - corehost.command.hub : Permet de retourner au hub
 # // - corehost.admin : Permet d'utiliser les commandes d'administration du proxy
+# // - corehost.party.limit.<x> : Fixe la limite de taille du groupe (ex: corehost.party.limit.10)
+# // - corehost.friend.limit.<x> : Fixe la limite d'amis maximum (ex: corehost.friend.limit.100)
 
 settings:
   prefix: "&8[&6CoreHost&8] &7"
+  party-limit-default: 5
+  friend-limit-default: 10
 
 redis:
   host: "127.0.0.1"

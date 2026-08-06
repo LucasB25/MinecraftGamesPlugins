@@ -90,8 +90,12 @@ public class StaffListener implements Listener {
     public void onDamageByEntity(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player) {
             Player damager = (Player) event.getDamager();
-            if (modManager.isModMode(damager.getUniqueId()) || freezeManager.isFrozen(damager.getUniqueId())) {
+            if (freezeManager.isFrozen(damager.getUniqueId())) {
                 event.setCancelled(true);
+                return;
+            }
+            if (modManager.isModMode(damager.getUniqueId())) {
+                event.setDamage(0);
             }
         }
     }

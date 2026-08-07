@@ -45,8 +45,27 @@ public class SumoListener implements Listener {
             instance.addPlayer(player);
         } else {
             // Might be a dynamically loaded world that wasn't registered yet?
-            // Let's create it on the fly for testing
+            boolean isSumo = false;
+            
             if (worldName.toLowerCase().contains("sumo")) {
+                isSumo = true;
+            } else {
+                try {
+                    fr.corehost.game.CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(fr.corehost.game.CoreHostGame.class);
+                    if (coreGame != null && coreGame.getRedisManager() != null) {
+                        fr.corehost.api.host.HostManager hostManager = new fr.corehost.api.host.HostManager(coreGame.getRedisManager());
+                        java.util.UUID hostId = java.util.UUID.fromString(worldName);
+                        fr.corehost.api.host.HostData data = hostManager.getHost(hostId);
+                        if (data != null && "sumo".equalsIgnoreCase(data.getGameType())) {
+                            isSumo = true;
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignore, not a valid UUID or redis is offline
+                }
+            }
+            
+            if (isSumo) {
                 instance = plugin.getGameManager().createInstance(worldName, "default");
                 if (instance != null) {
                     instance.addPlayer(player);

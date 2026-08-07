@@ -8,6 +8,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 
 import java.util.Optional;
 
@@ -91,8 +92,21 @@ public class SumoListener implements Listener {
                     // Cancel fall damage entirely
                     if (event.getCause() == EntityDamageEvent.DamageCause.FALL) {
                         event.setCancelled(true);
+                    } else if (event.getCause() == EntityDamageEvent.DamageCause.VOID) {
+                        event.setCancelled(true);
+                        instance.handleDeath(player);
                     }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Optional<SumoGameInstance> optInstance = plugin.getGameManager().getInstanceForPlayer((Player) event.getEntity());
+            if (optInstance.isPresent()) {
+                event.setCancelled(true);
             }
         }
     }

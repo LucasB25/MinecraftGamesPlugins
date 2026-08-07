@@ -6,6 +6,11 @@ settings:
 gameplay:
   countdown-seconds: 5
   void-level: 50
+  round-time: 60
+  max-draws: 3
+
+rewards:
+  win-coins: 50
 
 redis:
   host: "127.0.0.1"

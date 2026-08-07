@@ -40,6 +40,11 @@ public class SumoGameInstance {
     
     private int roundTime = 60;
     private org.bukkit.scheduler.BukkitTask roundTimerTask;
+    
+    private int consecutiveDraws = 0;
+    private final int maxDraws;
+    private final int winCoins;
+    private final int defaultRoundTime;
 
     public SumoGameInstance(CoreHostSumo plugin, String hostId, World world, SumoMapConfig mapConfig) {
         this.plugin = plugin;
@@ -47,6 +52,10 @@ public class SumoGameInstance {
         this.world = world;
         this.mapConfig = mapConfig;
         this.scoreboardManager = new SumoScoreboardManager(this);
+        
+        this.maxDraws = plugin.getConfig().getInt("gameplay.max-draws", 3);
+        this.winCoins = plugin.getConfig().getInt("rewards.win-coins", 50);
+        this.defaultRoundTime = plugin.getConfig().getInt("gameplay.round-time", 60);
         
         // Fetch HostData to get Best Of setting
         CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
@@ -92,6 +101,7 @@ public class SumoGameInstance {
             
             resetPlayerState(player);
             scoreboardManager.setupScoreboard(player);
+            plugin.getGameManager().registerPlayer(player.getUniqueId(), this);
 
             broadcast(ChatColor.YELLOW + player.getName() + " a rejoint la partie (" + players.size() + "/2)");
 
@@ -102,6 +112,7 @@ public class SumoGameInstance {
     public void removePlayer(Player player) {
         players.remove(player.getUniqueId());
         scoreboardManager.removeScoreboard(player);
+        plugin.getGameManager().unregisterPlayer(player.getUniqueId());
         
         if (state == GameState.PLAYING) {
             handleDeath(player);
@@ -133,8 +144,10 @@ public class SumoGameInstance {
         alivePlayers.remove(player.getUniqueId());
         
         // Visual feedback for loser
-        player.sendTitle(ChatColor.RED + "TOMBÉ !", "", 5, 40, 10);
-        player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1.0f, 1.0f);
+        if (player.isOnline()) {
+            player.sendTitle(ChatColor.RED + "TOMBÉ !", "", 5, 40, 10);
+            player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1.0f, 1.0f);
+        }
         
         Player winner = null;
         if (alivePlayers.size() == 1) {
@@ -157,6 +170,7 @@ public class SumoGameInstance {
             }
         }
         
+        consecutiveDraws = 0; // Reset draws on win
         scoreboardManager.updateAll();
         checkWin(winner);
     }
@@ -209,7 +223,7 @@ public class SumoGameInstance {
 
                     if (totalWait <= 0) {
                         state = GameState.PLAYING;
-                        roundTime = 60;
+                        roundTime = defaultRoundTime;
                         scoreboardManager.updateAll();
 
                         for (UUID uuid : players) {
@@ -256,7 +270,7 @@ public class SumoGameInstance {
                     
                     CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
                     if (coreGame != null && coreGame.getRedisManager() != null) {
-                        coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_COINS\", \"uuid\":\"" + roundWinner.getUniqueId().toString() + "\", \"amount\": 50}");
+                        coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_COINS\", \"uuid\":\"" + roundWinner.getUniqueId().toString() + "\", \"amount\": " + winCoins + "}");
                     }
                     
                     for (UUID uuid : players) {
@@ -351,7 +365,14 @@ public class SumoGameInstance {
     private void handleDraw() {
         if (state != GameState.PLAYING) return;
         state = GameState.WAITING;
+        consecutiveDraws++;
         scoreboardManager.updateAll();
+        
+        if (consecutiveDraws >= maxDraws) {
+            broadcast(ChatColor.RED + "Trop d'égalités consécutives. La partie est annulée.");
+            checkWin(null); // End the game as a global draw/forfeit
+            return;
+        }
         
         for (UUID uuid : players) {
             Player p = Bukkit.getPlayer(uuid);

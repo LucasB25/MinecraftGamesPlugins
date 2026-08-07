@@ -7,11 +7,13 @@ import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public class SumoGameManager {
 
     private final CoreHostSumo plugin;
     private final Map<String, SumoGameInstance> instances = new HashMap<>();
+    private final Map<UUID, SumoGameInstance> playerInstances = new HashMap<>();
 
     public SumoGameManager(CoreHostSumo plugin) {
         this.plugin = plugin;
@@ -47,8 +49,14 @@ public class SumoGameManager {
     }
 
     public Optional<SumoGameInstance> getInstanceForPlayer(Player player) {
-        return instances.values().stream()
-                .filter(instance -> instance.hasPlayer(player.getUniqueId()))
-                .findFirst();
+        return Optional.ofNullable(playerInstances.get(player.getUniqueId()));
+    }
+
+    public void registerPlayer(UUID uuid, SumoGameInstance instance) {
+        playerInstances.put(uuid, instance);
+    }
+
+    public void unregisterPlayer(UUID uuid) {
+        playerInstances.remove(uuid);
     }
 }

@@ -45,7 +45,27 @@ public class CloudNetServiceManager {
         }
 
         if (!isCloudNetEnabled || plugin.getHostManager() == null) {
-            player.sendMessage(prefix + ChatColor.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");
+            // Local Test Mode Bypass
+            player.sendMessage(prefix + ChatColor.YELLOW + "[Mode Test Local] " + ChatColor.GRAY + "Génération simulée et téléportation...");
+            
+            if (plugin.getHostManager() != null) {
+                UUID hostId = UUID.randomUUID();
+                HostData hostData = new HostData(
+                        hostId,
+                        player.getUniqueId(),
+                        player.getName(),
+                        gameType,
+                        "sumo", // Default target for local
+                        "sumo", 
+                        2
+                );
+                hostData.setBestOf(bestOf);
+                hostData.setStatus(fr.corehost.api.host.HostStatus.STARTING);
+                plugin.getHostManager().saveHost(hostData);
+            }
+            
+            // Connect to velocity 'sumo' server
+            plugin.connectToServer(player, "sumo");
             return;
         }
 

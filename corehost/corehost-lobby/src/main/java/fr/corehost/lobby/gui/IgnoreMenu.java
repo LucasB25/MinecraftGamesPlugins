@@ -61,7 +61,7 @@ public class IgnoreMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 // ── Bottom bar decoration (unified Pink + Purple) ──
-                MenuUtils.fillBottomRow(inventory);
+                LobbyMenuUtils.fillBottomRow(inventory);
 
                 // ── Populate Ignored Players ──
                 int slot = 0;
@@ -95,7 +95,7 @@ public class IgnoreMenu implements CustomMenu {
                 }
 
                 // ── Back to Settings ──
-                inventory.setItem(49, MenuUtils.getBackToSettingsButton());
+                inventory.setItem(49, LobbyMenuUtils.getBackToSettingsButton());
 
                 player.openInventory(inventory);
             });

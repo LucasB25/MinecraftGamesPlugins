@@ -58,7 +58,7 @@ public class SettingsMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 // ── Border decoration: Pink + Purple alternating (matches Profile) ──
-                MenuUtils.fillBorder(inventory);
+                LobbyMenuUtils.fillBorder(inventory);
 
                 // ── Slot 11: Friend Requests Toggle ──
                 ItemStack friendRequestToggle = new ItemBuilder(isBlocked ? Material.RED_DYE : Material.LIME_DYE)
@@ -129,7 +129,7 @@ public class SettingsMenu implements CustomMenu {
                 inventory.setItem(15, ignoredPlayers);
 
                 // ── Slot 22: Back to Profile ──
-                inventory.setItem(22, MenuUtils.getBackButton());
+                inventory.setItem(22, LobbyMenuUtils.getBackButton());
 
                 player.openInventory(inventory);
             });

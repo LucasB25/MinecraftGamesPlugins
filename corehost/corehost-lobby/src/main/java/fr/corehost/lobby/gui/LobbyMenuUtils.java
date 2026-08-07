@@ -6,7 +6,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import fr.corehost.lobby.utils.ItemBuilder;
 
-public class MenuUtils {
+public class LobbyMenuUtils {
 
     public static ItemStack getPinkFiller() {
         return new ItemBuilder(Material.PINK_STAINED_GLASS_PANE).setName(" ").build();

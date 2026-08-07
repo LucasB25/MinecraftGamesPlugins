@@ -11,7 +11,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MenuUtils {
+public class StaffMenuUtils {
 
     public static ItemStack getRedFiller() {
         ItemStack item = new ItemStack(Material.RED_STAINED_GLASS_PANE);

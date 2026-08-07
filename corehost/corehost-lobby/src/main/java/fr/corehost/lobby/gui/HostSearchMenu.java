@@ -41,7 +41,7 @@ public class HostSearchMenu implements CustomMenu {
     }
     
     private void drawBottomBar() {
-        MenuUtils.fillBottomRow(inventory);
+        LobbyMenuUtils.fillBottomRow(inventory);
 
         // Create Host item
         String currentFilter = gameFilter.equals("ALL") ? "Tous" : gameFilter;

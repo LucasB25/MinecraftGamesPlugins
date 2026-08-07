@@ -72,7 +72,7 @@ public class PartyMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 // ── Bottom bar: Pink + Purple alternating (matches Profile) ──
-                MenuUtils.fillBottomRow(inventory);
+                LobbyMenuUtils.fillBottomRow(inventory);
 
                 boolean isLeader = leaderUuid != null && leaderUuid.equals(playerUuid);
 
@@ -139,7 +139,7 @@ public class PartyMenu implements CustomMenu {
                 inventory.setItem(48, info);
 
                 // ── Back to Profile (slot 49) — matches FriendsMenu ──
-                inventory.setItem(49, MenuUtils.getBackButton());
+                inventory.setItem(49, LobbyMenuUtils.getBackButton());
 
                 // ── Invite Player (slot 50) — matches FriendsMenu "Ajouter un ami" ──
                 if (isLeader) {

@@ -89,7 +89,7 @@ public class FriendsMenu implements CustomMenu {
                 if (!player.isOnline()) return;
 
                 // ── Bottom bar: Pink + Purple alternating (matches Profile) ──
-                MenuUtils.fillBottomRow(inventory);
+                LobbyMenuUtils.fillBottomRow(inventory);
 
                 // ── Friend heads ──
                 int slot = 0;
@@ -159,12 +159,12 @@ public class FriendsMenu implements CustomMenu {
 
                 // ── Pagination: Previous Page (slot 45) ──
                 if (page > 0) {
-                    inventory.setItem(45, MenuUtils.getPrevPageButton());
+                    inventory.setItem(45, LobbyMenuUtils.getPrevPageButton());
                 }
 
                 // ── Pagination: Next Page (slot 53) ──
                 if (endIndex < friends.size()) {
-                    inventory.setItem(53, MenuUtils.getNextPageButton());
+                    inventory.setItem(53, LobbyMenuUtils.getNextPageButton());
                 }
 
                 // ── Info: Friend Count (slot 48) ──
@@ -179,7 +179,7 @@ public class FriendsMenu implements CustomMenu {
                 inventory.setItem(48, info);
 
                 // ── Back to Profile (slot 49) ──
-                inventory.setItem(49, MenuUtils.getBackButton());
+                inventory.setItem(49, LobbyMenuUtils.getBackButton());
 
                 // ── Add Friend (slot 50) ──
                 ItemStack addFriend = new ItemBuilder(Material.EMERALD)

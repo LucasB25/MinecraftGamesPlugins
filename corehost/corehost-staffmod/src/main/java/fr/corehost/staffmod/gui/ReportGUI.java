@@ -29,8 +29,8 @@ public class ReportGUI {
     public void open(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
         Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Signalements Actifs", NamedTextColor.RED, TextDecoration.BOLD)));
-        MenuUtils.fillBorder(inv);
-        inv.setItem(45, MenuUtils.getCloseButton());
+        StaffMenuUtils.fillBorder(inv);
+        inv.setItem(45, StaffMenuUtils.getCloseButton());
 
         Map<UUID, ReportManager.CachedMessage> reports = plugin.getReportManager().getAllActiveReports();
         

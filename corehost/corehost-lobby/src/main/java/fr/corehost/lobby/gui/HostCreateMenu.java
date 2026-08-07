@@ -30,7 +30,7 @@ public class HostCreateMenu implements CustomMenu {
 
     private void initializeItems() {
         // Border decoration (unified Pink + Purple)
-        MenuUtils.fillBorder(inventory);
+        LobbyMenuUtils.fillBorder(inventory);
 
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
         ConfigurationSection gamesSection = plugin.getConfig().getConfigurationSection("games");

@@ -26,8 +26,8 @@ public class PlayerListGUI {
     public void open(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
         Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération - Joueurs", NamedTextColor.RED, TextDecoration.BOLD)));
-        MenuUtils.fillBorder(inv);
-        inv.setItem(45, MenuUtils.getCloseButton());
+        StaffMenuUtils.fillBorder(inv);
+        inv.setItem(45, StaffMenuUtils.getCloseButton());
 
         int[] slots = {10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34, 37,38,39,40,41,42,43};
         int slotIndex = 0;

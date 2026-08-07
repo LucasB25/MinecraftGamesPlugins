@@ -24,7 +24,7 @@ public class SumoSettingsMenu implements CustomMenu {
 
     private void initializeItems() {
         // Border decoration (unified Pink + Purple)
-        MenuUtils.fillBorder(inventory);
+        LobbyMenuUtils.fillBorder(inventory);
 
         // BO3 Item
         ItemStack bo3 = new ItemBuilder(Material.SLIME_BALL, 3)
@@ -69,7 +69,7 @@ public class SumoSettingsMenu implements CustomMenu {
         inventory.setItem(15, bo7);
 
         // Back button (unified)
-        inventory.setItem(22, MenuUtils.getBackToCreateButton());
+        inventory.setItem(22, LobbyMenuUtils.getBackToCreateButton());
     }
 
     public void open(Player player) {

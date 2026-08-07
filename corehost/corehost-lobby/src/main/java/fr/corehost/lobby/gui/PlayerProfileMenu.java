@@ -28,7 +28,7 @@ public class PlayerProfileMenu implements CustomMenu {
 
     private void initializeItems(boolean isLinked, int coins) {
         // Border decoration (Pink + Purple alternating)
-        MenuUtils.fillBorder(inventory);
+        LobbyMenuUtils.fillBorder(inventory);
 
         long firstPlayed = player.getFirstPlayed();
         String firstPlayedDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(firstPlayed));
@@ -80,7 +80,7 @@ public class PlayerProfileMenu implements CustomMenu {
         inventory.setItem(12, friendsItem);
 
         // ── Slot 13: Empty (glass pane) ──
-        inventory.setItem(13, MenuUtils.getPurpleFiller());
+        inventory.setItem(13, LobbyMenuUtils.getPurpleFiller());
 
         // ── Slot 14: Party (Cake) ──
         ItemStack partyItem = new ItemBuilder(Material.CAKE)

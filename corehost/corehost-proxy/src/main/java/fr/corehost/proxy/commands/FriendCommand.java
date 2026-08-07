@@ -102,35 +102,37 @@ public class FriendCommand implements SimpleCommand {
         }
 
         String targetName = args[1];
-        UUID targetUuid = plugin.getFriendManager().getUuidByName(targetName);
+        plugin.getServer().getScheduler().buildTask(plugin, () -> {
+            UUID targetUuid = plugin.getFriendManager().getUuidByName(targetName);
 
-        if (targetUuid == null) {
-            player.sendMessage(ProxyPrefix.message("Ce joueur n'a jamais été sur le serveur.", NamedTextColor.RED));
-            return;
-        }
+            if (targetUuid == null) {
+                player.sendMessage(ProxyPrefix.message("Ce joueur n'a jamais été sur le serveur.", NamedTextColor.RED));
+                return;
+            }
 
-        if (targetUuid.equals(player.getUniqueId())) {
-            player.sendMessage(ProxyPrefix.message("Vous ne pouvez pas être ami avec vous-même.", NamedTextColor.RED));
-            return;
-        }
+            if (targetUuid.equals(player.getUniqueId())) {
+                player.sendMessage(ProxyPrefix.message("Vous ne pouvez pas être ami avec vous-même.", NamedTextColor.RED));
+                return;
+            }
 
-        switch (sub) {
-            case "add":
-                handleAdd(player, targetUuid, targetName);
-                break;
-            case "accept":
-                handleAccept(player, targetUuid, targetName);
-                break;
-            case "deny":
-                handleDeny(player, targetUuid, targetName);
-                break;
-            case "remove":
-                handleRemove(player, targetUuid, targetName);
-                break;
-            default:
-                sendHelp(player);
-                break;
-        }
+            switch (sub) {
+                case "add":
+                    handleAdd(player, targetUuid, targetName);
+                    break;
+                case "accept":
+                    handleAccept(player, targetUuid, targetName);
+                    break;
+                case "deny":
+                    handleDeny(player, targetUuid, targetName);
+                    break;
+                case "remove":
+                    handleRemove(player, targetUuid, targetName);
+                    break;
+                default:
+                    sendHelp(player);
+                    break;
+            }
+        }).schedule();
     }
 
     private int getFriendLimit(Player player) {

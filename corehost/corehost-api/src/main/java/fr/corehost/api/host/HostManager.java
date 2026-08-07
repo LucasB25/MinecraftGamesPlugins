@@ -26,6 +26,7 @@ public class HostManager {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             String json = gson.toJson(hostData);
             jedis.set(HOST_PREFIX + hostData.getHostId().toString(), json);
+            jedis.sadd("corehost:hosts:active_ids", hostData.getHostId().toString());
             // Expire after 24 hours just in case of ghost servers
             jedis.expire(HOST_PREFIX + hostData.getHostId().toString(), 86400); 
         } catch (JedisException e) {
@@ -48,11 +49,14 @@ public class HostManager {
     public List<HostData> getAllHosts() {
         List<HostData> hosts = new ArrayList<>();
         try (Jedis jedis = redisManager.getPool().getResource()) {
-            Set<String> keys = jedis.keys(HOST_PREFIX + "*");
-            for (String key : keys) {
-                String json = jedis.get(key);
-                if (json != null) {
-                    hosts.add(gson.fromJson(json, HostData.class));
+            Set<String> activeIds = jedis.smembers("corehost:hosts:active_ids");
+            if (activeIds != null && !activeIds.isEmpty()) {
+                String[] keys = activeIds.stream().map(id -> HOST_PREFIX + id).toArray(String[]::new);
+                List<String> values = jedis.mget(keys);
+                for (String json : values) {
+                    if (json != null) {
+                        hosts.add(gson.fromJson(json, HostData.class));
+                    }
                 }
             }
         } catch (JedisException e) {
@@ -64,6 +68,7 @@ public class HostManager {
     public void deleteHost(UUID hostId) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             jedis.del(HOST_PREFIX + hostId.toString());
+            jedis.srem("corehost:hosts:active_ids", hostId.toString());
         } catch (JedisException e) {
             // Ignored if Redis is down
         }

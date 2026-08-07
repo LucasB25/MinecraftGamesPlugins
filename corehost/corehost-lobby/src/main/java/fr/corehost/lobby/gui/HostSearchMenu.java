@@ -89,15 +89,13 @@ public class HostSearchMenu implements CustomMenu {
     }
     
     private void drawHosts() {
-        // Clear host slots
-        for(int i = 0; i < 45; i++) {
-            inventory.setItem(i, new ItemStack(Material.AIR));
-        }
-        
-        // Fetch running hosts from Redis
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
         
         if (plugin.getHostManager() == null) {
+            // Clear host slots
+            for(int i = 0; i < 45; i++) {
+                inventory.setItem(i, new ItemStack(Material.AIR));
+            }
             ItemStack maintenanceItem = new ItemBuilder(Material.BARRIER)
                 .setName(ChatColor.RED + "" + ChatColor.BOLD + "Système en Maintenance")
                 .setLore(
@@ -109,48 +107,58 @@ public class HostSearchMenu implements CustomMenu {
             return;
         }
         
-        List<HostData> hosts = plugin.getHostManager().getAllHosts();
-        
-        int index = 0;
-        NamespacedKey hostKey = new NamespacedKey(plugin, "host_id");
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            List<HostData> hosts = plugin.getHostManager().getAllHosts();
+            
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (inventory.getViewers().isEmpty()) return;
+                
+                // Clear host slots
+                for(int i = 0; i < 45; i++) {
+                    inventory.setItem(i, new ItemStack(Material.AIR));
+                }
 
-        for (HostData host : hosts) {
-            if (index >= 45) break; // Maximum capacity in this page
-            
-            // Apply Filters
-            if (!gameFilter.equals("ALL") && !host.getGameType().equalsIgnoreCase(gameFilter)) {
-                continue;
-            }
-            if (statusFilter != null && host.getStatus() != statusFilter) {
-                continue;
-            }
+                int index = 0;
+                NamespacedKey hostKey = new NamespacedKey(plugin, "host_id");
+                NamespacedKey serverKey = new NamespacedKey(plugin, "server_name");
 
-            String materialName = plugin.getConfig().getString("games." + host.getGameType() + ".material", "BEDROCK");
-            Material mat = Material.matchMaterial(materialName);
-            if (mat == null) mat = Material.BEDROCK;
-            
-            String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
-            List<String> lore = java.util.Arrays.asList(
-                    "",
-                    ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Hôte : " + ChatColor.WHITE + host.getOwnerName(),
-                    ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name(),
-                    ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + host.getMaxPlayers(),
-                    "",
-                    ChatColor.GREEN + "► Cliquez pour rejoindre !"
-            );
-            
-            NamespacedKey serverKey = new NamespacedKey(plugin, "server_name");
-            
-            ItemStack hostItem = new ItemBuilder(mat)
-                .setName(ChatColor.YELLOW + "Serveur " + host.getGameType())
-                .setLore(lore)
-                .addPersistentData(hostKey, PersistentDataType.STRING, host.getHostId().toString())
-                .addPersistentData(serverKey, PersistentDataType.STRING, host.getServerName())
-                .build();
-            
-            inventory.setItem(index, hostItem);
-            index++;
-        }
+                for (HostData host : hosts) {
+                    if (index >= 45) break; // Maximum capacity in this page
+                    
+                    // Apply Filters
+                    if (!gameFilter.equals("ALL") && !host.getGameType().equalsIgnoreCase(gameFilter)) {
+                        continue;
+                    }
+                    if (statusFilter != null && host.getStatus() != statusFilter) {
+                        continue;
+                    }
+
+                    String materialName = plugin.getConfig().getString("games." + host.getGameType() + ".material", "BEDROCK");
+                    Material mat = Material.matchMaterial(materialName);
+                    if (mat == null) mat = Material.BEDROCK;
+                    
+                    String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
+                    List<String> lore = java.util.Arrays.asList(
+                            "",
+                            ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Hôte : " + ChatColor.WHITE + host.getOwnerName(),
+                            ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name(),
+                            ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + host.getMaxPlayers(),
+                            "",
+                            ChatColor.GREEN + "► Cliquez pour rejoindre !"
+                    );
+                    
+                    ItemStack hostItem = new ItemBuilder(mat)
+                        .setName(ChatColor.YELLOW + "Serveur " + host.getGameType())
+                        .setLore(lore)
+                        .addPersistentData(hostKey, PersistentDataType.STRING, host.getHostId().toString())
+                        .addPersistentData(serverKey, PersistentDataType.STRING, host.getServerName())
+                        .build();
+                    
+                    inventory.setItem(index, hostItem);
+                    index++;
+                }
+            });
+        });
     }
 
     public void open(Player player) {

@@ -23,8 +23,6 @@ public class ChatListener implements Listener {
     private final fr.corehost.staffmod.StaffModPlugin plugin;
     private final ReportManager reportManager;
     private final java.util.Map<UUID, Long> lastMessageTime = new java.util.HashMap<>();
-    private final java.util.Map<UUID, String> lastMessageContent = new java.util.HashMap<>();
-    
     private static final java.util.regex.Pattern URL_PATTERN = java.util.regex.Pattern.compile("(?i)\\b(?:https?://)?(?:www\\.)?[a-z0-9-]+\\.(?:com|org|net|fr|eu|io|gg)\\b");
     private static final java.util.regex.Pattern IP_PATTERN = java.util.regex.Pattern.compile("\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b");
     private static final java.util.regex.Pattern DISCORD_PATTERN = java.util.regex.Pattern.compile("(?i)d[\\s\\W]*i[\\s\\W]*s[\\s\\W]*c[\\s\\W]*o[\\s\\W]*r[\\s\\W]*d[\\s\\W]*(?:\\.|dot)[\\s\\W]*(?:g[\\s\\W]*g|c[\\s\\W]*o[\\s\\W]*m[\\s\\W]*/[\\s\\W]*i[\\s\\W]*n[\\s\\W]*v[\\s\\W]*i[\\s\\W]*t[\\s\\W]*e)[\\s\\W]*/[\\s\\W]*[a-zA-Z0-9]+");
@@ -102,15 +100,8 @@ public class ChatListener implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            if (lastMessageContent.containsKey(source.getUniqueId()) && lastMessageContent.get(source.getUniqueId()).equalsIgnoreCase(plainTextMsg)) {
-                source.sendMessage(Component.text("Veuillez ne pas répéter le même message.", NamedTextColor.RED));
-                notifyStaff(source, "Répétition", plainTextMsg);
-                event.setCancelled(true);
-                return;
-            }
             
             lastMessageTime.put(source.getUniqueId(), now);
-            lastMessageContent.put(source.getUniqueId(), plainTextMsg);
             
             if (URL_PATTERN.matcher(plainTextMsg).find() || IP_PATTERN.matcher(plainTextMsg).find()) {
                 source.sendMessage(Component.text("Les liens et adresses IP sont interdits dans le chat.", NamedTextColor.RED));

@@ -369,28 +369,30 @@ public class ParkourManager {
     }
 
     private void saveRecord(UUID uuid, String courseId, long time) {
-        // Insert to Redis
-        try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
-            jedis.zadd("corehost:parkour:" + courseId, (double) time, uuid.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        // Insert to MySQL
-        if (plugin.getDatabaseManager() != null) {
-            try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
-                 java.sql.PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO parkour_records (uuid, course_id, best_time) VALUES (?, ?, ?) " +
-                     "ON DUPLICATE KEY UPDATE best_time = LEAST(best_time, ?)")) {
-                stmt.setString(1, uuid.toString());
-                stmt.setString(2, courseId);
-                stmt.setLong(3, time);
-                stmt.setLong(4, time);
-                stmt.executeUpdate();
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            // Insert to Redis
+            try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                jedis.zadd("corehost:parkour:" + courseId, (double) time, uuid.toString());
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+            
+            // Insert to MySQL
+            if (plugin.getDatabaseManager() != null) {
+                try (java.sql.Connection conn = plugin.getDatabaseManager().getConnection();
+                     java.sql.PreparedStatement stmt = conn.prepareStatement(
+                         "INSERT INTO parkour_records (uuid, course_id, best_time) VALUES (?, ?, ?) " +
+                         "ON DUPLICATE KEY UPDATE best_time = LEAST(best_time, ?)")) {
+                    stmt.setString(1, uuid.toString());
+                    stmt.setString(2, courseId);
+                    stmt.setLong(3, time);
+                    stmt.setLong(4, time);
+                    stmt.executeUpdate();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     public boolean isPlayerInModMode(Player player) {

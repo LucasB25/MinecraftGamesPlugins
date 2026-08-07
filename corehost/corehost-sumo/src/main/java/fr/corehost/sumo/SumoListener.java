@@ -66,11 +66,28 @@ public class SumoListener implements Listener {
         Optional<SumoGameInstance> optInstance = plugin.getGameManager().getInstanceForPlayer(event.getPlayer());
         if (optInstance.isPresent()) {
             SumoGameInstance instance = optInstance.get();
+            
+            if (instance.isFrozen()) {
+                org.bukkit.Location from = event.getFrom();
+                org.bukkit.Location to = event.getTo();
+                if (to != null && (from.getX() != to.getX() || from.getZ() != to.getZ())) {
+                    event.getPlayer().teleport(new org.bukkit.Location(
+                        from.getWorld(),
+                        from.getX(),
+                        from.getY(),
+                        from.getZ(),
+                        to.getYaw(),
+                        to.getPitch()
+                    ));
+                    return;
+                }
+            }
+            
             int y = event.getTo().getBlockY();
             if (y <= instance.getMapConfig().getDeathHeight()) {
                 if (instance.getState() == SumoGameInstance.GameState.PLAYING) {
                     instance.handleDeath(event.getPlayer());
-                } else if (instance.getState() == SumoGameInstance.GameState.WAITING || instance.getState() == SumoGameInstance.GameState.STARTING) {
+                } else if (instance.getState() == SumoGameInstance.GameState.WAITING || instance.getState() == SumoGameInstance.GameState.STARTING || instance.getState() == SumoGameInstance.GameState.ENDED) {
                     event.getPlayer().teleport(event.getPlayer().getWorld().getSpawnLocation());
                 }
             }

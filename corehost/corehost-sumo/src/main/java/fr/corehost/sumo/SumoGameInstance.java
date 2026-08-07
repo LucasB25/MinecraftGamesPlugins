@@ -41,6 +41,8 @@ public class SumoGameInstance {
     private int roundTime = 60;
     private org.bukkit.scheduler.BukkitTask roundTimerTask;
     
+    private boolean frozen = false;
+    
     private int consecutiveDraws = 0;
     private final int maxDraws;
     
@@ -264,6 +266,7 @@ public class SumoGameInstance {
                 public void run() {
                     if (players.size() < 2) {
                         state = GameState.WAITING;
+                        frozen = false;
                         scoreboardManager.updateAll();
                         broadcast(ChatColor.RED + "Pas assez de joueurs, annulation du démarrage.");
                         
@@ -283,6 +286,7 @@ public class SumoGameInstance {
 
                     if (totalWait == 5) {
                         teleportToFightSpawns();
+                        frozen = true;
                     }
 
                     if (totalWait <= 5 && totalWait > 0) {
@@ -300,6 +304,7 @@ public class SumoGameInstance {
 
                     if (totalWait <= 0) {
                         state = GameState.PLAYING;
+                        frozen = false;
                         roundTime = defaultRoundTime;
                         scoreboardManager.updateAll();
                         syncHostData();
@@ -345,6 +350,7 @@ public class SumoGameInstance {
                 state = GameState.ENDED;
                 scoreboardManager.updateAll();
                 syncHostData();
+                teleportToFightSpawns();
                 
                 CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
                 
@@ -425,6 +431,7 @@ public class SumoGameInstance {
                 state = GameState.WAITING;
                 scoreboardManager.updateAll();
                 syncHostData();
+                teleportToFightSpawns();
                 
                 new BukkitRunnable() {
                     @Override
@@ -476,6 +483,7 @@ public class SumoGameInstance {
         consecutiveDraws++;
         scoreboardManager.updateAll();
         syncHostData();
+        teleportToFightSpawns();
         
         if (consecutiveDraws >= maxDraws) {
             broadcast(ChatColor.RED + "Trop d'égalités consécutives. La partie est annulée.");
@@ -555,6 +563,10 @@ public class SumoGameInstance {
 
     public GameState getState() {
         return state;
+    }
+
+    public boolean isFrozen() {
+        return frozen;
     }
 
     public World getWorld() {

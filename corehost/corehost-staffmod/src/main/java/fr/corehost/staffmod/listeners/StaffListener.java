@@ -95,7 +95,14 @@ public class StaffListener implements Listener {
                 return;
             }
             if (modManager.isModMode(damager.getUniqueId())) {
-                event.setDamage(0);
+                org.bukkit.inventory.ItemStack item = damager.getInventory().getItemInMainHand();
+                if (item.getType() == org.bukkit.Material.WOODEN_SWORD || item.getType() == org.bukkit.Material.STONE_SWORD) {
+                    if (item.containsEnchantment(org.bukkit.enchantments.Enchantment.KNOCKBACK)) {
+                        event.setDamage(0);
+                        return;
+                    }
+                }
+                event.setCancelled(true);
             }
         }
     }

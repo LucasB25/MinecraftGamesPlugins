@@ -68,7 +68,9 @@ public class VanishManager {
             } catch (Exception ignored) {}
 
             for (Player online : Bukkit.getOnlinePlayers()) {
-                online.showPlayer(plugin, player);
+                if (!online.hasMetadata("visibility_hidden")) {
+                    online.showPlayer(plugin, player);
+                }
             }
             updateVanishItem(player, false);
             if (notify && player.isOnline()) {

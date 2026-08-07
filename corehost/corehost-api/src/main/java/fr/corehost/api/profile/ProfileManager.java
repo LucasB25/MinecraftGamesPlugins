@@ -150,6 +150,18 @@ public class ProfileManager {
     }
     
     /**
+     * Forces a synchronous load of the profile from storage and updates the cache.
+     * This avoids invalidating the cache which would cause a main thread freeze on the next getProfile() call.
+     */
+    public void forceUpdateProfile(UUID uuid) {
+        PlayerProfile profile = loadProfileFromStorage(uuid);
+        if (profile != null) {
+            updateCache(profile);
+            saveProfileToRedis(profile);
+        }
+    }
+    
+    /**
      * Publishes an update message to Redis so all other servers invalidate their cache for this player.
      */
     public void publishProfileUpdate(UUID uuid) {

@@ -68,6 +68,21 @@ public class ModManager {
                 } catch (Exception ignored) {}
             }
             
+            // Sortir le joueur d'une instance Sumo s'il est en jeu
+            org.bukkit.plugin.Plugin sumoPlugin = org.bukkit.Bukkit.getPluginManager().getPlugin("CoreHost-Sumo");
+            if (sumoPlugin != null && sumoPlugin.isEnabled()) {
+                try {
+                    Object gameMgr = sumoPlugin.getClass().getMethod("getGameManager").invoke(sumoPlugin);
+                    if (gameMgr != null) {
+                        java.util.Optional<?> optInstance = (java.util.Optional<?>) gameMgr.getClass().getMethod("getInstanceForPlayer", Player.class).invoke(gameMgr, player);
+                        if (optInstance.isPresent()) {
+                            Object instance = optInstance.get();
+                            instance.getClass().getMethod("removePlayer", Player.class).invoke(instance, player);
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+            
             // Save Inventory
             savedInventories.put(uuid, player.getInventory().getContents());
             savedArmor.put(uuid, player.getInventory().getArmorContents());
@@ -98,6 +113,21 @@ public class ModManager {
                 plugin.getRedisManager().setEx("corehost:modmode:" + uuid.toString(), "false", 86400);
             }
             
+            // Sortir le joueur d'une instance Sumo s'il est en jeu
+            org.bukkit.plugin.Plugin sumoPlugin = org.bukkit.Bukkit.getPluginManager().getPlugin("CoreHost-Sumo");
+            if (sumoPlugin != null && sumoPlugin.isEnabled()) {
+                try {
+                    Object gameMgr = sumoPlugin.getClass().getMethod("getGameManager").invoke(sumoPlugin);
+                    if (gameMgr != null) {
+                        java.util.Optional<?> optInstance = (java.util.Optional<?>) gameMgr.getClass().getMethod("getInstanceForPlayer", Player.class).invoke(gameMgr, player);
+                        if (optInstance.isPresent()) {
+                            Object instance = optInstance.get();
+                            instance.getClass().getMethod("removePlayer", Player.class).invoke(instance, player);
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+            
             // Restore Inventory
             player.getInventory().clear();
             if (savedInventories.containsKey(uuid)) {
@@ -114,15 +144,26 @@ public class ModManager {
             player.setFlying(false);
             player.setFlySpeed(0.1f);
 
-            // Give Lobby Items if in Lobby world
-            giveLobbyItems(player);
+            // Vérifier si nous sommes sur le serveur Lobby
+            org.bukkit.plugin.Plugin lobbyPlugin = org.bukkit.Bukkit.getPluginManager().getPlugin("CoreHost-Lobby");
+            if (lobbyPlugin != null && lobbyPlugin.isEnabled()) {
+                // Give Lobby Items if in Lobby world
+                giveLobbyItems(player);
 
-            // Teleport to spawn location
-            Location spawn = player.getWorld().getSpawnLocation().clone();
-            spawn.setX(spawn.getBlockX() + 0.5);
-            spawn.setZ(spawn.getBlockZ() + 0.5);
-            spawn.setYaw(spawn.getYaw() + 180f);
-            player.teleport(spawn);
+                // Teleport to spawn location
+                Location spawn = player.getWorld().getSpawnLocation().clone();
+                spawn.setX(spawn.getBlockX() + 0.5);
+                spawn.setZ(spawn.getBlockZ() + 0.5);
+                spawn.setYaw(spawn.getYaw() + 180f);
+                player.teleport(spawn);
+            } else {
+                // Envoyer au lobby via BungeeCord
+                @SuppressWarnings("UnstableApiUsage")
+                com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
+                out.writeUTF("Connect");
+                out.writeUTF("lobby");
+                player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
+            }
             
             if (notify && player.isOnline()) {
                 player.sendMessage(plugin.getPrefix().append(Component.text("Mode Modération désactivé !", NamedTextColor.RED)));

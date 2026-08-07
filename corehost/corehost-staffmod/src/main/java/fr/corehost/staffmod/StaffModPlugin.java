@@ -69,6 +69,9 @@ public class StaffModPlugin extends JavaPlugin {
         this.nametagManager = new NametagManager(this);
         getServer().getPluginManager().registerEvents(this.nametagManager, this);
 
+        // Register BungeeCord channel
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
         getLogger().info("StaffMod a été activé avec succès !");
     }
 

@@ -176,6 +176,7 @@ public class LobbyListener implements Listener {
             if (hiddenPlayers.contains(player.getUniqueId())) {
                 // Currently hidden -> Make visible
                 hiddenPlayers.remove(player.getUniqueId());
+                player.removeMetadata("visibility_hidden", plugin);
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     player.showPlayer(plugin, p);
                 }
@@ -190,6 +191,7 @@ public class LobbyListener implements Listener {
             } else {
                 // Currently visible -> Make hidden
                 hiddenPlayers.add(player.getUniqueId());
+                player.setMetadata("visibility_hidden", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     player.hidePlayer(plugin, p);
                 }

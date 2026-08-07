@@ -19,7 +19,9 @@ public class ProfilePubSubListener extends JedisPubSub {
         if ("corehost:profile:update".equals(channel)) {
             try {
                 UUID uuid = UUID.fromString(message);
-                profileManager.invalidateProfile(uuid);
+                java.util.concurrent.CompletableFuture.runAsync(() -> {
+                    profileManager.forceUpdateProfile(uuid);
+                });
             } catch (IllegalArgumentException e) {
                 logger.warning("Invalid UUID received on profile update channel: " + message);
             }

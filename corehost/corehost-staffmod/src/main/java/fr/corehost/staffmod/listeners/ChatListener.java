@@ -27,6 +27,7 @@ public class ChatListener implements Listener {
     
     private static final java.util.regex.Pattern URL_PATTERN = java.util.regex.Pattern.compile("(?i)\\b(?:https?://)?(?:www\\.)?[a-z0-9-]+\\.(?:com|org|net|fr|eu|io|gg)\\b");
     private static final java.util.regex.Pattern IP_PATTERN = java.util.regex.Pattern.compile("\\b(?:[0-9]{1,3}\\.){3}[0-9]{1,3}\\b");
+    private static final java.util.regex.Pattern DISCORD_PATTERN = java.util.regex.Pattern.compile("(?i)d[\\s\\W]*i[\\s\\W]*s[\\s\\W]*c[\\s\\W]*o[\\s\\W]*r[\\s\\W]*d[\\s\\W]*(?:\\.|dot)[\\s\\W]*(?:g[\\s\\W]*g|c[\\s\\W]*o[\\s\\W]*m[\\s\\W]*/[\\s\\W]*i[\\s\\W]*n[\\s\\W]*v[\\s\\W]*i[\\s\\W]*t[\\s\\W]*e)[\\s\\W]*/[\\s\\W]*[a-zA-Z0-9]+");
 
     public ChatListener(fr.corehost.staffmod.StaffModPlugin plugin) {
         this.plugin = plugin;
@@ -36,6 +37,61 @@ public class ChatListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         Player source = event.getPlayer();
+        
+        String muteKey = "corehost:chat:mute:" + source.getUniqueId().toString();
+        String muteReason = plugin.getRedisManager().get(muteKey);
+        if (muteReason != null) {
+            long ttl = 0;
+            try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                ttl = jedis.ttl(muteKey);
+            } catch (Exception e) {
+                plugin.getLogger().warning("Erreur lors de la récupération du TTL du mute : " + e.getMessage());
+            }
+
+            String timeStr = "";
+            if (ttl > 0) {
+                long m = ttl / 60;
+                long s = ttl % 60;
+                if (m > 0) {
+                    timeStr = m + "m " + s + "s";
+                } else {
+                    timeStr = s + "s";
+                }
+            }
+
+            String[] parts = muteReason.split("\\|");
+            String reason = parts[0];
+            String totalTimeStr = "";
+            if (parts.length > 1) {
+                try {
+                    int totalSeconds = Integer.parseInt(parts[1]);
+                    int tm = totalSeconds / 60;
+                    int ts = totalSeconds % 60;
+                    if (tm > 0 && ts > 0) {
+                        totalTimeStr = tm + "m " + ts + "s";
+                    } else if (tm > 0) {
+                        totalTimeStr = tm + "m";
+                    } else {
+                        totalTimeStr = ts + "s";
+                    }
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
+            }
+
+            if (!timeStr.isEmpty()) {
+                if (!totalTimeStr.isEmpty()) {
+                    source.sendMessage(Component.text("Vous êtes réduit au silence. Temps total : " + totalTimeStr.trim() + " | Temps restant : " + timeStr + " (Raison: " + reason + ")", NamedTextColor.RED));
+                } else {
+                    source.sendMessage(Component.text("Vous êtes réduit au silence pour encore " + timeStr + ". (Raison: " + reason + ")", NamedTextColor.RED));
+                }
+            } else {
+                source.sendMessage(Component.text("Vous êtes réduit au silence. (Raison: " + reason + ")", NamedTextColor.RED));
+            }
+            event.setCancelled(true);
+            return;
+        }
+
         String plainTextMsg = PlainTextComponentSerializer.plainText().serialize(event.message());
         
         if (!source.hasPermission("staffmod.bypasschat")) {
@@ -60,6 +116,12 @@ public class ChatListener implements Listener {
                 return;
             }
             
+            if (DISCORD_PATTERN.matcher(plainTextMsg).find()) {
+                source.sendMessage(Component.text("Les invitations Discord sont interdites dans le chat.", NamedTextColor.RED));
+                event.setCancelled(true);
+                return;
+            }
+            
             String lowerMsg = plainTextMsg.toLowerCase();
             java.util.List<String> forbiddenWords = plugin.getConfig().getStringList("chat.forbidden_words");
             if (forbiddenWords == null || forbiddenWords.isEmpty()) {
@@ -70,6 +132,24 @@ public class ChatListener implements Listener {
                 if (lowerMsg.matches(".*\\b" + word + "\\b.*")) {
                     source.sendMessage(Component.text("Votre message contient un vocabulaire inapproprié.", NamedTextColor.RED));
                     event.setCancelled(true);
+                    
+                    try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
+                        String strikeKey = "corehost:chat:strikes:" + source.getUniqueId().toString();
+                        long strikes = jedis.incr(strikeKey);
+                        if (strikes == 1) {
+                            jedis.expire(strikeKey, 600); // 10 minutes
+                        }
+                        if (strikes >= 3) {
+                            int muteDurationMinutes = plugin.getConfig().getInt("chat.auto_mute_duration", 15);
+                            int muteDurationSeconds = muteDurationMinutes * 60;
+                            plugin.getRedisManager().setEx("corehost:chat:mute:" + source.getUniqueId().toString(), "Auto-Sanction (Langage)|" + muteDurationSeconds, muteDurationSeconds);
+                            source.sendMessage(Component.text("Vous avez été rendu muet pour " + muteDurationMinutes + " minutes suite à vos propos répétitifs.", NamedTextColor.DARK_RED));
+                            jedis.del(strikeKey); // Reset strikes
+                        }
+                    } catch (Exception e) {
+                        plugin.getLogger().warning("Erreur lors de l'auto-sanction : " + e.getMessage());
+                    }
+                    
                     return;
                 }
             }

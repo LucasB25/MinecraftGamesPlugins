@@ -17,6 +17,7 @@ chat:
     - "pute"
     - "enculé"
     - "ez"
+  auto_mute_duration: 15 # Durée de l'auto-mute en minutes
 
 # -----------------------------------------------------
 # Permissions du plugin CoreHost-StaffMod :

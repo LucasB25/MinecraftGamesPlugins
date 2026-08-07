@@ -47,8 +47,10 @@ public class SumoListener implements Listener {
             // Might be a dynamically loaded world that wasn't registered yet?
             // Let's create it on the fly for testing
             if (worldName.toLowerCase().contains("sumo")) {
-                plugin.getGameManager().createInstance(worldName, "default");
-                plugin.getGameManager().getInstance(worldName).addPlayer(player);
+                instance = plugin.getGameManager().createInstance(worldName, "default");
+                if (instance != null) {
+                    instance.addPlayer(player);
+                }
             }
         }
     }
@@ -64,13 +66,13 @@ public class SumoListener implements Listener {
         Optional<SumoGameInstance> optInstance = plugin.getGameManager().getInstanceForPlayer(event.getPlayer());
         if (optInstance.isPresent()) {
             SumoGameInstance instance = optInstance.get();
-            if (instance.getState() == SumoGameInstance.GameState.PLAYING) {
-                int y = event.getTo().getBlockY();
-                if (y <= instance.getMapConfig().getDeathHeight()) {
+            int y = event.getTo().getBlockY();
+            if (y <= instance.getMapConfig().getDeathHeight()) {
+                if (instance.getState() == SumoGameInstance.GameState.PLAYING) {
                     instance.handleDeath(event.getPlayer());
+                } else if (instance.getState() == SumoGameInstance.GameState.WAITING || instance.getState() == SumoGameInstance.GameState.STARTING) {
+                    event.getPlayer().teleport(event.getPlayer().getWorld().getSpawnLocation());
                 }
-            } else if (instance.getState() == SumoGameInstance.GameState.WAITING || instance.getState() == SumoGameInstance.GameState.STARTING) {
-                // Prevent moving down or out of spawn area if needed
             }
         }
     }

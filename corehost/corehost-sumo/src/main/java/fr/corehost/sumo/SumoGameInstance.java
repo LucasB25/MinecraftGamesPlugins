@@ -43,7 +43,13 @@ public class SumoGameInstance {
     
     private int consecutiveDraws = 0;
     private final int maxDraws;
-    private final int winCoins;
+    
+    private final int coinsPerRoundWon;
+    private final int matchWinBonus;
+    private final int matchLoseBonus;
+    private final int flawlessBonus;
+    private final int forfeitWinBonus;
+    
     private final int defaultRoundTime;
 
     public SumoGameInstance(CoreHostSumo plugin, String hostId, World world, SumoMapConfig mapConfig) {
@@ -54,22 +60,83 @@ public class SumoGameInstance {
         this.scoreboardManager = new SumoScoreboardManager(this);
         
         this.maxDraws = plugin.getConfig().getInt("gameplay.max-draws", 3);
-        this.winCoins = plugin.getConfig().getInt("rewards.win-coins", 50);
+        
+        this.coinsPerRoundWon = plugin.getConfig().getInt("rewards.coins-per-round-won", 5);
+        this.matchWinBonus = plugin.getConfig().getInt("rewards.match-win-bonus", 10);
+        this.matchLoseBonus = plugin.getConfig().getInt("rewards.match-lose-bonus", 5);
+        this.flawlessBonus = plugin.getConfig().getInt("rewards.flawless-bonus", 10);
+        this.forfeitWinBonus = plugin.getConfig().getInt("rewards.forfeit-win-bonus", 15);
+        
         this.defaultRoundTime = plugin.getConfig().getInt("gameplay.round-time", 60);
         
         // Fetch HostData to get Best Of setting
         CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
         if (coreGame != null && coreGame.getRedisManager() != null) {
             HostManager hostManager = new HostManager(coreGame.getRedisManager());
+            HostData data = null;
             try {
-                HostData data = hostManager.getHost(UUID.fromString(hostId));
-                if (data != null) {
-                    int bestOf = data.getBestOf();
-                    this.targetScore = (int) Math.ceil(bestOf / 2.0);
-                }
+                data = hostManager.getHost(UUID.fromString(hostId));
             } catch (Exception e) {
-                plugin.getLogger().warning("Invalid hostId format for Sumo instance: " + hostId);
+                // Fallback for local testing (hostId is worldName "sumo")
+                data = hostManager.getAllHosts().stream()
+                        .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
+                        .findFirst().orElse(null);
             }
+            
+            if (data != null) {
+                int bestOf = data.getBestOf();
+                this.targetScore = (int) Math.ceil(bestOf / 2.0);
+                
+                data.setStatus(fr.corehost.api.host.HostStatus.WAITING);
+                hostManager.saveHost(data);
+            } else {
+                plugin.getLogger().warning("Could not find HostData for Sumo instance: " + hostId);
+            }
+        }
+    }
+
+    private void syncHostData() {
+        CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+        if (coreGame == null || coreGame.getRedisManager() == null) return;
+        
+        HostManager hostManager = new HostManager(coreGame.getRedisManager());
+        HostData data = null;
+        try {
+            data = hostManager.getHost(UUID.fromString(hostId));
+        } catch (Exception e) {
+            data = hostManager.getAllHosts().stream()
+                    .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
+                    .findFirst().orElse(null);
+        }
+        
+        if (data != null) {
+            data.setCurrentPlayers(players.size());
+            
+            if (state == GameState.WAITING) data.setStatus(fr.corehost.api.host.HostStatus.WAITING);
+            else if (state == GameState.STARTING) data.setStatus(fr.corehost.api.host.HostStatus.STARTING);
+            else if (state == GameState.PLAYING) data.setStatus(fr.corehost.api.host.HostStatus.PLAYING);
+            else if (state == GameState.ENDED) data.setStatus(fr.corehost.api.host.HostStatus.FINISHED);
+            
+            hostManager.saveHost(data);
+        }
+    }
+
+    private void deleteHostData() {
+        CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+        if (coreGame == null || coreGame.getRedisManager() == null) return;
+        
+        HostManager hostManager = new HostManager(coreGame.getRedisManager());
+        HostData data = null;
+        try {
+            data = hostManager.getHost(UUID.fromString(hostId));
+        } catch (Exception e) {
+            data = hostManager.getAllHosts().stream()
+                    .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
+                    .findFirst().orElse(null);
+        }
+        
+        if (data != null) {
+            hostManager.deleteHost(data.getHostId());
         }
     }
 
@@ -79,17 +146,22 @@ public class SumoGameInstance {
             return;
         }
 
-        if (state != GameState.WAITING && state != GameState.STARTING) {
+        if (state == GameState.WAITING || state == GameState.STARTING) {
+            if (players.size() >= 2 && !players.contains(player.getUniqueId())) {
+                player.kickPlayer("La partie est déjà pleine !");
+                return;
+            }
+        } else {
             CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
             if (coreGame != null && coreGame.getSpectatorManager() != null) {
                 coreGame.getSpectatorManager().setSpectator(player, true);
                 player.teleport(world.getSpawnLocation());
-                player.sendMessage(SUMO_PREFIX + ChatColor.YELLOW + "La partie a déjà commencé. Vous avez rejoint en tant que spectateur.");
+                player.sendMessage(SUMO_PREFIX + ChatColor.YELLOW + "La partie est en cours. Vous avez rejoint en tant que spectateur.");
                 if (scoreboardManager != null) {
                     scoreboardManager.setupScoreboard(player);
                 }
             } else {
-                player.sendMessage(SUMO_PREFIX + ChatColor.RED + "La partie a déjà commencé.");
+                player.kickPlayer("La partie a déjà commencé.");
             }
             return;
         }
@@ -99,12 +171,13 @@ public class SumoGameInstance {
             alivePlayers.add(player.getUniqueId());
             wins.put(player.getUniqueId(), 0);
             
-            resetPlayerState(player);
+            resetPlayerState(player, true);
             scoreboardManager.setupScoreboard(player);
             plugin.getGameManager().registerPlayer(player.getUniqueId(), this);
 
             broadcast(ChatColor.YELLOW + player.getName() + " a rejoint la partie (" + players.size() + "/2)");
 
+            syncHostData();
             checkStart(true);
         }
     }
@@ -113,6 +186,8 @@ public class SumoGameInstance {
         players.remove(player.getUniqueId());
         scoreboardManager.removeScoreboard(player);
         plugin.getGameManager().unregisterPlayer(player.getUniqueId());
+        
+        syncHostData();
         
         if (state == GameState.PLAYING) {
             handleDeath(player);
@@ -124,6 +199,7 @@ public class SumoGameInstance {
 
         // Si la partie se vide complètement (ex: pendant l'attente), on l'annule
         if (players.isEmpty()) {
+            deleteHostData();
             plugin.getGameManager().removeInstance(hostId);
         }
     }
@@ -179,6 +255,7 @@ public class SumoGameInstance {
         if (state == GameState.WAITING && players.size() >= 2) { // 2 players to start
             state = GameState.STARTING;
             scoreboardManager.updateAll();
+            syncHostData();
             
             new BukkitRunnable() {
                 int totalWait = isFirstGame ? 10 : 5;
@@ -225,6 +302,7 @@ public class SumoGameInstance {
                         state = GameState.PLAYING;
                         roundTime = defaultRoundTime;
                         scoreboardManager.updateAll();
+                        syncHostData();
 
                         for (UUID uuid : players) {
                             Player p = Bukkit.getPlayer(uuid);
@@ -247,7 +325,7 @@ public class SumoGameInstance {
     }
 
     private void checkWin(Player roundWinner) {
-        if (alivePlayers.size() <= 1) {
+        if (alivePlayers.size() <= 1 || roundWinner == null) {
             
             if (roundTimerTask != null) {
                 roundTimerTask.cancel();
@@ -255,7 +333,9 @@ public class SumoGameInstance {
             }
             
             boolean matchOver = false;
-            if (roundWinner != null && wins.getOrDefault(roundWinner.getUniqueId(), 0) >= targetScore) {
+            if (roundWinner == null) {
+                matchOver = true; // global draw/forfeit
+            } else if (wins.getOrDefault(roundWinner.getUniqueId(), 0) >= targetScore) {
                 matchOver = true;
             } else if (players.size() < 2) {
                 matchOver = true; // forfeit
@@ -264,23 +344,53 @@ public class SumoGameInstance {
             if (matchOver) {
                 state = GameState.ENDED;
                 scoreboardManager.updateAll();
+                syncHostData();
+                
+                CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
                 
                 if (roundWinner != null) {
                     broadcast(ChatColor.GOLD + roundWinner.getName() + " a gagné la partie !");
                     
-                    CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
-                    if (coreGame != null && coreGame.getRedisManager() != null) {
-                        coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_COINS\", \"uuid\":\"" + roundWinner.getUniqueId().toString() + "\", \"amount\": " + winCoins + "}");
-                    }
+                    boolean forfeit = players.size() < 2;
                     
                     for (UUID uuid : players) {
                         Player p = Bukkit.getPlayer(uuid);
                         if (p != null) {
+                            int playerWins = wins.getOrDefault(uuid, 0);
+                            int totalCoins = playerWins * coinsPerRoundWon;
+                            
                             if (p.getUniqueId().equals(roundWinner.getUniqueId())) {
-                                p.sendTitle(ChatColor.GOLD + "VICTOIRE", ChatColor.YELLOW + "Bien joué !", 10, 60, 20);
+                                // Winner logic
+                                if (forfeit) {
+                                    totalCoins += forfeitWinBonus;
+                                } else {
+                                    totalCoins += matchWinBonus;
+                                    
+                                    // Check flawless (opponent has 0 wins)
+                                    boolean flawless = true;
+                                    for (UUID other : players) {
+                                        if (!other.equals(uuid) && wins.getOrDefault(other, 0) > 0) {
+                                            flawless = false;
+                                        }
+                                    }
+                                    if (flawless) {
+                                        totalCoins += flawlessBonus;
+                                    }
+                                }
+                                
+                                p.sendTitle(ChatColor.GOLD + "VICTOIRE", ChatColor.YELLOW + "Bien joué ! (+" + totalCoins + " coins)", 10, 60, 20);
                                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                             } else {
-                                p.sendTitle(ChatColor.RED + "DÉFAITE", ChatColor.GRAY + "Meilleure chance la prochaine fois !", 10, 60, 20);
+                                // Loser logic
+                                totalCoins += matchLoseBonus;
+                                p.sendTitle(ChatColor.RED + "DÉFAITE", ChatColor.GRAY + "Tu gagnes " + totalCoins + " coins.", 10, 60, 20);
+                            }
+                            
+                            p.sendMessage(SUMO_PREFIX + ChatColor.GOLD + "Récompense : " + ChatColor.YELLOW + "+" + totalCoins + " Coins");
+                            
+                            // Send coins to Redis
+                            if (coreGame != null && coreGame.getRedisManager() != null && totalCoins > 0) {
+                                coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_COINS\", \"uuid\":\"" + uuid.toString() + "\", \"amount\": " + totalCoins + "}");
                             }
                         }
                     }
@@ -291,7 +401,6 @@ public class SumoGameInstance {
                 for (UUID uuid : players) {
                     Player p = Bukkit.getPlayer(uuid);
                     if (p != null) {
-                        CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
                         if (coreGame != null && coreGame.getSpectatorManager() != null) {
                             coreGame.getSpectatorManager().setSpectator(p, true);
                         } else {
@@ -303,12 +412,10 @@ public class SumoGameInstance {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        for (UUID uuid : players) {
-                            Player p = Bukkit.getPlayer(uuid);
-                            if (p != null) {
-                                p.kickPlayer("Partie terminée.");
-                            }
+                        for (Player p : world.getPlayers()) {
+                            p.kickPlayer("Partie terminée.");
                         }
+                        deleteHostData();
                         plugin.getGameManager().removeInstance(hostId);
                     }
                 }.runTaskLater(plugin, 100L); // 5 seconds
@@ -317,6 +424,7 @@ public class SumoGameInstance {
                 // Next Round
                 state = GameState.WAITING;
                 scoreboardManager.updateAll();
+                syncHostData();
                 
                 new BukkitRunnable() {
                     @Override
@@ -367,6 +475,7 @@ public class SumoGameInstance {
         state = GameState.WAITING;
         consecutiveDraws++;
         scoreboardManager.updateAll();
+        syncHostData();
         
         if (consecutiveDraws >= maxDraws) {
             broadcast(ChatColor.RED + "Trop d'égalités consécutives. La partie est annulée.");
@@ -396,7 +505,7 @@ public class SumoGameInstance {
         for (UUID uuid : players) {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) {
-                resetPlayerState(p);
+                resetPlayerState(p, false);
             }
         }
         
@@ -404,14 +513,20 @@ public class SumoGameInstance {
         checkStart(false);
     }
     
-    private void resetPlayerState(Player player) {
+    private void resetPlayerState(Player player, boolean tpToSpawn) {
         player.setGameMode(GameMode.ADVENTURE);
         player.getInventory().clear();
         player.setHealth(20.0);
         player.setFoodLevel(20);
+        player.setFireTicks(0);
+        for (org.bukkit.potion.PotionEffect effect : player.getActivePotionEffects()) {
+            player.removePotionEffect(effect.getType());
+        }
         
-        // TP to world spawn to wait for the countdown
-        player.teleport(world.getSpawnLocation());
+        if (tpToSpawn) {
+            // TP to world spawn to wait for the countdown
+            player.teleport(world.getSpawnLocation());
+        }
     }
 
     private void teleportToFightSpawns() {

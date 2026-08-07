@@ -19,11 +19,15 @@ public class SumoGameManager {
         this.plugin = plugin;
     }
 
-    public void createInstance(String hostId, String mapName) {
+    public synchronized SumoGameInstance createInstance(String hostId, String mapName) {
+        if (instances.containsKey(hostId)) {
+            return instances.get(hostId);
+        }
+
         World world = Bukkit.getWorld(hostId);
         if (world == null) {
             plugin.getLogger().warning("World " + hostId + " is not loaded!");
-            return;
+            return null;
         }
 
         SumoMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
@@ -34,6 +38,7 @@ public class SumoGameManager {
         SumoGameInstance instance = new SumoGameInstance(plugin, hostId, world, mapConfig);
         instances.put(hostId, instance);
         plugin.getLogger().info("Created Sumo instance for host " + hostId + " on map " + mapName);
+        return instance;
     }
 
     public void removeInstance(String hostId) {

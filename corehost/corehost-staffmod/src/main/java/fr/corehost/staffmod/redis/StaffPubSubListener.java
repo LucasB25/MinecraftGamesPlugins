@@ -57,6 +57,27 @@ public class StaffPubSubListener extends JedisPubSub {
                     }
                     Bukkit.getConsoleSender().sendMessage(scMessage);
                 });
+            } else if ("CHAT_FILTER".equals(action)) {
+                String sender = json.get("sender").getAsString();
+                String reason = json.get("reason").getAsString();
+                String content = json.get("message").getAsString();
+                
+                Component filterTag = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&c&lFiltre&8] &7");
+                
+                Component filterMessage = filterTag
+                        .append(Component.text(sender, NamedTextColor.YELLOW))
+                        .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
+                        .append(Component.text(content, NamedTextColor.GRAY))
+                        .append(Component.text(" (" + reason + ")", NamedTextColor.RED));
+                        
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    for (Player online : Bukkit.getOnlinePlayers()) {
+                        if (online.hasPermission("staffmod.use")) {
+                            online.sendMessage(filterMessage);
+                        }
+                    }
+                    Bukkit.getConsoleSender().sendMessage(filterMessage);
+                });
             } else if ("FREEZE_PLAYER".equals(action)) {
                 String targetName = json.get("target").getAsString();
                 Bukkit.getScheduler().runTask(plugin, () -> {

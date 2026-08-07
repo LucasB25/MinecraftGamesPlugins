@@ -27,6 +27,7 @@ public class HostSearchMenu implements CustomMenu {
     private final Inventory inventory;
     private String gameFilter = "ALL";
     private HostStatus statusFilter = null;
+    private org.bukkit.scheduler.BukkitTask refreshTask;
 
     public HostSearchMenu() {
         this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.GOLD + "Recherche de Serveurs");
@@ -60,7 +61,10 @@ public class HostSearchMenu implements CustomMenu {
         // Refresh item
         ItemStack refreshItem = new ItemBuilder(Material.EMERALD)
             .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Rafraîchir la liste")
-            .setLore(ChatColor.GRAY + "Mettre à jour les serveurs").build();
+            .setLore(
+                ChatColor.GRAY + "Mettre à jour les serveurs",
+                ChatColor.DARK_GRAY + "(Actualisation automatique toutes les 2s)"
+            ).build();
         inventory.setItem(49, refreshItem);
         
         // Filter by Game item
@@ -151,6 +155,18 @@ public class HostSearchMenu implements CustomMenu {
 
     public void open(Player player) {
         player.openInventory(inventory);
+        
+        CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
+        this.refreshTask = new org.bukkit.scheduler.BukkitRunnable() {
+            @Override
+            public void run() {
+                if (player.getOpenInventory().getTopInventory().equals(inventory)) {
+                    drawHosts();
+                } else {
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(plugin, 40L, 40L);
     }
 
     @Override

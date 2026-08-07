@@ -98,11 +98,13 @@ public class ChatListener implements Listener {
             long now = System.currentTimeMillis();
             if (lastMessageTime.containsKey(source.getUniqueId()) && (now - lastMessageTime.get(source.getUniqueId())) < 1500) {
                 source.sendMessage(Component.text("Veuillez patienter entre chaque message.", NamedTextColor.RED));
+                notifyStaff(source, "Spam", plainTextMsg);
                 event.setCancelled(true);
                 return;
             }
             if (lastMessageContent.containsKey(source.getUniqueId()) && lastMessageContent.get(source.getUniqueId()).equalsIgnoreCase(plainTextMsg)) {
                 source.sendMessage(Component.text("Veuillez ne pas répéter le même message.", NamedTextColor.RED));
+                notifyStaff(source, "Répétition", plainTextMsg);
                 event.setCancelled(true);
                 return;
             }
@@ -112,14 +114,29 @@ public class ChatListener implements Listener {
             
             if (URL_PATTERN.matcher(plainTextMsg).find() || IP_PATTERN.matcher(plainTextMsg).find()) {
                 source.sendMessage(Component.text("Les liens et adresses IP sont interdits dans le chat.", NamedTextColor.RED));
+                notifyStaff(source, "Lien/IP", plainTextMsg);
                 event.setCancelled(true);
                 return;
             }
             
             if (DISCORD_PATTERN.matcher(plainTextMsg).find()) {
                 source.sendMessage(Component.text("Les invitations Discord sont interdites dans le chat.", NamedTextColor.RED));
+                notifyStaff(source, "Discord", plainTextMsg);
                 event.setCancelled(true);
                 return;
+            }
+            
+            if (plainTextMsg.length() > 5) {
+                int upperCase = 0;
+                for (int i = 0; i < plainTextMsg.length(); i++) {
+                    if (Character.isUpperCase(plainTextMsg.charAt(i))) upperCase++;
+                }
+                if ((double) upperCase / plainTextMsg.length() > 0.7) {
+                    source.sendMessage(Component.text("Veuillez éviter d'utiliser trop de majuscules.", NamedTextColor.RED));
+                    notifyStaff(source, "Majuscules", plainTextMsg);
+                    event.setCancelled(true);
+                    return;
+                }
             }
             
             String lowerMsg = plainTextMsg.toLowerCase();
@@ -131,6 +148,7 @@ public class ChatListener implements Listener {
             for (String word : forbiddenWords) {
                 if (lowerMsg.matches(".*\\b" + word + "\\b.*")) {
                     source.sendMessage(Component.text("Votre message contient un vocabulaire inapproprié.", NamedTextColor.RED));
+                    notifyStaff(source, "Insulte", plainTextMsg);
                     event.setCancelled(true);
                     
                     try (redis.clients.jedis.Jedis jedis = plugin.getRedisManager().getPool().getResource()) {
@@ -223,6 +241,17 @@ public class ChatListener implements Listener {
                 return warningIcon.append(formattedMessage);
             }
         });
+    }
+
+    private void notifyStaff(Player sender, String reason, String message) {
+        if (plugin.getRedisManager() != null) {
+            com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+            json.addProperty("action", "CHAT_FILTER");
+            json.addProperty("sender", sender.getName());
+            json.addProperty("reason", reason);
+            json.addProperty("message", message);
+            plugin.getRedisManager().publish("corehost:staff:events", json.toString());
+        }
     }
 }
 

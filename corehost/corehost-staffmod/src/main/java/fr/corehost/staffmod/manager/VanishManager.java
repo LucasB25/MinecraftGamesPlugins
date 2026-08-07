@@ -94,11 +94,23 @@ public class VanishManager {
         }
 
         if (player.hasPermission("staffmod.mod")) {
+            boolean shouldBeVanished = false;
             if (plugin.getRedisManager() != null) {
-                plugin.getRedisManager().setEx("corehost:vanish:" + player.getUniqueId().toString(), "false", 86400);
+                String val = plugin.getRedisManager().get("corehost:vanish:" + player.getUniqueId().toString());
+                if ("true".equals(val)) {
+                    shouldBeVanished = true;
+                }
             }
-            if (isVanished(player.getUniqueId())) {
-                setVanished(player, false, false);
+            
+            if (shouldBeVanished) {
+                setVanished(player, true, false);
+            } else {
+                if (plugin.getRedisManager() != null) {
+                    plugin.getRedisManager().setEx("corehost:vanish:" + player.getUniqueId().toString(), "false", 86400);
+                }
+                if (isVanished(player.getUniqueId())) {
+                    setVanished(player, false, false);
+                }
             }
         }
     }

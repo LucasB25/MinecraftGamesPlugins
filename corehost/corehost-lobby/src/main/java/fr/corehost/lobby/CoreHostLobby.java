@@ -205,9 +205,39 @@ public class CoreHostLobby extends JavaPlugin {
             player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + org.bukkit.ChatColor.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
             return;
         }
-        ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF("Connect");
-        out.writeUTF(serverName);
-        player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
+
+        java.util.UUID leaderId = partyManager.getPartyLeader(player.getUniqueId());
+        if (leaderId != null && leaderId.equals(player.getUniqueId()) && partyManager.isPartyWarpEnabled(leaderId)) {
+            java.util.Set<java.util.UUID> members = partyManager.getPartyMembers(leaderId);
+            for (java.util.UUID memberId : members) {
+                String memberName = null;
+                Player onlineMember = Bukkit.getPlayer(memberId);
+                if (onlineMember != null) {
+                    memberName = onlineMember.getName();
+                } else {
+                    org.bukkit.OfflinePlayer offline = Bukkit.getOfflinePlayer(memberId);
+                    if (offline.getName() != null) {
+                        memberName = offline.getName();
+                    }
+                }
+
+                if (memberName != null) {
+                    ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                    out.writeUTF("ConnectOther");
+                    out.writeUTF(memberName);
+                    out.writeUTF(serverName);
+                    player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
+
+                    if (onlineMember != null && !onlineMember.getUniqueId().equals(player.getUniqueId())) {
+                        onlineMember.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + org.bukkit.ChatColor.YELLOW + "Le chef du groupe vous a téléporté sur " + serverName + " !");
+                    }
+                }
+            }
+        } else {
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            out.writeUTF("Connect");
+            out.writeUTF(serverName);
+            player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
+        }
     }
 }

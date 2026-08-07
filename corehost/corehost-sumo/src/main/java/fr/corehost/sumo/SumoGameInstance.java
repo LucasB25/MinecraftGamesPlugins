@@ -71,7 +71,17 @@ public class SumoGameInstance {
         }
 
         if (state != GameState.WAITING && state != GameState.STARTING) {
-            player.sendMessage(SUMO_PREFIX + ChatColor.RED + "La partie a déjà commencé.");
+            CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+            if (coreGame != null && coreGame.getSpectatorManager() != null) {
+                coreGame.getSpectatorManager().setSpectator(player, true);
+                player.teleport(world.getSpawnLocation());
+                player.sendMessage(SUMO_PREFIX + ChatColor.YELLOW + "La partie a déjà commencé. Vous avez rejoint en tant que spectateur.");
+                if (scoreboardManager != null) {
+                    scoreboardManager.setupScoreboard(player);
+                }
+            } else {
+                player.sendMessage(SUMO_PREFIX + ChatColor.RED + "La partie a déjà commencé.");
+            }
             return;
         }
 
@@ -266,7 +276,14 @@ public class SumoGameInstance {
                 
                 for (UUID uuid : players) {
                     Player p = Bukkit.getPlayer(uuid);
-                    if (p != null) p.setGameMode(GameMode.SPECTATOR);
+                    if (p != null) {
+                        CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+                        if (coreGame != null && coreGame.getSpectatorManager() != null) {
+                            coreGame.getSpectatorManager().setSpectator(p, true);
+                        } else {
+                            p.setGameMode(GameMode.SPECTATOR);
+                        }
+                    }
                 }
                 
                 new BukkitRunnable() {

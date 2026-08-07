@@ -2,12 +2,15 @@ package fr.corehost.game;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import java.util.logging.Logger;
+import fr.corehost.game.spectator.SpectatorManager;
+import fr.corehost.game.spectator.SpectatorListener;
 
 public class CoreHostGame extends JavaPlugin {
     
     private Logger log;
     private fr.corehost.api.redis.RedisManager redisManager;
     private fr.corehost.game.redis.GamePubSubListener pubSubListener;
+    private SpectatorManager spectatorManager;
     
     @Override
     public void onEnable() {
@@ -41,8 +44,15 @@ public class CoreHostGame extends JavaPlugin {
         this.pubSubListener = new fr.corehost.game.redis.GamePubSubListener(this, slimeManager, redisManager, serverName);
         redisManager.subscribe(pubSubListener, "corehost:game:" + serverName);
         
+        // Initialiser SpectatorManager
+        this.spectatorManager = new SpectatorManager(this);
+        getServer().getPluginManager().registerEvents(new SpectatorListener(this, spectatorManager), this);
+        
         // Initialiser IsolationListener
         getServer().getPluginManager().registerEvents(new fr.corehost.game.listeners.IsolationListener(this), this);
+        
+        // Register BungeeCord channel
+        getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         
         // Register commands
         fr.corehost.game.commands.CoreHostGameCommand command = new fr.corehost.game.commands.CoreHostGameCommand(this);
@@ -64,5 +74,9 @@ public class CoreHostGame extends JavaPlugin {
     
     public fr.corehost.api.redis.RedisManager getRedisManager() {
         return redisManager;
+    }
+    
+    public SpectatorManager getSpectatorManager() {
+        return spectatorManager;
     }
 }

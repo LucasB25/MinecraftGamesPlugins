@@ -35,9 +35,41 @@ public class IsolationListener implements Listener {
                 online.hidePlayer(plugin, joined);
                 joined.hidePlayer(plugin, online);
             } else {
-                // In the same world: show each other
-                online.showPlayer(plugin, joined);
-                joined.showPlayer(plugin, online);
+                // In the same world: check spectator status
+                boolean joinedIsSpec = plugin.getSpectatorManager() != null && plugin.getSpectatorManager().isSpectator(joined);
+                boolean onlineIsSpec = plugin.getSpectatorManager() != null && plugin.getSpectatorManager().isSpectator(online);
+
+                if (joinedIsSpec && !onlineIsSpec) {
+                    if (joined.hasMetadata("vanished") && joined.getMetadata("vanished").get(0).asBoolean()) {
+                        online.hidePlayer(plugin, joined);
+                    } else {
+                        online.showPlayer(plugin, joined); // Keep in tab
+                        online.hideEntity(plugin, joined); // Hide model
+                    }
+                } else {
+                    if (joined.hasMetadata("vanished") && joined.getMetadata("vanished").get(0).asBoolean()) {
+                        online.hidePlayer(plugin, joined);
+                    } else {
+                        online.showPlayer(plugin, joined);
+                        online.showEntity(plugin, joined);
+                    }
+                }
+
+                if (onlineIsSpec && !joinedIsSpec) {
+                    if (online.hasMetadata("vanished") && online.getMetadata("vanished").get(0).asBoolean()) {
+                        joined.hidePlayer(plugin, online);
+                    } else {
+                        joined.showPlayer(plugin, online); // Keep in tab
+                        joined.hideEntity(plugin, online); // Hide model
+                    }
+                } else {
+                    if (online.hasMetadata("vanished") && online.getMetadata("vanished").get(0).asBoolean()) {
+                        joined.hidePlayer(plugin, online);
+                    } else {
+                        joined.showPlayer(plugin, online);
+                        joined.showEntity(plugin, online);
+                    }
+                }
             }
         }
         
@@ -60,8 +92,40 @@ public class IsolationListener implements Listener {
                 online.hidePlayer(plugin, player);
                 player.hidePlayer(plugin, online);
             } else {
-                online.showPlayer(plugin, player);
-                player.showPlayer(plugin, online);
+                boolean playerIsSpec = plugin.getSpectatorManager() != null && plugin.getSpectatorManager().isSpectator(player);
+                boolean onlineIsSpec = plugin.getSpectatorManager() != null && plugin.getSpectatorManager().isSpectator(online);
+
+                if (playerIsSpec && !onlineIsSpec) {
+                    if (player.hasMetadata("vanished") && player.getMetadata("vanished").get(0).asBoolean()) {
+                        online.hidePlayer(plugin, player);
+                    } else {
+                        online.showPlayer(plugin, player); // Keep in tab
+                        online.hideEntity(plugin, player); // Hide model
+                    }
+                } else {
+                    if (player.hasMetadata("vanished") && player.getMetadata("vanished").get(0).asBoolean()) {
+                        online.hidePlayer(plugin, player);
+                    } else {
+                        online.showPlayer(plugin, player);
+                        online.showEntity(plugin, player);
+                    }
+                }
+
+                if (onlineIsSpec && !playerIsSpec) {
+                    if (online.hasMetadata("vanished") && online.getMetadata("vanished").get(0).asBoolean()) {
+                        player.hidePlayer(plugin, online);
+                    } else {
+                        player.showPlayer(plugin, online); // Keep in tab
+                        player.hideEntity(plugin, online); // Hide model
+                    }
+                } else {
+                    if (online.hasMetadata("vanished") && online.getMetadata("vanished").get(0).asBoolean()) {
+                        player.hidePlayer(plugin, online);
+                    } else {
+                        player.showPlayer(plugin, online);
+                        player.showEntity(plugin, online);
+                    }
+                }
             }
         }
     }

@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -36,9 +37,13 @@ public class VanishManager {
         if (vanish) {
             if (isVanished(uuid)) return;
             vanishedPlayers.add(uuid);
-            if (plugin.getRedisManager() != null) {
+            if (plugin.getRedisManager() != null && notify) {
                 plugin.getRedisManager().setEx("corehost:vanish:" + uuid.toString(), "true", 86400);
             }
+            player.setMetadata("vanished", new FixedMetadataValue(plugin, true));
+            try {
+                player.getClass().getMethod("setListed", boolean.class).invoke(player, false);
+            } catch (Exception ignored) {}
 
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (!online.hasPermission("staffmod.vanish.see")) {
@@ -52,9 +57,15 @@ public class VanishManager {
         } else {
             if (!isVanished(uuid)) return;
             vanishedPlayers.remove(uuid);
-            if (plugin.getRedisManager() != null) {
+            if (plugin.getRedisManager() != null && notify) {
                 plugin.getRedisManager().setEx("corehost:vanish:" + uuid.toString(), "false", 86400);
             }
+            if (player.hasMetadata("vanished")) {
+                player.removeMetadata("vanished", plugin);
+            }
+            try {
+                player.getClass().getMethod("setListed", boolean.class).invoke(player, true);
+            } catch (Exception ignored) {}
 
             for (Player online : Bukkit.getOnlinePlayers()) {
                 online.showPlayer(plugin, player);

@@ -356,6 +356,7 @@ public class SumoGameInstance {
                 
                 if (roundWinner != null) {
                     broadcast(ChatColor.GOLD + roundWinner.getName() + " a gagné la partie !");
+                    broadcast(ChatColor.YELLOW + "Retour au lobby dans 10 secondes...");
                     
                     boolean forfeit = players.size() < 2;
                     
@@ -418,13 +419,16 @@ public class SumoGameInstance {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        for (Player p : world.getPlayers()) {
-                            p.kickPlayer("Partie terminée.");
+                        for (UUID uuid : players) {
+                            Player p = Bukkit.getPlayer(uuid);
+                            if (p != null) {
+                                sendPlayerToLobby(p);
+                            }
                         }
                         deleteHostData();
                         plugin.getGameManager().removeInstance(hostId);
                     }
-                }.runTaskLater(plugin, 100L); // 5 seconds
+                }.runTaskLater(plugin, 200L); // 10 seconds
                 
             } else {
                 // Next Round
@@ -553,6 +557,21 @@ public class SumoGameInstance {
     }
 
     public static final String SUMO_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "Sumo" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+
+    private void sendPlayerToLobby(Player player) {
+        if (player == null || !player.isOnline()) {
+            return;
+        }
+
+        try {
+            com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
+            out.writeUTF("Connect");
+            out.writeUTF("lobby");
+            player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
+        } catch (Exception e) {
+            player.kickPlayer("Retour au lobby");
+        }
+    }
 
     private void broadcast(String message) {
         for (UUID uuid : players) {

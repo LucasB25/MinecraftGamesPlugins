@@ -27,4 +27,56 @@ chat:
 # - staffmod.staffchat   : Permet de lire et écrire dans le /sc (Staff Chat) (default: false)
 # - staffmod.vanish.see  : Permet de voir les joueurs en vanish (default: false)
 # - staffmod.bypasschat  : Permet d'ignorer le filtrage automatique du chat (default: false)
+# - staffmod.mute        : Permet d'utiliser le menu de mute (default: false)
+# - staffmod.unmute      : Permet de unmute un joueur (default: false)
 # -----------------------------------------------------
+
+mute_durations:
+  1:
+    name: "5 Minutes"
+    duration: 300
+    material: "CLOCK"
+  2:
+    name: "15 Minutes"
+    duration: 900
+    material: "CLOCK"
+  3:
+    name: "30 Minutes"
+    duration: 1800
+    material: "CLOCK"
+  4:
+    name: "1 Heure"
+    duration: 3600
+    material: "CLOCK"
+  5:
+    name: "12 Heures"
+    duration: 43200
+    material: "CLOCK"
+  6:
+    name: "1 Jour"
+    duration: 86400
+    material: "CLOCK"
+  7:
+    name: "Permanent"
+    duration: 0
+    material: "CLOCK"
+
+mute_reasons:
+  1:
+    name: "Spam"
+    material: "BOOK"
+  2:
+    name: "Insultes"
+    material: "BOOK"
+  3:
+    name: "Comportement inadapté"
+    material: "BOOK"
+  4:
+    name: "Publicité"
+    material: "BOOK"
+  5:
+    name: "Provocation"
+    material: "BOOK"
+  6:
+    name: "Menaces"
+    material: "BOOK"

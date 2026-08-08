@@ -226,7 +226,23 @@ public class GUIListener implements Listener {
                     }
                     player.sendMessage(plugin.getPrefix().append(Component.text("Connexion au serveur de " + targetName + "...", NamedTextColor.GREEN)));
                 }
-            } else if (slot == 29 || slot == 31 || slot == 33) { // History, Mute, Ban
+            } else if (slot == 31) { // Mute
+                if (!player.hasPermission("staffmod.mute") && !player.hasPermission("staffmod.mod")) {
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    player.sendMessage(plugin.getPrefix().append(Component.text("Vous n'avez pas la permission d'utiliser cette fonctionnalité.", NamedTextColor.RED)));
+                    return;
+                }
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                new MuteTimeGUI(plugin, targetName).open(player);
+            } else if (slot == 32) { // Unmute
+                if (!player.hasPermission("staffmod.unmute") && !player.hasPermission("staffmod.mod")) {
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    player.sendMessage(plugin.getPrefix().append(Component.text("Vous n'avez pas la permission de unmute un joueur.", NamedTextColor.RED)));
+                    return;
+                }
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                new MuteConfirmGUI(plugin, targetName, -1, "Unmute", "Levée de sanction").open(player);
+            } else if (slot == 29 || slot == 33) { // History, Ban
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.sendMessage(plugin.getPrefix().append(Component.text("Cette fonctionnalité arrive bientôt !", NamedTextColor.YELLOW)));
                 player.closeInventory();
@@ -239,6 +255,150 @@ public class GUIListener implements Listener {
             if (event.getSlot() == 53 || event.getSlot() == 35) { // 53 = Invsee, 35 = Endersee
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 String targetName = title.substring(title.indexOf(" : ") + 3);
+                new PlayerSSGUI(plugin, targetName).open(player);
+            }
+        }
+        else if (title.contains("Mute (Durée) : ")) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() == null) return;
+            Player player = (Player) event.getWhoClicked();
+            String targetName = title.substring(title.indexOf(" : ") + 3);
+
+            if (event.getSlot() == 27) { // Bouton retour
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                new PlayerSSGUI(plugin, targetName).open(player);
+                return;
+            }
+
+            ItemStack item = event.getCurrentItem();
+            if (item.getItemMeta() == null || item.getItemMeta().lore() == null) return;
+            List<Component> lore = item.getItemMeta().lore();
+            if (lore.size() < 2) return;
+
+            String durationLine = PlainTextComponentSerializer.plainText().serialize(lore.get(1));
+            String durationStr = durationLine.replace("▪ Durée : ", "");
+
+            int durationSeconds = 0;
+            if (!durationStr.equals("Permanent")) {
+                if (durationStr.endsWith("s")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("s", ""));
+                } else if (durationStr.endsWith("m")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("m", "")) * 60;
+                } else if (durationStr.endsWith("h")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("h", "")) * 3600;
+                } else if (durationStr.endsWith("j")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("j", "")) * 86400;
+                }
+            }
+
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+            new MuteReasonGUI(plugin, targetName, durationSeconds, durationStr).open(player);
+        }
+        else if (title.contains("Mute (Raison) : ")) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() == null) return;
+            Player player = (Player) event.getWhoClicked();
+            String targetName = title.substring(title.indexOf(" : ") + 3);
+
+            if (event.getSlot() == 27) { // Bouton retour
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                new MuteTimeGUI(plugin, targetName).open(player);
+                return;
+            }
+
+            ItemStack item = event.getCurrentItem();
+            if (item.getItemMeta() == null || item.getItemMeta().lore() == null) return;
+            List<Component> lore = item.getItemMeta().lore();
+            if (lore.size() < 3) return;
+
+            String durationLine = PlainTextComponentSerializer.plainText().serialize(lore.get(1));
+            String durationStr = durationLine.replace("▪ Durée : ", "");
+            
+            String reasonLine = PlainTextComponentSerializer.plainText().serialize(lore.get(2));
+            String reason = reasonLine.replace("▪ Raison : ", "");
+
+            int durationSeconds = 0;
+            if (!durationStr.equals("Permanent")) {
+                if (durationStr.endsWith("s")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("s", ""));
+                } else if (durationStr.endsWith("m")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("m", "")) * 60;
+                } else if (durationStr.endsWith("h")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("h", "")) * 3600;
+                } else if (durationStr.endsWith("j")) {
+                    durationSeconds = Integer.parseInt(durationStr.replace("j", "")) * 86400;
+                }
+            }
+
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+            new MuteConfirmGUI(plugin, targetName, durationSeconds, durationStr, reason).open(player);
+        }
+        else if (title.contains("Mute (Confirmer) : ")) {
+            event.setCancelled(true);
+            if (event.getCurrentItem() == null) return;
+            Player player = (Player) event.getWhoClicked();
+            String targetName = title.substring(title.indexOf(" : ") + 3);
+
+            if (event.getSlot() == 18) { // Bouton retour
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                new MuteTimeGUI(plugin, targetName).open(player); // or MuteReasonGUI, but MuteTimeGUI is fine
+                return;
+            }
+
+            if (event.getSlot() == 15) { // Annuler
+                player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+                new PlayerSSGUI(plugin, targetName).open(player);
+                return;
+            }
+
+            if (event.getSlot() == 11) { // Confirmer
+                ItemStack confirmItem = event.getInventory().getItem(11);
+                if (confirmItem == null || confirmItem.getItemMeta() == null || confirmItem.getItemMeta().lore() == null) return;
+                List<Component> lore = confirmItem.getItemMeta().lore();
+                if (lore.size() < 4) return;
+
+                String durationLine = PlainTextComponentSerializer.plainText().serialize(lore.get(2));
+                String durationStr = durationLine.replace("▪ Durée : ", "");
+
+                String reasonLine = PlainTextComponentSerializer.plainText().serialize(lore.get(3));
+                String reason = reasonLine.replace("▪ Raison : ", "");
+
+                int durationSeconds = 0;
+                if (!durationStr.equals("Permanent") && !durationStr.equals("Unmute")) {
+                    if (durationStr.endsWith("s")) {
+                        durationSeconds = Integer.parseInt(durationStr.replace("s", ""));
+                    } else if (durationStr.endsWith("m")) {
+                        durationSeconds = Integer.parseInt(durationStr.replace("m", "")) * 60;
+                    } else if (durationStr.endsWith("h")) {
+                        durationSeconds = Integer.parseInt(durationStr.replace("h", "")) * 3600;
+                    } else if (durationStr.endsWith("j")) {
+                        durationSeconds = Integer.parseInt(durationStr.replace("j", "")) * 86400;
+                    }
+                } else if (durationStr.equals("Unmute")) {
+                    durationSeconds = -1;
+                }
+
+                UUID targetId = Bukkit.getOfflinePlayer(targetName).getUniqueId();
+                if (plugin.getRedisManager() != null) {
+                    if (durationSeconds == -1) {
+                        plugin.getRedisManager().del("corehost:chat:mute:" + targetId.toString());
+                        player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur ", NamedTextColor.GREEN))
+                                .append(Component.text(targetName, NamedTextColor.YELLOW))
+                                .append(Component.text(" a été dé-muté.", NamedTextColor.GREEN)));
+                    } else if (durationSeconds > 0) {
+                        plugin.getRedisManager().setEx("corehost:chat:mute:" + targetId.toString(), reason + "|" + durationSeconds, durationSeconds);
+                        player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur ", NamedTextColor.GREEN))
+                                .append(Component.text(targetName, NamedTextColor.YELLOW))
+                                .append(Component.text(" a été rendu muet pour : " + durationStr, NamedTextColor.GREEN)));
+                    } else {
+                        plugin.getRedisManager().set("corehost:chat:mute:" + targetId.toString(), reason + "|-1");
+                        player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur ", NamedTextColor.GREEN))
+                                .append(Component.text(targetName, NamedTextColor.YELLOW))
+                                .append(Component.text(" a été rendu muet pour : " + durationStr, NamedTextColor.GREEN)));
+                    }
+                }
+
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                 new PlayerSSGUI(plugin, targetName).open(player);
             }
         }

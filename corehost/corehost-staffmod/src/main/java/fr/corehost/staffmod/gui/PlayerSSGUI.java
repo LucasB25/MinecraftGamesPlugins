@@ -160,7 +160,7 @@ public class PlayerSSGUI {
                 Component.empty(),
                 Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Rendre muet temporairement", NamedTextColor.GRAY)),
                 Component.empty(),
-                Component.text("(Bientôt disponible)", NamedTextColor.DARK_GRAY)
+                Component.text("► Cliquez pour choisir la durée", NamedTextColor.YELLOW)
             ));
             muteItem.setItemMeta(muteMeta);
         }
@@ -180,6 +180,23 @@ public class PlayerSSGUI {
             banItem.setItemMeta(banMeta);
         }
         inv.setItem(33, banItem);
+
+        // 10. Unmute Action (Slot 32)
+        if (player.hasPermission("staffmod.unmute") || player.hasPermission("staffmod.mod")) {
+            ItemStack unmuteItem = new ItemStack(Material.MILK_BUCKET);
+            ItemMeta unmuteMeta = unmuteItem.getItemMeta();
+            if (unmuteMeta != null) {
+                unmuteMeta.displayName(Component.text("Démuter", NamedTextColor.GREEN, TextDecoration.BOLD));
+                unmuteMeta.lore(Arrays.asList(
+                    Component.empty(),
+                    Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Lever la sanction de mute", NamedTextColor.GRAY)),
+                    Component.empty(),
+                    Component.text("► Cliquez pour démuter", NamedTextColor.YELLOW)
+                ));
+                unmuteItem.setItemMeta(unmuteMeta);
+            }
+            inv.setItem(32, unmuteItem);
+        }
 
         player.openInventory(inv);
     }

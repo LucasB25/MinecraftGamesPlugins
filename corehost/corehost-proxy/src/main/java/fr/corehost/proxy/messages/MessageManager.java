@@ -36,6 +36,16 @@ public class MessageManager {
 
     public boolean isMessagesBlocked(UUID uuid) {
         if (plugin.getRedisManager() == null || !plugin.getRedisManager().isConnected()) return false;
+        
+        // Mod Mode check
+        String modMode = plugin.getRedisManager().get("corehost:modmode:" + uuid.toString());
+        if ("true".equals(modMode)) {
+            String modMsg = plugin.getRedisManager().get("corehost:modmsg:" + uuid.toString());
+            if (!"true".equals(modMsg)) {
+                return true;
+            }
+        }
+        
         String val = plugin.getRedisManager().get("corehost:messages:blocked:" + uuid.toString());
         return "true".equals(val);
     }

@@ -206,10 +206,14 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         // Mise à jour des joueurs
         Team playersTeam = board.getTeam("players_count");
         if (playersTeam != null) {
-            // Using globalPlayerCount updated via BungeeCord plugin messaging
-            // If proxy is not reachable, this will just display 0, or fallback to Bukkit size if wanted.
-            // A good fallback is Math.max(globalPlayerCount, Bukkit.getOnlinePlayers().size())
+            int vanishedLocal = 0;
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (p.hasMetadata("vanished")) {
+                    vanishedLocal++;
+                }
+            }
             int displayCount = Math.max(globalPlayerCount, Bukkit.getOnlinePlayers().size());
+            displayCount = Math.max(0, displayCount - vanishedLocal);
             playersTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Joueurs: " + ChatColor.GREEN + displayCount);
         }
 

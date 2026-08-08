@@ -115,6 +115,19 @@ public class ModCommand implements TabExecutor {
                 }
                 new PlayerSSGUI(plugin, targetName).open(player);
                 return true;
+            } else if (args[0].equalsIgnoreCase("msg")) {
+                if (plugin.getRedisManager() != null) {
+                    String key = "corehost:modmsg:" + player.getUniqueId().toString();
+                    String val = plugin.getRedisManager().get(key);
+                    if ("true".equals(val)) {
+                        plugin.getRedisManager().del(key);
+                        player.sendMessage(plugin.getPrefix().append(Component.text("Vous ne recevez plus les messages privés en mode modération.", NamedTextColor.RED)));
+                    } else {
+                        plugin.getRedisManager().setEx(key, "true", 86400);
+                        player.sendMessage(plugin.getPrefix().append(Component.text("Vous recevez maintenant les messages privés en mode modération.", NamedTextColor.GREEN)));
+                    }
+                }
+                return true;
             }
         }
 
@@ -126,6 +139,7 @@ public class ModCommand implements TabExecutor {
         player.sendMessage(Component.text(" ▪ ", NamedTextColor.DARK_GRAY).append(Component.text("/mod reports ", NamedTextColor.RED)).append(Component.text("- Gérer les signalements", NamedTextColor.GRAY)));
         player.sendMessage(Component.text(" ▪ ", NamedTextColor.DARK_GRAY).append(Component.text("/mod sc <msg> ", NamedTextColor.RED)).append(Component.text("- Message dans le Staff Chat", NamedTextColor.GRAY)));
         player.sendMessage(Component.text(" ▪ ", NamedTextColor.DARK_GRAY).append(Component.text("/mod ss <joueur> ", NamedTextColor.RED)).append(Component.text("- Modération d'un joueur", NamedTextColor.GRAY)));
+        player.sendMessage(Component.text(" ▪ ", NamedTextColor.DARK_GRAY).append(Component.text("/mod msg ", NamedTextColor.RED)).append(Component.text("- Toggle les MPs en mod", NamedTextColor.GRAY)));
         player.sendMessage(Component.text(" ▪ ", NamedTextColor.DARK_GRAY).append(Component.text("/staffmod_report <id> ", NamedTextColor.RED)).append(Component.text("- Gérer un signalement", NamedTextColor.GRAY)));
         player.sendMessage(Component.empty());
         return true;
@@ -141,6 +155,7 @@ public class ModCommand implements TabExecutor {
             if ("staff".startsWith(args[0].toLowerCase())) completions.add("staff");
             if ("sc".startsWith(args[0].toLowerCase())) completions.add("sc");
             if ("ss".startsWith(args[0].toLowerCase())) completions.add("ss");
+            if ("msg".startsWith(args[0].toLowerCase())) completions.add("msg");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("ss") && sender.hasPermission("staffmod.mod")) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online.getName().toLowerCase().startsWith(args[1].toLowerCase()) && !online.getName().equalsIgnoreCase(sender.getName())) {

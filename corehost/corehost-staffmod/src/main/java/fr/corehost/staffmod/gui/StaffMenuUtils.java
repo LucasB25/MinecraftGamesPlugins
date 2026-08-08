@@ -13,8 +13,8 @@ import java.util.List;
 
 public class StaffMenuUtils {
 
-    public static ItemStack getRedFiller() {
-        ItemStack item = new ItemStack(Material.RED_STAINED_GLASS_PANE);
+    public static ItemStack getPinkFiller() {
+        ItemStack item = new ItemStack(Material.PINK_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.displayName(Component.text(" "));
@@ -23,8 +23,8 @@ public class StaffMenuUtils {
         return item;
     }
 
-    public static ItemStack getGrayFiller() {
-        ItemStack item = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+    public static ItemStack getPurpleFiller() {
+        ItemStack item = new ItemStack(Material.PURPLE_STAINED_GLASS_PANE);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.displayName(Component.text(" "));
@@ -37,24 +37,24 @@ public class StaffMenuUtils {
         int size = inventory.getSize();
         if (size < 9) return;
         
-        ItemStack red = getRedFiller();
-        ItemStack gray = getGrayFiller();
+        ItemStack pink = getPinkFiller();
+        ItemStack purple = getPurpleFiller();
         
         int start = size - 9;
         for (int i = start; i < size; i++) {
-            inventory.setItem(i, (i % 2 == 0) ? red : gray);
+            inventory.setItem(i, (i % 2 == 0) ? pink : purple);
         }
     }
 
     public static void fillBorder(Inventory inventory) {
         int size = inventory.getSize();
-        ItemStack red = getRedFiller();
-        ItemStack gray = getGrayFiller();
+        ItemStack pink = getPinkFiller();
+        ItemStack purple = getPurpleFiller();
         
         for (int i = 0; i < size; i++) {
             // Top row or bottom row or left column or right column
             if (i < 9 || i >= size - 9 || i % 9 == 0 || i % 9 == 8) {
-                inventory.setItem(i, (i % 2 == 0) ? red : gray);
+                inventory.setItem(i, (i % 2 == 0) ? pink : purple);
             }
         }
     }

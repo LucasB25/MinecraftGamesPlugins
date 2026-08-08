@@ -25,7 +25,7 @@ public class PlayerListGUI {
 
     public void open(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
-        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération - Joueurs", NamedTextColor.RED, TextDecoration.BOLD)));
+        Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY).append(Component.text("Modération - Joueurs", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD)));
         StaffMenuUtils.fillBorder(inv);
         inv.setItem(45, StaffMenuUtils.getCloseButton());
 

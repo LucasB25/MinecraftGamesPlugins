@@ -4,7 +4,7 @@ redis:
   password: ""
 
 settings:
-  prefix: "&8[&cStaff&8] &7"
+  prefix: "&8[&6Staff&8] &7"
 
 chat:
   forbidden_words:

@@ -23,7 +23,7 @@ public class InvseeGUI {
     public void open(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
         Inventory inv = Bukkit.createInventory(null, 54, Component.text("» ", NamedTextColor.DARK_GRAY)
-                .append(Component.text("Inventaire : " + target.getName(), NamedTextColor.RED, TextDecoration.BOLD)));
+                .append(Component.text("Inventaire : " + target.getName(), NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD)));
 
         // Copier l'inventaire principal (0 à 35)
         for (int i = 0; i < 36; i++) {
@@ -35,7 +35,7 @@ public class InvseeGUI {
 
         // Ligne de séparation (36 à 44)
         for (int i = 36; i < 45; i++) {
-            inv.setItem(i, StaffMenuUtils.getGrayFiller());
+            inv.setItem(i, StaffMenuUtils.getPurpleFiller());
         }
 
         // Pièces d'armure (45 à 48)
@@ -50,13 +50,13 @@ public class InvseeGUI {
         inv.setItem(47, (legs != null && legs.getType() != Material.AIR) ? legs.clone() : createPlaceholder(Material.GRAY_STAINED_GLASS_PANE, "Jambières : Aucune"));
         inv.setItem(48, (boots != null && boots.getType() != Material.AIR) ? boots.clone() : createPlaceholder(Material.GRAY_STAINED_GLASS_PANE, "Bottes : Aucune"));
 
-        inv.setItem(49, StaffMenuUtils.getGrayFiller());
+        inv.setItem(49, StaffMenuUtils.getPurpleFiller());
 
         // Seconde Main (50)
         inv.setItem(50, (offhand != null && offhand.getType() != Material.AIR) ? offhand.clone() : createPlaceholder(Material.GRAY_STAINED_GLASS_PANE, "Seconde Main : Aucune"));
 
-        inv.setItem(51, StaffMenuUtils.getGrayFiller());
-        inv.setItem(52, StaffMenuUtils.getGrayFiller());
+        inv.setItem(51, StaffMenuUtils.getPurpleFiller());
+        inv.setItem(52, StaffMenuUtils.getPurpleFiller());
 
         // Bouton Fermer (53)
         inv.setItem(53, StaffMenuUtils.getCloseButton());

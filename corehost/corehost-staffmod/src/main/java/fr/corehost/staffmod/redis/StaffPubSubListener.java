@@ -41,7 +41,7 @@ public class StaffPubSubListener extends JedisPubSub {
                     prefixComponent = LegacyComponentSerializer.legacyAmpersand().deserialize(rank + " ");
                 }
                 
-                Component scTag = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&cStaffChat&8] &7");
+                Component scTag = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&6SC&8] &7");
                 
                 Component scMessage = scTag
                         .append(prefixComponent)
@@ -62,7 +62,7 @@ public class StaffPubSubListener extends JedisPubSub {
                 String reason = json.get("reason").getAsString();
                 String content = json.get("message").getAsString();
                 
-                Component filterTag = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&c&lFiltre&8] &7");
+                Component filterTag = LegacyComponentSerializer.legacyAmpersand().deserialize("&8[&6Filtre&8] &7");
                 
                 Component filterMessage = filterTag
                         .append(Component.text(sender, NamedTextColor.YELLOW))

@@ -11,6 +11,8 @@ public class CoreHostGame extends JavaPlugin {
     private fr.corehost.api.redis.RedisManager redisManager;
     private fr.corehost.game.redis.GamePubSubListener pubSubListener;
     private SpectatorManager spectatorManager;
+    private String serverName;
+    private java.util.Map<java.util.UUID, String> pendingJoins = new java.util.concurrent.ConcurrentHashMap<>();
     
     @Override
     public void onEnable() {
@@ -26,14 +28,13 @@ public class CoreHostGame extends JavaPlugin {
         this.redisManager = new fr.corehost.api.redis.RedisManager(redisHost, redisPort, redisPassword);
         
         // Get CloudNet Service Name
-        String serverName;
         try {
             serverName = System.getenv("CLOUDNET_SERVICE_NAME");
             if (serverName == null || serverName.isEmpty()) {
-                serverName = "Unknown-1";
+                serverName = "Sumo-1";
             }
         } catch (Exception e) {
-            serverName = "Unknown-1";
+            serverName = "Sumo-1";
             log.warning("Impossible d'obtenir le nom CloudNet, utilisation de " + serverName);
         }
         
@@ -78,5 +79,13 @@ public class CoreHostGame extends JavaPlugin {
     
     public SpectatorManager getSpectatorManager() {
         return spectatorManager;
+    }
+    
+    public String getServerName() {
+        return serverName;
+    }
+    
+    public java.util.Map<java.util.UUID, String> getPendingJoins() {
+        return pendingJoins;
     }
 }

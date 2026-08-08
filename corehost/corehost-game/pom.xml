@@ -29,6 +29,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.infernalsuite.asp</groupId>
+            <artifactId>file-loader</artifactId>
+        </dependency>
+        <dependency>
             <groupId>eu.cloudnetservice.cloudnet</groupId>
             <artifactId>driver-api</artifactId>
             <scope>provided</scope>

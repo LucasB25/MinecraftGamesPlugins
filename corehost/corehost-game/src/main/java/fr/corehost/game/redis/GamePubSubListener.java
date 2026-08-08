@@ -34,22 +34,32 @@ public class GamePubSubListener extends JedisPubSub {
             if ("create_slime_instance".equals(action)) {
                 String hostId = json.get("hostId").getAsString();
                 String gameType = json.get("gameType").getAsString();
+                String defaultTemplate = json.has("templateName") ? json.get("templateName").getAsString() : gameType;
                 
-                plugin.getLogger().info("Received request to create slime instance for host " + hostId + " (game: " + gameType + ")");
+                org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+                    fr.corehost.game.events.PreSlimeInstanceCreateEvent event = new fr.corehost.game.events.PreSlimeInstanceCreateEvent(hostId, gameType);
+                    event.setTemplateName(defaultTemplate);
+                    org.bukkit.Bukkit.getPluginManager().callEvent(event);
+                    
+                    String templateName = event.getTemplateName();
+                    plugin.getLogger().info("Received request to create slime instance for host " + hostId + " (game: " + gameType + ", template: " + templateName + ")");
+                    
+                    // Use the templateName (e.g. yinyang), and hostId as the new world name
+                    slimeManager.loadWorld(templateName, hostId);
+                });
                 
-                // Use the gameType as the template name, and hostId as the new world name
-                slimeManager.loadWorld(gameType, hostId);
-                
-                // After world is loaded (this is async inside SlimeManager, so we need a callback)
-                // For now, let's just publish back directly. Ideally, SlimeManager calls this back when it's done.
-                // To keep it clean, we'll notify Proxy here but it might be a few ms early.
-                // We'll update SlimeManager later to do this callback if necessary.
-                
-                JsonObject response = new JsonObject();
-                response.addProperty("action", "HOST_READY");
-                response.addProperty("hostId", hostId);
-                response.addProperty("serverName", serverName);
-                redisManager.publish("corehost:proxy:events", response.toString());
+                // After world is loaded (this is async inside SlimeManager)
+                // SlimeManager will publish the HOST_READY event once the world is loaded.
+            } else if ("PLAYER_JOIN_HOST".equals(action)) {
+                String hostId = json.get("hostId").getAsString();
+                String playerUuidStr = json.get("playerUuid").getAsString();
+                try {
+                    java.util.UUID playerUuid = java.util.UUID.fromString(playerUuidStr);
+                    plugin.getPendingJoins().put(playerUuid, hostId);
+                    plugin.getLogger().info("Registered pending join for player " + playerUuidStr + " to host " + hostId);
+                } catch (Exception ex) {
+                    plugin.getLogger().warning("Invalid UUID in PLAYER_JOIN_HOST: " + playerUuidStr);
+                }
             }
 
         } catch (Exception e) {

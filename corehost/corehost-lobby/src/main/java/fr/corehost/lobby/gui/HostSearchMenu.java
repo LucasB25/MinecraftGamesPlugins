@@ -229,16 +229,29 @@ public class HostSearchMenu implements CustomMenu {
             // Check if it's a server item
             CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
             NamespacedKey serverKey = new NamespacedKey(plugin, "server_name");
+            NamespacedKey hostKey = new NamespacedKey(plugin, "host_id");
             ItemMeta meta = clicked.getItemMeta();
             
             if (meta != null && meta.getPersistentDataContainer().has(serverKey, PersistentDataType.STRING)) {
                 String serverName = meta.getPersistentDataContainer().get(serverKey, PersistentDataType.STRING);
-                if (serverName != null) {
+                String hostId = meta.getPersistentDataContainer().get(hostKey, PersistentDataType.STRING);
+                
+                if (serverName != null && hostId != null) {
                     if (player.hasMetadata("modmode")) {
                         player.sendMessage(prefix + ChatColor.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
                         player.closeInventory();
                         return;
                     }
+                    
+                    // Notify target game server about the incoming player
+                    if (plugin.getRedisManager() != null) {
+                        com.google.gson.JsonObject request = new com.google.gson.JsonObject();
+                        request.addProperty("action", "PLAYER_JOIN_HOST");
+                        request.addProperty("hostId", hostId);
+                        request.addProperty("playerUuid", player.getUniqueId().toString());
+                        plugin.getRedisManager().publish("corehost:game:" + serverName, request.toString());
+                    }
+                    
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
                     player.sendMessage(prefix + "Connexion au serveur " + ChatColor.GREEN + serverName + ChatColor.GRAY + "...");
                     plugin.connectToServer(player, serverName);

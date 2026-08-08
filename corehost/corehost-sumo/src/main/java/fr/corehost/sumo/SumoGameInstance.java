@@ -199,10 +199,9 @@ public class SumoGameInstance {
             scoreboardManager.updateAll();
         }
 
-        // Si la partie se vide complètement (ex: pendant l'attente), on l'annule
         if (players.isEmpty()) {
             deleteHostData();
-            plugin.getGameManager().removeInstance(hostId);
+            plugin.getGameManager().cleanupInstance(hostId);
         }
     }
 
@@ -419,14 +418,11 @@ public class SumoGameInstance {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        for (UUID uuid : players) {
-                            Player p = Bukkit.getPlayer(uuid);
-                            if (p != null) {
-                                sendPlayerToLobby(p);
-                            }
+                        for (Player p : world.getPlayers()) {
+                            sendPlayerToLobby(p);
                         }
                         deleteHostData();
-                        plugin.getGameManager().removeInstance(hostId);
+                        plugin.getGameManager().cleanupInstance(hostId);
                     }
                 }.runTaskLater(plugin, 200L); // 10 seconds
                 
@@ -525,6 +521,18 @@ public class SumoGameInstance {
         checkStart(false);
     }
     
+    private org.bukkit.Location getPlayerSpawnLocation(Player player) {
+        if (mapConfig == null) return world.getSpawnLocation();
+        
+        int pIndex = players.indexOf(player.getUniqueId());
+        org.bukkit.Location mapLoc = (pIndex <= 0) ? mapConfig.getSpawn1() : mapConfig.getSpawn2();
+        
+        if (mapLoc != null) {
+            return new org.bukkit.Location(world, mapLoc.getX(), mapLoc.getY(), mapLoc.getZ(), mapLoc.getYaw(), mapLoc.getPitch());
+        }
+        return world.getSpawnLocation();
+    }
+
     private void resetPlayerState(Player player, boolean tpToSpawn) {
         player.setGameMode(GameMode.ADVENTURE);
         player.getInventory().clear();
@@ -536,8 +544,8 @@ public class SumoGameInstance {
         }
         
         if (tpToSpawn) {
-            // TP to world spawn to wait for the countdown
-            player.teleport(world.getSpawnLocation());
+            // TP directly to the fight spawn in the instance world
+            player.teleport(getPlayerSpawnLocation(player));
         }
     }
 
@@ -545,13 +553,13 @@ public class SumoGameInstance {
         if (players.size() > 0) {
             Player p1 = Bukkit.getPlayer(players.get(0));
             if (p1 != null) {
-                p1.teleport(mapConfig.getSpawn1() != null ? mapConfig.getSpawn1() : world.getSpawnLocation());
+                p1.teleport(getPlayerSpawnLocation(p1));
             }
         }
         if (players.size() > 1) {
             Player p2 = Bukkit.getPlayer(players.get(1));
             if (p2 != null) {
-                p2.teleport(mapConfig.getSpawn2() != null ? mapConfig.getSpawn2() : world.getSpawnLocation());
+                p2.teleport(getPlayerSpawnLocation(p2));
             }
         }
     }
@@ -568,8 +576,25 @@ public class SumoGameInstance {
             out.writeUTF("Connect");
             out.writeUTF("lobby");
             player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
+            
+            // Fallback for local testing if BungeeCord isn't available
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (player.isOnline() && player.getWorld().equals(world)) {
+                        resetPlayerState(player, false);
+                        if (Bukkit.getWorlds().size() > 0) {
+                            player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+                        }
+                    }
+                }
+            }.runTaskLater(plugin, 10L);
+            
         } catch (Exception e) {
-            player.kickPlayer("Retour au lobby");
+            resetPlayerState(player, false);
+            if (Bukkit.getWorlds().size() > 0) {
+                player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+            }
         }
     }
 

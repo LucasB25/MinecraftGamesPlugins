@@ -21,6 +21,46 @@ public class IsolationListener implements Listener {
         this.plugin = plugin;
     }
 
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPlayerJoinHost(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        
+        // 1. Check pending joins for this player
+        String targetHostId = plugin.getPendingJoins().remove(player.getUniqueId());
+        
+        if (plugin.getRedisManager() != null) {
+            try {
+                fr.corehost.api.host.HostManager hostManager = new fr.corehost.api.host.HostManager(plugin.getRedisManager());
+                
+                if (targetHostId != null) {
+                    // Player was explicitly sent here to join a specific host
+                    java.util.UUID hId = java.util.UUID.fromString(targetHostId);
+                    fr.corehost.api.host.HostData h = hostManager.getHost(hId);
+                    if (h != null && h.getServerName().equalsIgnoreCase(plugin.getServerName())) {
+                        org.bukkit.World w = Bukkit.getWorld(h.getWorldName());
+                        if (w != null) {
+                            player.teleport(w.getSpawnLocation());
+                            return; // Stop checking further
+                        }
+                    }
+                }
+                
+                // 2. Fallback: if they are the owner of an active host on this server
+                for (fr.corehost.api.host.HostData h : hostManager.getAllHosts()) {
+                    if (h.getServerName().equalsIgnoreCase(plugin.getServerName())) {
+                        if (h.getOwnerUuid().equals(player.getUniqueId())) {
+                            org.bukkit.World w = Bukkit.getWorld(h.getWorldName());
+                            if (w != null) {
+                                player.teleport(w.getSpawnLocation());
+                            }
+                            break;
+                        }
+                    }
+                }
+            } catch (Exception e) {}
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player joined = event.getPlayer();

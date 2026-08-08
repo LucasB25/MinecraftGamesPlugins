@@ -14,9 +14,14 @@ public class SumoGameManager {
     private final CoreHostSumo plugin;
     private final Map<String, SumoGameInstance> instances = new HashMap<>();
     private final Map<UUID, SumoGameInstance> playerInstances = new HashMap<>();
+    private final Map<String, String> pendingMaps = new HashMap<>();
 
     public SumoGameManager(CoreHostSumo plugin) {
         this.plugin = plugin;
+    }
+
+    public void setPendingMap(String hostId, String mapName) {
+        pendingMaps.put(hostId, mapName);
     }
 
     public synchronized SumoGameInstance createInstance(String hostId, String mapName) {
@@ -30,9 +35,19 @@ public class SumoGameManager {
             return null;
         }
 
-        SumoMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
+        String pending = pendingMaps.remove(hostId);
+        String actualMapName = (pending != null) ? pending : mapName;
+
+        SumoMapConfig mapConfig = plugin.getMapManager().getMap(actualMapName);
+        if (mapConfig == null) {
+            mapConfig = plugin.getMapManager().getRandomFunctionalMap();
+        }
+        
         if (mapConfig == null) {
             plugin.getLogger().warning("Aucune carte fonctionnelle trouvée ! L'instance sera injouable.");
+        } else if (mapConfig.getSpawn1() != null) {
+            org.bukkit.Location s1 = mapConfig.getSpawn1();
+            world.setSpawnLocation(s1.getBlockX(), s1.getBlockY(), s1.getBlockZ(), s1.getYaw());
         }
 
         SumoGameInstance instance = new SumoGameInstance(plugin, hostId, world, mapConfig);
@@ -41,8 +56,58 @@ public class SumoGameManager {
         return instance;
     }
 
-    public void removeInstance(String hostId) {
+    public synchronized void removeInstance(String hostId) {
         instances.remove(hostId);
+    }
+
+    public synchronized void cleanupInstance(String hostId) {
+        SumoGameInstance instance = instances.get(hostId);
+        if (instance != null) {
+            World world = instance.getWorld();
+            
+            // Unregister all players
+            for (UUID uuid : new java.util.ArrayList<>(instance.getPlayers())) {
+                unregisterPlayer(uuid);
+            }
+            
+            instances.remove(hostId);
+            
+            if (world != null && !world.getName().equalsIgnoreCase("sumo")) { // Ne pas supprimer le monde template
+                // Teleport remaining players in the world to the main world
+                World mainWorld = Bukkit.getWorlds().get(0);
+                for (Player p : world.getPlayers()) {
+                    p.teleport(mainWorld.getSpawnLocation());
+                }
+                
+                // Unload and delete world async
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    Bukkit.unloadWorld(world, false);
+                    
+                    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                        // Supprimer le dossier classique si c'est un monde normal
+                        java.io.File worldFolder = world.getWorldFolder();
+                        try {
+                            if (worldFolder.exists()) {
+                                java.nio.file.Files.walk(worldFolder.toPath())
+                                    .sorted(java.util.Comparator.reverseOrder())
+                                    .map(java.nio.file.Path::toFile)
+                                    .forEach(java.io.File::delete);
+                            }
+                        } catch (java.io.IOException e) {
+                            plugin.getLogger().severe("Failed to delete world folder " + hostId + ": " + e.getMessage());
+                        }
+                        
+                        // Supprimer le fichier slime si c'est un SlimeWorld
+                        java.io.File slimeFile = new java.io.File(Bukkit.getWorldContainer(), "slime_worlds/" + hostId + ".slime");
+                        if (slimeFile.exists()) {
+                            slimeFile.delete();
+                        }
+                        
+                        plugin.getLogger().info("Deleted world " + hostId);
+                    });
+                }, 20L); // Wait 1 second before unloading to ensure players are teleported
+            }
+        }
     }
 
     public SumoGameInstance getInstance(String hostId) {

@@ -46,17 +46,20 @@ public class CloudNetServiceManager {
 
         if (!isCloudNetEnabled || plugin.getHostManager() == null) {
             // Local Test Mode Bypass
-            player.sendMessage(prefix + ChatColor.YELLOW + "[Mode Test Local] " + ChatColor.GRAY + "Génération simulée et téléportation...");
+            player.sendMessage(prefix + ChatColor.YELLOW + "[Mode Test Local] " + ChatColor.GRAY + "Génération du monde en cours...");
+            
+            UUID hostId = UUID.randomUUID();
+            String worldName = gameType.toLowerCase() + "-" + hostId.toString().substring(0, 8);
+            String localServerName = "Sumo-1";
             
             if (plugin.getHostManager() != null) {
-                UUID hostId = UUID.randomUUID();
                 HostData hostData = new HostData(
                         hostId,
                         player.getUniqueId(),
                         player.getName(),
                         gameType,
-                        "sumo", // Default target for local
-                        "sumo", 
+                        localServerName, 
+                        worldName, 
                         2
                 );
                 hostData.setBestOf(bestOf);
@@ -64,8 +67,15 @@ public class CloudNetServiceManager {
                 plugin.getHostManager().saveHost(hostData);
             }
             
-            // Connect to velocity 'sumo' server
-            plugin.connectToServer(player, "sumo");
+            if (plugin.getRedisManager() != null) {
+                JsonObject request = new JsonObject();
+                request.addProperty("action", "create_slime_instance");
+                request.addProperty("hostId", worldName);
+                request.addProperty("gameType", gameType);
+                
+                plugin.getRedisManager().publish("corehost:game:" + localServerName, request.toString());
+            }
+            
             return;
         }
 

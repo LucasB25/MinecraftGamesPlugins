@@ -26,9 +26,21 @@ public class SumoListener implements Listener {
         // For simplicity, let's assume world names starting with "sumo-" are sumo instances.
         // Or we can rely on Redis. We'll check if the world name is something we track.
         String worldName = event.getWorld().getName();
-        if (worldName.toLowerCase().startsWith("sumo")) { // fallback check if Redis isn't used
-            // We assume mapName is "sumo" for now, or extracted from worldName.
-            // plugin.getGameManager().createInstance(worldName, "default");
+        if (worldName.toLowerCase().startsWith("sumo")) {
+            // Create instance immediately so spawn location is set BEFORE players teleport
+            plugin.getGameManager().createInstance(worldName, "default");
+        }
+    }
+
+    @EventHandler
+    public void onPlayerChangedWorld(org.bukkit.event.player.PlayerChangedWorldEvent event) {
+        Player player = event.getPlayer();
+        String worldName = player.getWorld().getName();
+        if (worldName.toLowerCase().startsWith("sumo")) {
+            SumoGameInstance instance = plugin.getGameManager().getInstance(worldName);
+            if (instance != null) {
+                instance.addPlayer(player);
+            }
         }
     }
 
@@ -76,8 +88,20 @@ public class SumoListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        Optional<SumoGameInstance> optInstance = plugin.getGameManager().getInstanceForPlayer(event.getPlayer());
-        optInstance.ifPresent(instance -> instance.removePlayer(event.getPlayer()));
+        plugin.getGameManager().getInstanceForPlayer(event.getPlayer()).ifPresent(instance -> {
+            instance.removePlayer(event.getPlayer());
+        });
+    }
+
+    @EventHandler
+    public void onPreSlimeCreate(fr.corehost.game.events.PreSlimeInstanceCreateEvent event) {
+        if (event.getGameType().equalsIgnoreCase("sumo")) {
+            SumoMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
+            if (mapConfig != null) {
+                event.setTemplateName(mapConfig.getTemplateName());
+                plugin.getGameManager().setPendingMap(event.getHostId(), mapConfig.getName());
+            }
+        }
     }
 
     @EventHandler
@@ -89,15 +113,17 @@ public class SumoListener implements Listener {
             if (instance.isFrozen()) {
                 org.bukkit.Location from = event.getFrom();
                 org.bukkit.Location to = event.getTo();
-                if (to != null && (from.getX() != to.getX() || from.getZ() != to.getZ())) {
-                    event.getPlayer().teleport(new org.bukkit.Location(
-                        from.getWorld(),
-                        from.getX(),
-                        from.getY(),
-                        from.getZ(),
-                        to.getYaw(),
-                        to.getPitch()
-                    ));
+                if (to != null && (from.getX() != to.getX() || from.getZ() != to.getZ() || to.getY() > from.getY())) {
+                    org.bukkit.Location newTo = to.clone();
+                    newTo.setX(from.getX());
+                    newTo.setZ(from.getZ());
+                    
+                    // Empêcher de sauter (Y augmente), mais permettre de tomber (Y diminue)
+                    if (to.getY() > from.getY()) {
+                        newTo.setY(from.getY());
+                    }
+                    
+                    event.setTo(newTo);
                     return;
                 }
             }

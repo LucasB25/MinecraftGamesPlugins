@@ -15,4 +15,4 @@ commands:
 permissions:
   corehost.admin:
     description: Permet d'utiliser les commandes d'administration de CoreHost Game
-    default: false
+    default: op

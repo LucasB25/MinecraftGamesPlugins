@@ -62,7 +62,9 @@ public class ProxyPubSubListener extends JedisPubSub {
 
                 Optional<RegisteredServer> targetServer = server.getServer(serverName);
                 if (targetServer.isEmpty()) {
-                    plugin.getLogger().warn("Le serveur Host " + serverName + " est introuvable par Velocity !");
+                    if (!serverName.equals("Unknown-1") && !serverName.equals("local")) {
+                        plugin.getLogger().warn("Le serveur Host " + serverName + " est introuvable par Velocity !");
+                    }
                     return;
                 }
 

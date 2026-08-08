@@ -18,7 +18,11 @@ public class SumoMapConfig {
     private String spawn1WorldName;
     private String spawn2WorldName;
 
+    private String explicitTemplateName;
+
     public void load(ConfigurationSection section) {
+        this.explicitTemplateName = section.getString("template");
+        
         if (section.contains("spawn1.world")) {
             this.spawn1 = loadLocation(section.getConfigurationSection("spawn1"), 1);
         } else if (section.contains("spawn1")) {
@@ -37,6 +41,9 @@ public class SumoMapConfig {
     }
 
     public void save(ConfigurationSection section) {
+        if (explicitTemplateName != null) {
+            section.set("template", explicitTemplateName);
+        }
         if (spawn1 != null) {
             saveLocation(section.createSection("spawn1"), spawn1);
         }
@@ -66,6 +73,19 @@ public class SumoMapConfig {
     }
 
     public String getName() {
+        return name;
+    }
+
+    public String getTemplateName() {
+        if (explicitTemplateName != null) {
+            return explicitTemplateName;
+        }
+        if (spawn1WorldName != null) {
+            return spawn1WorldName;
+        }
+        if (spawn1 != null && spawn1.getWorld() != null) {
+            return spawn1.getWorld().getName();
+        }
         return name;
     }
 

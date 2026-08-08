@@ -75,32 +75,41 @@ public class LobbyListener implements Listener {
             });
         }
 
-        // Slot 4: Play Menu (Compass)
-        ItemStack searchHost = new ItemStack(Material.COMPASS);
+        // Search Host Menu
+        int searchSlot = plugin.getConfig().getInt("hotbar.search_host.slot", 4);
+        Material searchMat = Material.matchMaterial(plugin.getConfig().getString("hotbar.search_host.material", "COMPASS"));
+        if (searchMat == null) searchMat = Material.COMPASS;
+        ItemStack searchHost = new ItemStack(searchMat);
         ItemMeta searchMeta = searchHost.getItemMeta();
         if (searchMeta != null) {
             searchMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Jouer " + ChatColor.GRAY + "(Clic-Droit)");
             searchHost.setItemMeta(searchMeta);
         }
-        player.getInventory().setItem(4, searchHost);
+        player.getInventory().setItem(searchSlot, searchHost);
 
-        // Slot 8: Profile
-        ItemStack profile = new ItemStack(Material.PLAYER_HEAD);
+        // Profile Menu
+        int profileSlot = plugin.getConfig().getInt("hotbar.profile.slot", 8);
+        Material profileMat = Material.matchMaterial(plugin.getConfig().getString("hotbar.profile.material", "PLAYER_HEAD"));
+        if (profileMat == null) profileMat = Material.PLAYER_HEAD;
+        ItemStack profile = new ItemStack(profileMat);
         SkullMeta profileMeta = (SkullMeta) profile.getItemMeta();
         if (profileMeta != null) {
             profileMeta.setOwningPlayer(player);
             profileMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Mon Profil " + ChatColor.GRAY + "(Clic-Droit)");
             profile.setItemMeta(profileMeta);
         }
-        player.getInventory().setItem(8, profile);
-        // Slot 7: Visibility
-        ItemStack visibility = new ItemStack(Material.LIME_DYE);
+        player.getInventory().setItem(profileSlot, profile);
+        // Visibility Toggle
+        int visSlot = plugin.getConfig().getInt("hotbar.visibility_on.slot", 7);
+        Material visMat = Material.matchMaterial(plugin.getConfig().getString("hotbar.visibility_on.material", "LIME_DYE"));
+        if (visMat == null) visMat = Material.LIME_DYE;
+        ItemStack visibility = new ItemStack(visMat);
         ItemMeta visMeta = visibility.getItemMeta();
         if (visMeta != null) {
             visMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Joueurs : Visibles " + ChatColor.GRAY + "(Clic-Droit)");
             visibility.setItemMeta(visMeta);
         }
-        player.getInventory().setItem(7, visibility);
+        player.getInventory().setItem(visSlot, visibility);
 
         // Scoreboard
         if (plugin.getScoreboardManager() != null) {
@@ -159,18 +168,27 @@ public class LobbyListener implements Listener {
             event.setCancelled(true);
         }
 
-        if (item.getType() == Material.COMPASS) {
+        Material searchMat = Material.matchMaterial(plugin.getConfig().getString("hotbar.search_host.material", "COMPASS"));
+        if (searchMat == null) searchMat = Material.COMPASS;
+        Material profileMat = Material.matchMaterial(plugin.getConfig().getString("hotbar.profile.material", "PLAYER_HEAD"));
+        if (profileMat == null) profileMat = Material.PLAYER_HEAD;
+        Material visMatOn = Material.matchMaterial(plugin.getConfig().getString("hotbar.visibility_on.material", "LIME_DYE"));
+        if (visMatOn == null) visMatOn = Material.LIME_DYE;
+        Material visMatOff = Material.matchMaterial(plugin.getConfig().getString("hotbar.visibility_off.material", "GRAY_DYE"));
+        if (visMatOff == null) visMatOff = Material.GRAY_DYE;
+
+        if (item.getType() == searchMat) {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
             new HostSearchMenu().open(player);
-        } else if (item.getType() == Material.PLAYER_HEAD) {
+        } else if (item.getType() == profileMat) {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
             new PlayerProfileMenu(plugin, player).open(player);
-        } else if (item.getType() == Material.LIME_DYE || item.getType() == Material.GRAY_DYE) {
-            if (player.hasCooldown(Material.LIME_DYE) || player.hasCooldown(Material.GRAY_DYE)) {
+        } else if (item.getType() == visMatOn || item.getType() == visMatOff) {
+            if (player.hasCooldown(visMatOn) || player.hasCooldown(visMatOff)) {
                 return;
             }
-            player.setCooldown(Material.LIME_DYE, 60);
-            player.setCooldown(Material.GRAY_DYE, 60);
+            player.setCooldown(visMatOn, 60);
+            player.setCooldown(visMatOff, 60);
 
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
             if (hiddenPlayers.contains(player.getUniqueId())) {
@@ -180,13 +198,14 @@ public class LobbyListener implements Listener {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     player.showPlayer(plugin, p);
                 }
-                ItemStack visibility = new ItemStack(Material.LIME_DYE);
+                ItemStack visibility = new ItemStack(visMatOn);
                 ItemMeta visMeta = visibility.getItemMeta();
                 if (visMeta != null) {
                     visMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Joueurs : Visibles " + ChatColor.GRAY + "(Clic-Droit)");
                     visibility.setItemMeta(visMeta);
                 }
-                player.getInventory().setItem(7, visibility);
+                int visSlot = plugin.getConfig().getInt("hotbar.visibility_on.slot", 7);
+                player.getInventory().setItem(visSlot, visibility);
                 player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Les joueurs sont maintenant visibles.");
             } else {
                 // Currently visible -> Make hidden
@@ -195,13 +214,14 @@ public class LobbyListener implements Listener {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     player.hidePlayer(plugin, p);
                 }
-                ItemStack visibility = new ItemStack(Material.GRAY_DYE);
+                ItemStack visibility = new ItemStack(visMatOff);
                 ItemMeta visMeta = visibility.getItemMeta();
                 if (visMeta != null) {
                     visMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Joueurs : Cachés " + ChatColor.GRAY + "(Clic-Droit)");
                     visibility.setItemMeta(visMeta);
                 }
-                player.getInventory().setItem(7, visibility);
+                int visSlot = plugin.getConfig().getInt("hotbar.visibility_on.slot", 7);
+                player.getInventory().setItem(visSlot, visibility);
                 player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Les joueurs sont maintenant cachés.");
             }
         }

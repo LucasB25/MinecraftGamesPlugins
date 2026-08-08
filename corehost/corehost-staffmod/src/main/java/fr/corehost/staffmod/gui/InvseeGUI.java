@@ -58,8 +58,8 @@ public class InvseeGUI {
         inv.setItem(51, StaffMenuUtils.getPurpleFiller());
         inv.setItem(52, StaffMenuUtils.getPurpleFiller());
 
-        // Bouton Fermer (53)
-        inv.setItem(53, StaffMenuUtils.getCloseButton());
+        // Bouton Retour (53)
+        inv.setItem(53, StaffMenuUtils.getBackButton());
 
         player.openInventory(inv);
     }

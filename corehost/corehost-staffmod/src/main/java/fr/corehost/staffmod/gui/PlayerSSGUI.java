@@ -89,7 +89,7 @@ public class PlayerSSGUI {
             ));
             invItem.setItemMeta(invMeta);
         }
-        inv.setItem(19, invItem);
+        inv.setItem(20, invItem);
 
         // 2. Enderchest (Slot 20)
         ItemStack ecItem = new ItemStack(Material.ENDER_CHEST);
@@ -104,7 +104,7 @@ public class PlayerSSGUI {
             ));
             ecItem.setItemMeta(ecMeta);
         }
-        inv.setItem(20, ecItem);
+        inv.setItem(21, ecItem);
 
         // 3. Teleport (Slot 21)
         ItemStack tpItem = new ItemStack(Material.ENDER_PEARL);
@@ -119,7 +119,7 @@ public class PlayerSSGUI {
             ));
             tpItem.setItemMeta(tpMeta);
         }
-        inv.setItem(21, tpItem);
+        inv.setItem(23, tpItem);
 
         // 4. Freeze (Slot 23)
         ItemStack freezeItem = new ItemStack(Material.PACKED_ICE);
@@ -134,7 +134,7 @@ public class PlayerSSGUI {
             ));
             freezeItem.setItemMeta(freezeMeta);
         }
-        inv.setItem(23, freezeItem);
+        inv.setItem(24, freezeItem);
 
         // 7. Sanctions History (Slot 29)
         ItemStack historyItem = new ItemStack(Material.BOOK);

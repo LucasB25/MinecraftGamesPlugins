@@ -160,7 +160,7 @@ public class GUIListener implements Listener {
             if (slot == 36) { // Back button
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.closeInventory();
-            } else if (slot == 19) { // Invsee
+            } else if (slot == 20) { // Invsee
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 Player target = Bukkit.getPlayerExact(targetName);
                 if (target != null) {
@@ -169,17 +169,17 @@ public class GUIListener implements Listener {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur n'est pas sur ce serveur.", NamedTextColor.RED)));
                     player.closeInventory();
                 }
-            } else if (slot == 20) { // Enderchest
+            } else if (slot == 21) { // Enderchest
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 Player target = Bukkit.getPlayerExact(targetName);
                 if (target != null) {
-                    player.openInventory(target.getEnderChest());
+                    new EnderseeGUI(plugin, target).open(player);
                 } else {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Le joueur n'est pas sur ce serveur.", NamedTextColor.RED)));
                     player.closeInventory();
                 }
 
-            } else if (slot == 23) { // Freeze
+            } else if (slot == 24) { // Freeze
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 boolean isFrozen = false;
                 Player target = Bukkit.getPlayerExact(targetName);
@@ -203,7 +203,7 @@ public class GUIListener implements Listener {
                         .append(Component.text(targetName, NamedTextColor.YELLOW)).append(Component.text(".", NamedTextColor.RED)));
                 }
                 player.closeInventory();
-            } else if (slot == 21) { // TP
+            } else if (slot == 23) { // TP
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 if (targetName.equalsIgnoreCase(player.getName())) {
                     player.sendMessage(plugin.getPrefix().append(Component.text("Vous ne pouvez pas vous téléporter à vous-même.", NamedTextColor.RED)));
@@ -232,13 +232,14 @@ public class GUIListener implements Listener {
                 player.closeInventory();
             }
         }
-        else if (title.contains("Inventaire : ")) {
+        else if (title.contains("Inventaire : ") || title.contains("Enderchest : ")) {
             event.setCancelled(true);
             if (event.getCurrentItem() == null) return;
             Player player = (Player) event.getWhoClicked();
-            if (event.getSlot() == 53) {
+            if (event.getSlot() == 53 || event.getSlot() == 35) { // 53 = Invsee, 35 = Endersee
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-                player.closeInventory();
+                String targetName = title.substring(title.indexOf(" : ") + 3);
+                new PlayerSSGUI(plugin, targetName).open(player);
             }
         }
     }

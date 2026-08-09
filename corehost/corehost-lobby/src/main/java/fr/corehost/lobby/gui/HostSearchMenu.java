@@ -62,6 +62,7 @@ public class HostSearchMenu implements CustomMenu {
         ItemStack refreshItem = new ItemBuilder(Material.EMERALD)
             .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Rafraîchir la liste")
             .setLore(
+                "",
                 ChatColor.GRAY + "Mettre à jour les serveurs",
                 ChatColor.DARK_GRAY + "(Actualisation automatique toutes les 2s)"
             ).build();

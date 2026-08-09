@@ -37,7 +37,7 @@ public class IgnoreMenu implements CustomMenu {
     }
 
     public void open(Player player) {
-        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW + "Joueurs Ignorés");
+        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Joueurs Ignorés");
 
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
 
@@ -90,7 +90,10 @@ public class IgnoreMenu implements CustomMenu {
                 if (ignoredPlayersList.isEmpty()) {
                     ItemStack empty = new ItemBuilder(Material.BARRIER)
                         .setName(ChatColor.RED + "Aucun joueur ignoré")
-                        .setLore(ChatColor.GRAY + "Vous n'avez ignoré personne.").build();
+                        .setLore(
+                            "",
+                            ChatColor.GRAY + "Vous n'avez ignoré personne."
+                        ).build();
                     inventory.setItem(22, empty); // Center of inventory
                 }
 

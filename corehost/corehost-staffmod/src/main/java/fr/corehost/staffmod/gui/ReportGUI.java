@@ -50,6 +50,7 @@ public class ReportGUI {
                 lore.add(Component.empty());
                 lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Message : ", NamedTextColor.GRAY)).append(Component.text(msg.getContent(), NamedTextColor.WHITE)));
                 lore.add(Component.text("▪ ", NamedTextColor.DARK_GRAY).append(Component.text("Serveur : ", NamedTextColor.GRAY)).append(Component.text(msg.getServer(), NamedTextColor.WHITE)));
+                lore.add(Component.empty());
                 lore.add(Component.text("► Clic Gauche : Se téléporter", NamedTextColor.GREEN));
                 lore.add(Component.text("► Clic Droit : Marquer comme résolu", NamedTextColor.YELLOW));
                 lore.add(Component.text(entry.getKey().toString(), NamedTextColor.BLACK)); // Hidden ID

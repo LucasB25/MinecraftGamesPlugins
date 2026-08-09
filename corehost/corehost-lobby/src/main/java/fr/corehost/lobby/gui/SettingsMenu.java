@@ -32,7 +32,7 @@ public class SettingsMenu implements CustomMenu {
 
     public void open(Player player, boolean playSound) {
         this.inventory = Bukkit.createInventory(this, 27,
-                ChatColor.DARK_GRAY + "» " + ChatColor.YELLOW + "Paramètres");
+                ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Paramètres");
 
         if (plugin.getFriendManager() == null) {
             player.sendMessage(ChatColor.RED + "Système d'amis indisponible.");

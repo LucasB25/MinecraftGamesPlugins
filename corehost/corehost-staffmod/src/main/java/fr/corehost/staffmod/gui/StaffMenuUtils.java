@@ -63,9 +63,9 @@ public class StaffMenuUtils {
         ItemStack item = new ItemStack(Material.ARROW);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("◄ Retour", NamedTextColor.RED));
+            meta.displayName(Component.text("◄ Retour", NamedTextColor.RED).decoration(TextDecoration.ITALIC, false));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("Fermer ou retourner", NamedTextColor.GRAY));
+            lore.add(Component.text("Fermer ou retourner", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
             meta.lore(lore);
             item.setItemMeta(meta);
         }
@@ -76,7 +76,7 @@ public class StaffMenuUtils {
         ItemStack item = new ItemStack(Material.ARROW);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("◄ Page Précédente", NamedTextColor.YELLOW));
+            meta.displayName(Component.text("◄ Page Précédente", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
             item.setItemMeta(meta);
         }
         return item;
@@ -86,7 +86,7 @@ public class StaffMenuUtils {
         ItemStack item = new ItemStack(Material.ARROW);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("Page Suivante ►", NamedTextColor.YELLOW));
+            meta.displayName(Component.text("Page Suivante ►", NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC, false));
             item.setItemMeta(meta);
         }
         return item;
@@ -96,9 +96,9 @@ public class StaffMenuUtils {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("Fermer", NamedTextColor.RED, TextDecoration.BOLD));
+            meta.displayName(Component.text("Fermer", NamedTextColor.RED, TextDecoration.BOLD).decoration(TextDecoration.ITALIC, false));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("Fermer le menu", NamedTextColor.GRAY));
+            lore.add(Component.text("Fermer le menu", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
             meta.lore(lore);
             item.setItemMeta(meta);
         }

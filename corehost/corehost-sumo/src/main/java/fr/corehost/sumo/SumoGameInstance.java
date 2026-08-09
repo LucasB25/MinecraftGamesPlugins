@@ -670,6 +670,13 @@ public class SumoGameInstance {
             org.bukkit.inventory.meta.ItemMeta meta = bed.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(ChatColor.RED + "Retour au Lobby");
+                meta.setLore(java.util.Arrays.asList(
+                    "",
+                    ChatColor.GRAY + "Quitter la partie et",
+                    ChatColor.GRAY + "retourner au hub principal.",
+                    "",
+                    ChatColor.YELLOW + "► Clic droit pour quitter"
+                ));
                 bed.setItemMeta(meta);
             }
             player.getInventory().setItem(8, bed);

@@ -69,7 +69,7 @@ public class SumoCommand implements CommandExecutor {
                 break;
             case "list":
                 player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.YELLOW + "Instances actives :");
-                player.sendMessage(ChatColor.GRAY + "- List command is not fully implemented yet.");
+                player.sendMessage(ChatColor.GRAY + "- (Commande en cours de développement)");
                 break;
             case "leave":
                 plugin.getGameManager().getInstanceForPlayer(player).ifPresent(inst -> {

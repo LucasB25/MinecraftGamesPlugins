@@ -36,7 +36,7 @@ public class CloudNetServiceManager {
     }
 
     @SuppressWarnings("deprecation")
-    public void createHost(Player player, String gameType, int bestOf, boolean doubleJumpEnabled) {
+    public void createHost(Player player, String gameType, int bestOf, boolean doubleJumpEnabled, boolean customKBEnabled) {
         String prefix = Constants.PREFIX;
         
         if (player.hasMetadata("modmode")) {
@@ -64,6 +64,7 @@ public class CloudNetServiceManager {
                 );
                 hostData.setBestOf(bestOf);
                 hostData.setDoubleJumpEnabled(doubleJumpEnabled);
+                hostData.setCustomKB(customKBEnabled);
                 hostData.setStatus(fr.corehost.api.host.HostStatus.STARTING);
                 plugin.getHostManager().saveHost(hostData);
             }
@@ -127,6 +128,7 @@ public class CloudNetServiceManager {
                     );
                     hostData.setBestOf(bestOf);
                     hostData.setDoubleJumpEnabled(doubleJumpEnabled);
+                    hostData.setCustomKB(customKBEnabled);
                     
                     // The slime world needs to be generated, so status is STARTING
                     hostData.setStatus(fr.corehost.api.host.HostStatus.STARTING);

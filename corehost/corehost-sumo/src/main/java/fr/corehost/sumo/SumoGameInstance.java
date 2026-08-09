@@ -42,7 +42,9 @@ public class SumoGameInstance {
     private org.bukkit.scheduler.BukkitTask roundTimerTask;
     private org.bukkit.scheduler.BukkitTask actionBarTask;
     
+    private int maxDraws = 3;
     private boolean doubleJumpEnabled = false;
+    private boolean customKB = false;
     private final java.util.Set<UUID> usedDoubleJump = new java.util.HashSet<>();
     private final Map<UUID, Integer> currentCombos = new HashMap<>();
     private final Map<UUID, Integer> maxCombos = new HashMap<>();
@@ -51,7 +53,6 @@ public class SumoGameInstance {
     private boolean frozen = false;
     
     private int consecutiveDraws = 0;
-    private final int maxDraws;
     
     private final int coinsPerRoundWon;
     private final int matchWinBonus;
@@ -96,6 +97,7 @@ public class SumoGameInstance {
                 int bestOf = data.getBestOf();
                 this.targetScore = (int) Math.ceil(bestOf / 2.0);
                 this.doubleJumpEnabled = data.isDoubleJumpEnabled();
+                this.customKB = data.isCustomKB();
                 
                 data.setStatus(fr.corehost.api.host.HostStatus.WAITING);
                 hostManager.saveHost(data);
@@ -787,6 +789,10 @@ public class SumoGameInstance {
 
     public java.util.Set<UUID> getUsedDoubleJump() {
         return usedDoubleJump;
+    }
+    
+    public boolean isCustomKB() {
+        return customKB;
     }
 
     public Map<UUID, Integer> getCurrentCombos() {

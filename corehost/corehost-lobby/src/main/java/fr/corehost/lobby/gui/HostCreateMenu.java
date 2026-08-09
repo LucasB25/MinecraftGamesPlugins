@@ -116,16 +116,16 @@ public class HostCreateMenu implements CustomMenu {
                                 clazz.getMethod("open", Player.class).invoke(menu, player);
                             } catch (Exception e) {
                                 plugin.getLogger().severe("Could not open settings menu for " + gameId + ": " + e.getMessage());
-                                plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false);
+                                plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false, false);
                             }
                         } else {
-                            plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false);
+                            plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false, false);
                         }
                     } else {
-                        plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false);
+                        plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false, false);
                     }
                 } else {
-                    plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false);
+                    plugin.getCloudNetServiceManager().createHost(player, gameId, 3, false, false);
                 }
             }
         }

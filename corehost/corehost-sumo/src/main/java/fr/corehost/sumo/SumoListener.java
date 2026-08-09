@@ -231,6 +231,37 @@ public class SumoListener implements Listener {
                     
                     // Victim combo resets to 0
                     instance.getCurrentCombos().put(victim.getUniqueId(), 0);
+                    
+                    if (instance.isCustomKB()) {
+                        plugin.getServer().getScheduler().runTask(plugin, () -> {
+                            double h = plugin.getConfig().getDouble("custom-kb.horizontal", 0.45);
+                            double v = plugin.getConfig().getDouble("custom-kb.vertical", 0.36);
+                            double sprintMult = plugin.getConfig().getDouble("custom-kb.sprint-multiplier", 1.3);
+                            double airMult = plugin.getConfig().getDouble("custom-kb.air-multiplier", 0.8);
+                            double maxY = plugin.getConfig().getDouble("custom-kb.max-y", 0.4);
+
+                            org.bukkit.util.Vector direction = attacker.getLocation().getDirection().setY(0).normalize();
+                            
+                            if (attacker.isSprinting()) {
+                                direction.multiply(sprintMult);
+                            }
+                            
+                            direction.multiply(h);
+                            
+                            double finalY = v;
+                            if (!victim.isOnGround()) {
+                                finalY *= airMult;
+                            }
+                            
+                            direction.setY(finalY);
+                            
+                            if (direction.getY() > maxY) {
+                                direction.setY(maxY);
+                            }
+
+                            victim.setVelocity(direction);
+                        });
+                    }
                 }
             }
         }

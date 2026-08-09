@@ -14,6 +14,7 @@ public class HostData {
     private int currentPlayers;
     private int bestOf;
     private boolean doubleJumpEnabled;
+    private boolean customKB;
 
     public HostData(UUID hostId, UUID ownerUuid, String ownerName, String gameType, String serverName, String worldName, int maxPlayers) {
         this.hostId = hostId;
@@ -27,6 +28,7 @@ public class HostData {
         this.currentPlayers = 0;
         this.bestOf = 3; // Par défaut BO3
         this.doubleJumpEnabled = false;
+        this.customKB = false;
     }
 
     // Used for deserialization
@@ -64,4 +66,7 @@ public class HostData {
 
     public boolean isDoubleJumpEnabled() { return doubleJumpEnabled; }
     public void setDoubleJumpEnabled(boolean doubleJumpEnabled) { this.doubleJumpEnabled = doubleJumpEnabled; }
+
+    public boolean isCustomKB() { return customKB; }
+    public void setCustomKB(boolean customKB) { this.customKB = customKB; }
 }

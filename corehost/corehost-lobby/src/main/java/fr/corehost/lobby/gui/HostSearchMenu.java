@@ -150,6 +150,8 @@ public class HostSearchMenu implements CustomMenu {
                         lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Manches : " + ChatColor.AQUA + "BO" + host.getBestOf());
                         String djStatus = host.isDoubleJumpEnabled() ? ChatColor.GREEN + "Actif" : ChatColor.RED + "Inactif";
                         lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Double Saut : " + djStatus);
+                        String kbStatus = host.isCustomKB() ? ChatColor.GREEN + "Custom" : ChatColor.RED + "Vanilla";
+                        lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Knockback : " + kbStatus);
                     }
                     
                     lore.add("");

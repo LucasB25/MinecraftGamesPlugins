@@ -190,6 +190,7 @@ public class DiscordManager extends ListenerAdapter {
             stmt.executeUpdate();
             
             plugin.getRedisManager().del("corehost:discord_link:code:" + code);
+            plugin.getRedisManager().setEx("corehost:discord_auth:" + playerUuid.toString(), "true", 3600);
             event.getChannel().sendMessage("✅ Votre compte Minecraft a été lié avec succès ! Vous pouvez maintenant jouer.").queue();
         } catch (SQLException e) {
             e.printStackTrace();

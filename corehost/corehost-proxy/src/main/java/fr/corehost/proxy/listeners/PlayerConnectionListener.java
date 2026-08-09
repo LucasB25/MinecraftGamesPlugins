@@ -66,6 +66,10 @@ public class PlayerConnectionListener {
     @Subscribe
     public void onDisconnect(DisconnectEvent event) {
         Player player = event.getPlayer();
+        if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+            plugin.getRedisManager().del("corehost:discord_auth:" + player.getUniqueId().toString());
+        }
+        
         if (plugin.getFriendManager() != null) {
             // Update last seen timestamp and set offline status asynchronously
             plugin.getServer().getScheduler().buildTask(plugin, () -> {

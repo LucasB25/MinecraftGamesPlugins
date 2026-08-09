@@ -63,7 +63,7 @@ public class AuthListener implements Listener {
                 String code = String.format("%06d", random.nextInt(1000000));
                 
                 if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
-                    plugin.getRedisManager().setEx("corehost:discord_link:code:" + code, uuid.toString(), 3600);
+                    plugin.getRedisManager().setEx("corehost:discord_link:code:" + code, uuid.toString(), 60); // 1 minute
                 }
                 
                 blockedPlayers.put(uuid, code);
@@ -88,12 +88,19 @@ public class AuthListener implements Listener {
                 startAuthTask(player, uuid, false, code);
                 
             } else {
+                // Check if already authenticated for this session
+                if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+                    String authStr = plugin.getRedisManager().get("corehost:discord_auth:" + uuid.toString());
+                    if (authStr != null && authStr.equals("true")) {
+                        return;
+                    }
+                }
+                
                 // Player is cracked and ALREADY linked. Require 2FA PIN.
                 String pin = String.format("%04d", random.nextInt(10000));
                 
                 if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
-                    plugin.getRedisManager().setEx("corehost:discord_auth_code:" + pin, uuid.toString(), 300); // 5 minutes
-                    plugin.getRedisManager().del("corehost:discord_auth:" + uuid.toString()); // Clear previous auth
+                    plugin.getRedisManager().setEx("corehost:discord_auth_code:" + pin, uuid.toString(), 60); // 1 minute
                 }
                 
                 blockedPlayers.put(uuid, pin);
@@ -122,9 +129,18 @@ public class AuthListener implements Listener {
 
     private void startAuthTask(Player player, UUID uuid, boolean is2FA, String expectedCode) {
         BukkitRunnable task = new BukkitRunnable() {
+            int timeLeft = 60; // 60 secondes pour valider
+
             @Override
             public void run() {
                 if (!player.isOnline()) {
+                    this.cancel();
+                    return;
+                }
+                
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    player.kickPlayer(ChatColor.RED + "Temps écoulé ! Vous avez mis trop de temps pour envoyer le code.");
                     this.cancel();
                     return;
                 }

@@ -40,6 +40,13 @@ public class SumoGameInstance {
     
     private int roundTime = 60;
     private org.bukkit.scheduler.BukkitTask roundTimerTask;
+    private org.bukkit.scheduler.BukkitTask actionBarTask;
+    
+    private boolean doubleJumpEnabled = false;
+    private final java.util.Set<UUID> usedDoubleJump = new java.util.HashSet<>();
+    private final Map<UUID, Integer> currentCombos = new HashMap<>();
+    private final Map<UUID, Integer> maxCombos = new HashMap<>();
+    private final Map<UUID, Integer> totalHits = new HashMap<>();
     
     private boolean frozen = false;
     
@@ -88,6 +95,7 @@ public class SumoGameInstance {
             if (data != null) {
                 int bestOf = data.getBestOf();
                 this.targetScore = (int) Math.ceil(bestOf / 2.0);
+                this.doubleJumpEnabled = data.isDoubleJumpEnabled();
                 
                 data.setStatus(fr.corehost.api.host.HostStatus.WAITING);
                 hostManager.saveHost(data);
@@ -192,7 +200,7 @@ public class SumoGameInstance {
         syncHostData();
         
         if (state == GameState.PLAYING) {
-            handleDeath(player);
+            handleDeath(player, true);
         } else {
             alivePlayers.remove(player.getUniqueId());
             broadcast(ChatColor.YELLOW + player.getName() + " a quitté la partie.");
@@ -215,14 +223,19 @@ public class SumoGameInstance {
         "{winner} a montré qui est le vrai maître du Sumo à {loser} !"
     };
 
-    public void handleDeath(Player player) {
+    public void handleDeath(Player player, boolean outOfBounds) {
         if (!alivePlayers.contains(player.getUniqueId())) return;
         
         alivePlayers.remove(player.getUniqueId());
         
         // Visual feedback for loser
         if (player.isOnline()) {
-            player.sendTitle(ChatColor.RED + "TOMBÉ !", "", 5, 40, 10);
+            int loserWins = wins.getOrDefault(player.getUniqueId(), 0);
+            if (outOfBounds) {
+                player.sendTitle(ChatColor.RED + "MANCHE PERDUE", ChatColor.GRAY + "Score: " + loserWins + "/" + targetScore, 5, 40, 10);
+            } else {
+                player.sendTitle(ChatColor.RED + "ÉLIMINÉ !", ChatColor.GRAY + "Par les statistiques", 5, 40, 10);
+            }
             player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1.0f, 1.0f);
         }
         
@@ -237,12 +250,14 @@ public class SumoGameInstance {
                 winner.sendTitle(ChatColor.AQUA + "MANCHE GAGNÉE", ChatColor.GRAY + "Score: " + currentWins + "/" + targetScore, 5, 40, 10);
                 winner.playSound(winner.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                 
-                // Random Death Message
-                String randomMsg = DEATH_MESSAGES[new java.util.Random().nextInt(DEATH_MESSAGES.length)];
-                randomMsg = randomMsg.replace("{loser}", ChatColor.RED + player.getName() + ChatColor.GRAY);
-                randomMsg = randomMsg.replace("{winner}", ChatColor.AQUA + winner.getName() + ChatColor.GRAY);
+                if (outOfBounds) {
+                    // Random Death Message only if they fell
+                    String randomMsg = DEATH_MESSAGES[new java.util.Random().nextInt(DEATH_MESSAGES.length)];
+                    randomMsg = randomMsg.replace("{loser}", ChatColor.RED + player.getName() + ChatColor.GRAY);
+                    randomMsg = randomMsg.replace("{winner}", ChatColor.AQUA + winner.getName() + ChatColor.GRAY);
+                    broadcast(randomMsg);
+                }
                 
-                broadcast(randomMsg);
                 broadcast(ChatColor.AQUA + winner.getName() + " a gagné cette manche ! (" + currentWins + "/" + targetScore + ")");
             }
         }
@@ -250,6 +265,13 @@ public class SumoGameInstance {
         consecutiveDraws = 0; // Reset draws on win
         scoreboardManager.updateAll();
         checkWin(winner);
+    }
+
+    private void stopActionBarTask() {
+        if (actionBarTask != null) {
+            actionBarTask.cancel();
+            actionBarTask = null;
+        }
     }
 
     private void checkStart(boolean isFirstGame) {
@@ -311,6 +333,7 @@ public class SumoGameInstance {
                         for (UUID uuid : players) {
                             Player p = Bukkit.getPlayer(uuid);
                             if (p != null) {
+                                p.getInventory().clear();
                                 p.sendTitle(ChatColor.GREEN + "C'EST PARTI !", "", 5, 20, 5);
                                 p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f);
                             }
@@ -347,6 +370,7 @@ public class SumoGameInstance {
             
             if (matchOver) {
                 state = GameState.ENDED;
+                stopActionBarTask();
                 scoreboardManager.updateAll();
                 syncHostData();
                 teleportToFightSpawns();
@@ -429,6 +453,7 @@ public class SumoGameInstance {
             } else {
                 // Next Round
                 state = GameState.WAITING;
+                stopActionBarTask();
                 scoreboardManager.updateAll();
                 syncHostData();
                 teleportToFightSpawns();
@@ -457,8 +482,8 @@ public class SumoGameInstance {
                 }
                 
                 if (roundTime <= 0) {
-                    broadcast(ChatColor.YELLOW + "Temps écoulé ! Égalité pour cette manche.");
-                    handleDraw();
+                    broadcast(ChatColor.YELLOW + "Temps écoulé ! Évaluation des statistiques pour départage...");
+                    resolveTieBreaker();
                     cancel();
                     return;
                 }
@@ -475,6 +500,94 @@ public class SumoGameInstance {
                 scoreboardManager.updateAll();
             }
         }.runTaskTimer(plugin, 20L, 20L);
+        
+        if (actionBarTask != null) {
+            actionBarTask.cancel();
+        }
+        
+        actionBarTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (state != GameState.PLAYING) {
+                    cancel();
+                    actionBarTask = null;
+                    return;
+                }
+                
+                for (UUID uuid : alivePlayers) {
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null && p.isOnline()) {
+                        int combo = currentCombos.getOrDefault(uuid, 0);
+                        String actionBarMsg = ChatColor.GOLD + "Combo: " + ChatColor.YELLOW + combo;
+                        
+                        if (doubleJumpEnabled) {
+                            String djStatus = usedDoubleJump.contains(uuid) ? (ChatColor.RED + "✖ Utilisé") : (ChatColor.GREEN + "✔ Prêt");
+                            actionBarMsg += ChatColor.DARK_GRAY + " | " + ChatColor.AQUA + "Double Jump: " + djStatus;
+                        }
+                        
+                        p.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionBarMsg));
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 10L);
+    }
+
+    private void resolveTieBreaker() {
+        if (state != GameState.PLAYING) return;
+        
+        Player winner = null;
+        Player loser = null;
+        
+        if (alivePlayers.size() == 2) {
+            UUID p1 = alivePlayers.get(0);
+            UUID p2 = alivePlayers.get(1);
+            
+            int hits1 = totalHits.getOrDefault(p1, 0);
+            int hits2 = totalHits.getOrDefault(p2, 0);
+            
+            if (hits1 > hits2) {
+                winner = Bukkit.getPlayer(p1);
+                loser = Bukkit.getPlayer(p2);
+            } else if (hits2 > hits1) {
+                winner = Bukkit.getPlayer(p2);
+                loser = Bukkit.getPlayer(p1);
+            } else {
+                int combo1 = maxCombos.getOrDefault(p1, 0);
+                int combo2 = maxCombos.getOrDefault(p2, 0);
+                
+                if (combo1 > combo2) {
+                    winner = Bukkit.getPlayer(p1);
+                    loser = Bukkit.getPlayer(p2);
+                } else if (combo2 > combo1) {
+                    winner = Bukkit.getPlayer(p2);
+                    loser = Bukkit.getPlayer(p1);
+                }
+            }
+        }
+        
+        if (winner != null && loser != null) {
+            int wHits = totalHits.getOrDefault(winner.getUniqueId(), 0);
+            int wCombos = maxCombos.getOrDefault(winner.getUniqueId(), 0);
+            int lHits = totalHits.getOrDefault(loser.getUniqueId(), 0);
+            int lCombos = maxCombos.getOrDefault(loser.getUniqueId(), 0);
+            
+            broadcast(ChatColor.GOLD + "Victoire par statistiques : " + ChatColor.YELLOW + winner.getName() 
+                + ChatColor.GRAY + " (" + wHits + " coups, " + wCombos + " max combo) " 
+                + ChatColor.DARK_GRAY + "vs " + ChatColor.RED + loser.getName() 
+                + ChatColor.DARK_GRAY + " (" + lHits + " coups, " + lCombos + " max combo)");
+                
+            handleDeath(loser, false);
+        } else {
+            if (alivePlayers.size() == 2) {
+                UUID p1 = alivePlayers.get(0);
+                int h1 = totalHits.getOrDefault(p1, 0);
+                int c1 = maxCombos.getOrDefault(p1, 0);
+                broadcast(ChatColor.YELLOW + "Égalité parfaite aux statistiques ! " + ChatColor.GRAY + "(" + h1 + " coups, " + c1 + " max combo chacun)");
+            } else {
+                broadcast(ChatColor.YELLOW + "Égalité parfaite aux statistiques !");
+            }
+            handleDraw();
+        }
     }
 
     private void handleDraw() {
@@ -510,6 +623,13 @@ public class SumoGameInstance {
         alivePlayers.clear();
         alivePlayers.addAll(players);
         
+        usedDoubleJump.clear();
+        for (UUID uuid : players) {
+            currentCombos.put(uuid, 0);
+            maxCombos.put(uuid, 0);
+            totalHits.put(uuid, 0);
+        }
+        
         for (UUID uuid : players) {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) {
@@ -541,6 +661,22 @@ public class SumoGameInstance {
         player.setFireTicks(0);
         for (org.bukkit.potion.PotionEffect effect : player.getActivePotionEffects()) {
             player.removePotionEffect(effect.getType());
+        }
+        
+        if (state == GameState.WAITING || state == GameState.STARTING) {
+            org.bukkit.inventory.ItemStack bed = new org.bukkit.inventory.ItemStack(org.bukkit.Material.RED_BED);
+            org.bukkit.inventory.meta.ItemMeta meta = bed.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ChatColor.RED + "Retour au Lobby");
+                bed.setItemMeta(meta);
+            }
+            player.getInventory().setItem(8, bed);
+        }
+        
+        if (doubleJumpEnabled && !usedDoubleJump.contains(player.getUniqueId())) {
+            player.setAllowFlight(true);
+        } else {
+            player.setAllowFlight(false);
         }
         
         if (tpToSpawn) {
@@ -643,5 +779,25 @@ public class SumoGameInstance {
 
     public CoreHostSumo getPlugin() {
         return plugin;
+    }
+
+    public boolean isDoubleJumpEnabled() {
+        return doubleJumpEnabled;
+    }
+
+    public java.util.Set<UUID> getUsedDoubleJump() {
+        return usedDoubleJump;
+    }
+
+    public Map<UUID, Integer> getCurrentCombos() {
+        return currentCombos;
+    }
+
+    public Map<UUID, Integer> getMaxCombos() {
+        return maxCombos;
+    }
+
+    public Map<UUID, Integer> getTotalHits() {
+        return totalHits;
     }
 }

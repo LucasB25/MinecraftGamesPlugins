@@ -9,6 +9,9 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
+import org.bukkit.Sound;
 
 import java.util.Optional;
 
@@ -94,12 +97,44 @@ public class SumoListener implements Listener {
     }
 
     @EventHandler
+    public void onPlayerInteract(org.bukkit.event.player.PlayerInteractEvent event) {
+        if (!event.hasItem()) return;
+        Player player = event.getPlayer();
+        org.bukkit.inventory.ItemStack item = event.getItem();
+        
+        if (item != null && item.getType() == org.bukkit.Material.RED_BED && item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+            if (item.getItemMeta().getDisplayName().contains("Retour au Lobby")) {
+                event.setCancelled(true);
+                
+                Optional<SumoGameInstance> optInstance = plugin.getGameManager().getInstanceForPlayer(player);
+                if (optInstance.isPresent()) {
+                    SumoGameInstance instance = optInstance.get();
+                    if (instance.getState() == SumoGameInstance.GameState.WAITING || instance.getState() == SumoGameInstance.GameState.STARTING) {
+                        player.sendMessage(org.bukkit.ChatColor.GREEN + "Retour au lobby...");
+                        
+                        try {
+                            com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
+                            out.writeUTF("Connect");
+                            out.writeUTF("lobby");
+                            player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
+                        } catch (Exception e) {
+                            player.sendMessage(org.bukkit.ChatColor.RED + "Impossible de se connecter au lobby.");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @EventHandler
     public void onPreSlimeCreate(fr.corehost.game.events.PreSlimeInstanceCreateEvent event) {
         if (event.getGameType().equalsIgnoreCase("sumo")) {
             SumoMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
             if (mapConfig != null) {
                 event.setTemplateName(mapConfig.getTemplateName());
                 plugin.getGameManager().setPendingMap(event.getHostId(), mapConfig.getName());
+            } else {
+                plugin.getLogger().severe("AUCUNE MAP SUMO CONFIGURÉE ! Le système va générer un monde par défaut (Vanilla). Veuillez utiliser /sumosetup pour configurer une map !");
             }
         }
     }
@@ -131,7 +166,7 @@ public class SumoListener implements Listener {
             int y = event.getTo().getBlockY();
             if (y <= instance.getMapConfig().getDeathHeight()) {
                 if (instance.getState() == SumoGameInstance.GameState.PLAYING) {
-                    instance.handleDeath(event.getPlayer());
+                    instance.handleDeath(event.getPlayer(), true);
                 } else if (instance.getState() == SumoGameInstance.GameState.WAITING || instance.getState() == SumoGameInstance.GameState.STARTING || instance.getState() == SumoGameInstance.GameState.ENDED) {
                     event.getPlayer().teleport(event.getPlayer().getWorld().getSpawnLocation());
                 }
@@ -158,8 +193,77 @@ public class SumoListener implements Listener {
                         event.setCancelled(true);
                     } else if (event.getCause() == EntityDamageEvent.DamageCause.VOID) {
                         event.setCancelled(true);
-                        instance.handleDeath(player);
+                        instance.handleDeath(player, true);
                     }
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getEntity() instanceof Player && event.getDamager() instanceof Player) {
+            Player victim = (Player) event.getEntity();
+            Player attacker = (Player) event.getDamager();
+            
+            Optional<SumoGameInstance> optInstance = plugin.getGameManager().getInstanceForPlayer(attacker);
+            if (optInstance.isPresent()) {
+                SumoGameInstance instance = optInstance.get();
+                if (instance.getState() == SumoGameInstance.GameState.PLAYING && instance.hasPlayer(victim.getUniqueId())) {
+                    
+                    // Si la victime est dans sa période d'invulnérabilité (suite à un précédent coup), on ignore ce coup (anti-spam)
+                    if (victim.getNoDamageTicks() > victim.getMaximumNoDamageTicks() / 2.0F) {
+                        return;
+                    }
+                    
+                    // Attacker gets +1 combo and +1 total hits
+                    int currentCombo = instance.getCurrentCombos().getOrDefault(attacker.getUniqueId(), 0);
+                    int newCombo = currentCombo + 1;
+                    instance.getCurrentCombos().put(attacker.getUniqueId(), newCombo);
+                    
+                    int currentMax = instance.getMaxCombos().getOrDefault(attacker.getUniqueId(), 0);
+                    if (newCombo > currentMax) {
+                        instance.getMaxCombos().put(attacker.getUniqueId(), newCombo);
+                    }
+                    
+                    int currentHits = instance.getTotalHits().getOrDefault(attacker.getUniqueId(), 0);
+                    instance.getTotalHits().put(attacker.getUniqueId(), currentHits + 1);
+                    
+                    // Victim combo resets to 0
+                    instance.getCurrentCombos().put(victim.getUniqueId(), 0);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (player.getGameMode() == org.bukkit.GameMode.CREATIVE || player.getGameMode() == org.bukkit.GameMode.SPECTATOR) return;
+        
+        Optional<SumoGameInstance> optInstance = plugin.getGameManager().getInstanceForPlayer(player);
+        if (optInstance.isPresent()) {
+            SumoGameInstance instance = optInstance.get();
+            if (instance.getState() == SumoGameInstance.GameState.PLAYING) {
+                if (instance.isDoubleJumpEnabled() && !instance.getUsedDoubleJump().contains(player.getUniqueId())) {
+                    event.setCancelled(true);
+                    player.setAllowFlight(false);
+                    player.setFlying(false);
+                    
+                    instance.getUsedDoubleJump().add(player.getUniqueId());
+                    
+                    org.bukkit.util.Vector jump = player.getLocation().getDirection().multiply(0.5).setY(1.0);
+                    player.setVelocity(jump);
+                    player.playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.2f);
+                } else {
+                    player.setAllowFlight(false);
+                }
+            } else {
+                // If not playing, don't allow flight unless they are in creative
+                event.setCancelled(true);
+                player.setFlying(false);
+                if (!instance.isDoubleJumpEnabled() || instance.getUsedDoubleJump().contains(player.getUniqueId())) {
+                    player.setAllowFlight(false);
                 }
             }
         }

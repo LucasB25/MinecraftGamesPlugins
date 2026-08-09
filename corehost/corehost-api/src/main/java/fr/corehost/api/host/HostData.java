@@ -13,6 +13,7 @@ public class HostData {
     private int maxPlayers;
     private int currentPlayers;
     private int bestOf;
+    private boolean doubleJumpEnabled;
 
     public HostData(UUID hostId, UUID ownerUuid, String ownerName, String gameType, String serverName, String worldName, int maxPlayers) {
         this.hostId = hostId;
@@ -25,6 +26,7 @@ public class HostData {
         this.maxPlayers = maxPlayers;
         this.currentPlayers = 0;
         this.bestOf = 3; // Par défaut BO3
+        this.doubleJumpEnabled = false;
     }
 
     // Used for deserialization
@@ -59,4 +61,7 @@ public class HostData {
 
     public int getBestOf() { return bestOf; }
     public void setBestOf(int bestOf) { this.bestOf = bestOf; }
+
+    public boolean isDoubleJumpEnabled() { return doubleJumpEnabled; }
+    public void setDoubleJumpEnabled(boolean doubleJumpEnabled) { this.doubleJumpEnabled = doubleJumpEnabled; }
 }

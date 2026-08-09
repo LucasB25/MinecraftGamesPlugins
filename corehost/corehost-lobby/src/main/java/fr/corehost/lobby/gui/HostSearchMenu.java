@@ -138,14 +138,22 @@ public class HostSearchMenu implements CustomMenu {
                     if (mat == null) mat = Material.BEDROCK;
                     
                     String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
-                    List<String> lore = java.util.Arrays.asList(
-                            "",
-                            ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Hôte : " + ChatColor.WHITE + host.getOwnerName(),
-                            ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name(),
-                            ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + host.getMaxPlayers(),
-                            "",
-                            ChatColor.GREEN + "► Cliquez pour rejoindre !"
-                    );
+                    List<String> lore = new java.util.ArrayList<>();
+                    lore.add("");
+                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Hôte : " + ChatColor.WHITE + host.getOwnerName());
+                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name());
+                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + host.getMaxPlayers());
+                    
+                    if (host.getGameType().equalsIgnoreCase("sumo")) {
+                        lore.add("");
+                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Configuration :");
+                        lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Manches : " + ChatColor.AQUA + "BO" + host.getBestOf());
+                        String djStatus = host.isDoubleJumpEnabled() ? ChatColor.GREEN + "Actif" : ChatColor.RED + "Inactif";
+                        lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Double Saut : " + djStatus);
+                    }
+                    
+                    lore.add("");
+                    lore.add(ChatColor.GREEN + "► Cliquez pour rejoindre !");
                     
                     ItemStack hostItem = new ItemBuilder(mat)
                         .setName(ChatColor.YELLOW + "Serveur " + host.getGameType())

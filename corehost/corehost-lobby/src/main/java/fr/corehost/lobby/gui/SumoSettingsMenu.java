@@ -15,6 +15,7 @@ public class SumoSettingsMenu implements CustomMenu {
 
     private final Inventory inventory;
     private final CoreHostLobby plugin;
+    private boolean doubleJumpEnabled = false;
 
     public SumoSettingsMenu(CoreHostLobby plugin) {
         this.plugin = plugin;
@@ -25,6 +26,8 @@ public class SumoSettingsMenu implements CustomMenu {
     private void initializeItems() {
         // Border decoration (unified Pink + Purple)
         LobbyMenuUtils.fillBorder(inventory);
+
+        updateDoubleJumpItem();
 
         // BO3 Item
         ItemStack bo3 = new ItemBuilder(Material.SLIME_BALL, 3)
@@ -72,6 +75,30 @@ public class SumoSettingsMenu implements CustomMenu {
         inventory.setItem(22, LobbyMenuUtils.getBackToCreateButton());
     }
 
+    private void updateDoubleJumpItem() {
+        ItemStack doubleJumpItem;
+        if (doubleJumpEnabled) {
+            doubleJumpItem = new ItemBuilder(Material.FEATHER)
+                .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Double Saut : " + ChatColor.GREEN + "Activé")
+                .setLore(
+                    "",
+                    ChatColor.GRAY + "Permet un double saut par manche.",
+                    "",
+                    ChatColor.YELLOW + "► Cliquez pour " + ChatColor.RED + "désactiver"
+                ).build();
+        } else {
+            doubleJumpItem = new ItemBuilder(Material.FEATHER)
+                .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Double Saut : " + ChatColor.RED + "Désactivé")
+                .setLore(
+                    "",
+                    ChatColor.GRAY + "Permet un double saut par manche.",
+                    "",
+                    ChatColor.YELLOW + "► Cliquez pour " + ChatColor.GREEN + "activer"
+                ).build();
+        }
+        inventory.setItem(4, doubleJumpItem);
+    }
+
     public void open(Player player) {
         if (player.hasMetadata("modmode")) {
             player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
@@ -104,6 +131,13 @@ public class SumoSettingsMenu implements CustomMenu {
             return;
         }
 
+        if (slot == 4) {
+            doubleJumpEnabled = !doubleJumpEnabled;
+            updateDoubleJumpItem();
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
+            return;
+        }
+
         int bestOf = 3; // Default BO3
         if (slot == 11) bestOf = 3; // BO3
         if (slot == 13) bestOf = 5; // BO5
@@ -111,6 +145,6 @@ public class SumoSettingsMenu implements CustomMenu {
 
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.5f);
         player.closeInventory();
-        plugin.getCloudNetServiceManager().createHost(player, "Sumo", bestOf);
+        plugin.getCloudNetServiceManager().createHost(player, "Sumo", bestOf, doubleJumpEnabled);
     }
 }

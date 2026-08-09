@@ -239,6 +239,7 @@ public class SumoListener implements Listener {
                             double sprintMult = plugin.getConfig().getDouble("custom-kb.sprint-multiplier", 1.3);
                             double airMult = plugin.getConfig().getDouble("custom-kb.air-multiplier", 0.8);
                             double maxY = plugin.getConfig().getDouble("custom-kb.max-y", 0.4);
+                            double friction = plugin.getConfig().getDouble("custom-kb.friction", 2.0);
 
                             org.bukkit.util.Vector direction = attacker.getLocation().getDirection().setY(0).normalize();
                             
@@ -248,18 +249,21 @@ public class SumoListener implements Listener {
                             
                             direction.multiply(h);
                             
-                            double finalY = v;
+                            org.bukkit.util.Vector currentVel = victim.getVelocity();
+                            
+                            double finalX = (currentVel.getX() / friction) + direction.getX();
+                            double finalZ = (currentVel.getZ() / friction) + direction.getZ();
+                            
+                            double finalY = (currentVel.getY() / friction) + v;
                             if (!victim.isOnGround()) {
                                 finalY *= airMult;
                             }
                             
-                            direction.setY(finalY);
-                            
-                            if (direction.getY() > maxY) {
-                                direction.setY(maxY);
+                            if (finalY > maxY) {
+                                finalY = maxY;
                             }
 
-                            victim.setVelocity(direction);
+                            victim.setVelocity(new org.bukkit.util.Vector(finalX, finalY, finalZ));
                         });
                     }
                 }

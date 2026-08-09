@@ -15,18 +15,19 @@ custom-kb:
   sprint-multiplier: 1.3
   air-multiplier: 0.8
   max-y: 0.4
+  friction: 2.0
 
 rewards:
   # --- Récompenses de base (à la manche) ---
-  coins-per-round-won: 5   # Coins donnés pour CHAQUE manche gagnée.
+  coins-per-round-won: 2   # Coins donnés pour CHAQUE manche gagnée.
   
   # --- Bonus de Fin de Match (si le joueur reste jusqu'au bout) ---
-  match-win-bonus: 10      # Bonus supplémentaire pour avoir remporté le match entier.
-  match-lose-bonus: 5      # Bonus de "consolation" pour le perdant qui n'a pas quitté.
+  match-win-bonus: 5       # Bonus supplémentaire pour avoir remporté le match entier.
+  match-lose-bonus: 2      # Bonus de "consolation" pour le perdant qui n'a pas quitté.
   
   # --- Bonus Spéciaux ---
-  flawless-bonus: 10       # Bonus "Parfait" (Victoire 3-0, 4-0, etc sans perdre une manche).
-  forfeit-win-bonus: 15    # Bonus donné au vainqueur si l'adversaire a "ragequit".
+  flawless-bonus: 5        # Bonus "Parfait" (Victoire 3-0, 4-0, etc sans perdre une manche).
+  forfeit-win-bonus: 8     # Bonus donné au vainqueur si l'adversaire a "ragequit".
 
 redis:
   host: "127.0.0.1"

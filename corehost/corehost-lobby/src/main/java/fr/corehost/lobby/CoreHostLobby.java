@@ -91,11 +91,6 @@ public class CoreHostLobby extends JavaPlugin {
 
         // Initialize Scoreboard
         this.scoreboardManager = new LobbyScoreboardManager(this);
-        getServer().getScheduler().runTaskTimer(this, () -> {
-            if (this.scoreboardManager != null) {
-                this.scoreboardManager.updateAll();
-            }
-        }, 20L, 40L); // Update every 2 seconds
 
         // Register Commands
         fr.corehost.lobby.commands.SpawnCommand spawnCommand = new fr.corehost.lobby.commands.SpawnCommand();

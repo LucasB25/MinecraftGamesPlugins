@@ -35,6 +35,25 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, "BungeeCord", this);
         plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "BungeeCord");
         
+        if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+            plugin.getRedisManager().subscribe(new redis.clients.jedis.JedisPubSub() {
+                @Override
+                public void onMessage(String channel, String message) {
+                    if (channel.equals("corehost:profile:update")) {
+                        try {
+                            UUID uuid = UUID.fromString(message);
+                            Player player = Bukkit.getPlayer(uuid);
+                            if (player != null && player.isOnline()) {
+                                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                                    updateCoins(player);
+                                }, 10L); // slight delay to ensure cache is cleared by API
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }, "corehost:profile:update");
+        }
+
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             Player p = Iterables.getFirst(Bukkit.getOnlinePlayers(), null);
             if (p != null) {
@@ -68,7 +87,29 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         if (subchannel.equals("PlayerCount")) {
             String server = in.readUTF();
             if (server.equals("ALL")) {
-                this.globalPlayerCount = in.readInt();
+                int newCount = in.readInt();
+                if (newCount != this.globalPlayerCount) {
+                    this.globalPlayerCount = newCount;
+                    updateAllPlayerCounts();
+                }
+            }
+        }
+    }
+
+    public void updateAllPlayerCounts() {
+        for (UUID uuid : scoreboards.keySet()) {
+            Scoreboard board = scoreboards.get(uuid);
+            Team playersTeam = board.getTeam("players_count");
+            if (playersTeam != null) {
+                int vanishedLocal = 0;
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (p.hasMetadata("vanished")) {
+                        vanishedLocal++;
+                    }
+                }
+                int displayCount = Math.max(globalPlayerCount, Bukkit.getOnlinePlayers().size());
+                displayCount = Math.max(0, displayCount - vanishedLocal);
+                playersTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Joueurs: " + ChatColor.GREEN + displayCount);
             }
         }
     }
@@ -169,7 +210,7 @@ public class LobbyScoreboardManager implements PluginMessageListener {
                     
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         if (player.isOnline()) {
-                            updateScoreboard(player);
+                            updateParkourTimes(player);
                         }
                     });
                 } catch (Exception ignored) {}
@@ -266,5 +307,48 @@ public class LobbyScoreboardManager implements PluginMessageListener {
             headTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Têtes: " + color + found + "/" + total);
         }
 
+    }
+
+    public void updateCoins(Player player) {
+        Scoreboard board = scoreboards.get(player.getUniqueId());
+        if (board == null) return;
+        Team coinsTeam = board.getTeam("coins");
+        if (coinsTeam != null) {
+            int coins = 0;
+            if (plugin.getProfileManager() != null) {
+                PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                if (profile != null) {
+                    coins = profile.getCoins();
+                }
+            }
+            coinsTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Coins: " + ChatColor.GOLD + coins + " ⛃");
+        }
+    }
+
+    public void updateParkourTimes(Player player) {
+        Scoreboard board = scoreboards.get(player.getUniqueId());
+        if (board == null) return;
+        
+        Team recordEasyTeam = board.getTeam("record_easy");
+        if (recordEasyTeam != null) {
+            String recordText = ChatColor.RED + "Aucun";
+            Double easy = easyTimes.get(player.getUniqueId());
+            if (easy != null) {
+                String formattedTime = String.format("%.2f", easy / 1000.0);
+                recordText = ChatColor.YELLOW + formattedTime + "s";
+            }
+            recordEasyTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Easy: " + recordText);
+        }
+        
+        Team recordHardTeam = board.getTeam("record_hard");
+        if (recordHardTeam != null) {
+            String recordText = ChatColor.RED + "Aucun";
+            Double hard = hardTimes.get(player.getUniqueId());
+            if (hard != null) {
+                String formattedTime = String.format("%.2f", hard / 1000.0);
+                recordText = ChatColor.YELLOW + formattedTime + "s";
+            }
+            recordHardTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Hard: " + recordText);
+        }
     }
 }

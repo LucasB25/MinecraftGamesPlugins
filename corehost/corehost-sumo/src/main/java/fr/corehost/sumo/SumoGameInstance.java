@@ -69,6 +69,22 @@ public class SumoGameInstance {
         this.mapConfig = mapConfig;
         this.scoreboardManager = new SumoScoreboardManager(this);
         
+        // Apply GameRules for the instance world
+        if (this.world != null) {
+            this.world.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
+            this.world.setGameRule(org.bukkit.GameRule.DO_WEATHER_CYCLE, false);
+            this.world.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
+            this.world.setGameRule(org.bukkit.GameRule.DO_ENTITY_DROPS, false);
+            this.world.setGameRule(org.bukkit.GameRule.DO_INSOMNIA, false);
+            this.world.setGameRule(org.bukkit.GameRule.ANNOUNCE_ADVANCEMENTS, false);
+            this.world.setGameRule(org.bukkit.GameRule.SHOW_DEATH_MESSAGES, false);
+            this.world.setGameRule(org.bukkit.GameRule.LOCATOR_BAR, false);
+            this.world.setTime(6000);
+            this.world.setStorm(false);
+            this.world.setThundering(false);
+        }
+
+        
         this.maxDraws = plugin.getConfig().getInt("gameplay.max-draws", 3);
         
         this.coinsPerRoundWon = plugin.getConfig().getInt("rewards.coins-per-round-won", 5);

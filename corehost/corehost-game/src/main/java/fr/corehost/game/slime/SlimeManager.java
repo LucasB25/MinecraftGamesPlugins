@@ -28,7 +28,7 @@ public class SlimeManager {
                 plugin.getLogger().info("Loading world " + worldName + " from template " + templateName + "...");
                 
                 // Check if it's a SlimeWorld file (.slime) in the slime_worlds folder
-                File slimeWorldsDir = new File("slime_worlds");
+                File slimeWorldsDir = new File(Bukkit.getWorldContainer(), "slime_worlds");
                 File templateSlimeFile = new File(slimeWorldsDir, templateName + ".slime");
                 File targetSlimeFile = new File(slimeWorldsDir, worldName + ".slime");
                 
@@ -54,6 +54,8 @@ public class SlimeManager {
                     }
                     return;
                 }
+                
+                plugin.getLogger().warning("Le fichier Slime template '" + templateName + ".slime' est introuvable dans slime_worlds/ ! Création d'un monde vanilla classique en fallback.");
                 
                 // Fallback: copy world folder
                 File serverFolder = Bukkit.getWorldContainer();

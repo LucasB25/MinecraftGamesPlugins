@@ -27,14 +27,14 @@ public class CoreHostGame extends JavaPlugin {
         
         this.redisManager = new fr.corehost.api.redis.RedisManager(redisHost, redisPort, redisPassword);
         
-        // Get CloudNet Service Name
+        // Get CloudNet Service Name or fallback to config
         try {
             serverName = System.getenv("CLOUDNET_SERVICE_NAME");
             if (serverName == null || serverName.isEmpty()) {
-                serverName = "Sumo-1";
+                serverName = getConfig().getString("settings.server-name", "Sumo-1");
             }
         } catch (Exception e) {
-            serverName = "Sumo-1";
+            serverName = getConfig().getString("settings.server-name", "Sumo-1");
             log.warning("Impossible d'obtenir le nom CloudNet, utilisation de " + serverName);
         }
         

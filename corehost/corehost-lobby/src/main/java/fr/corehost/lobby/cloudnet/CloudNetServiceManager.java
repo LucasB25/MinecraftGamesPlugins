@@ -50,7 +50,7 @@ public class CloudNetServiceManager {
             
             UUID hostId = UUID.randomUUID();
             String worldName = gameType.toLowerCase() + "-" + hostId.toString().substring(0, 8);
-            String localServerName = "Sumo-1";
+            String localServerName = gameType.substring(0, 1).toUpperCase() + gameType.substring(1).toLowerCase() + "-1";
             
             if (plugin.getHostManager() != null) {
                 HostData hostData = new HostData(

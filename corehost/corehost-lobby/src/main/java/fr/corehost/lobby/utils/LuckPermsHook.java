@@ -29,7 +29,8 @@ public class LuckPermsHook {
                 
                 String group = user.getPrimaryGroup();
                 if (group != null) {
-                    if (group.equalsIgnoreCase("default")) {
+                    String defaultGroup = org.bukkit.plugin.java.JavaPlugin.getPlugin(fr.corehost.lobby.CoreHostLobby.class).getConfig().getString("luckperms.default-group", "default");
+                    if (group.equalsIgnoreCase(defaultGroup)) {
                         return ChatColor.GRAY + "Joueurs";
                     } else if (group.equalsIgnoreCase("admin") || group.equalsIgnoreCase("administrateur")) {
                         return ChatColor.RED + group.substring(0, 1).toUpperCase() + group.substring(1);

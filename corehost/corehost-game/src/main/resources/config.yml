@@ -1,9 +1,37 @@
-# // Permissions:
-# // - corehost.admin : Permet d'utiliser les commandes d'administration de CoreHost Game
+# ====================================================== #
+#                                                        #
+#                 COREHOST GAME CONFIG                   #
+#                                                        #
+# ====================================================== #
+
+# ------------------------------------------------------ #
+# Permissions de base :
+# - corehost.admin : Administration des instances de jeu
+# ------------------------------------------------------ #
+
+# Paramètres du serveur
 settings:
+  # Préfixe affiché dans le chat
   prefix: "&8[&6CoreHost&8] &7"
+  # Nom unique de cette instance (ex: Local-1, Node-2)
   server-name: "Local-1"
 
+# Configuration BungeeCord
+bungeecord:
+  # Serveur vers lequel envoyer les joueurs en fin de partie
+  fallback-server: "lobby"
+
+# Paramètres du mode Spectateur (Joueurs éliminés ou staff)
+spectator:
+  # Distance maximale d'éloignement du centre (évite le lag des chunks)
+  max-distance: 500
+  # Vitesses de vol disponibles avec l'item Plume
+  speeds:
+    level-1: 0.1 # Vitesse x1
+    level-2: 0.2 # Vitesse x2
+    level-3: 0.3 # Vitesse x3
+
+# Connexion Redis & Base de données
 redis:
   host: "127.0.0.1"
   port: 6379

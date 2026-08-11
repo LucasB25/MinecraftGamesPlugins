@@ -8,6 +8,7 @@ public class ProxyConfig {
     private String discordBotToken;
     private String discordBotId;
     private String prefix;
+    private String lobbyKeyword;
     
     private String dbHost;
     private int dbPort;
@@ -22,6 +23,7 @@ public class ProxyConfig {
         this.discordBotToken = "";
         this.discordBotId = "";
         this.prefix = "&8[&6CoreHost&8] &7";
+        this.lobbyKeyword = "lobby";
         
         this.dbHost = "127.0.0.1";
         this.dbPort = 3306;
@@ -47,6 +49,9 @@ public class ProxyConfig {
 
     public String getPrefix() { return prefix; }
     public void setPrefix(String prefix) { this.prefix = prefix; }
+
+    public String getLobbyKeyword() { return lobbyKeyword; }
+    public void setLobbyKeyword(String lobbyKeyword) { this.lobbyKeyword = lobbyKeyword; }
 
     public String getDbHost() { return dbHost; }
     public void setDbHost(String dbHost) { this.dbHost = dbHost; }

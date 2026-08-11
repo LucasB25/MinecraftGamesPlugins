@@ -1,21 +1,45 @@
+# ====================================================== #
+#                                                        #
+#             COREHOST DE A COUDRE (DAC)                 #
+#                                                        #
+# ====================================================== #
+
+# Paramètres généraux
 settings:
   prefix: "&8[&6DAC&8] &7"
 
+bungeecord:
+  fallback-server: "lobby"
+
+slimeworld:
+  # Template SlimeWorldManager utilisé pour cloner les maps
+  default-template: "default"
+
+# Règles du jeu
 gameplay:
+  # Temps avant le début de la partie (en secondes)
   countdown-seconds: 10
+  # Hauteur Y de la mort (en dehors de l'eau)
   void-level: 50
+  # Temps accordé à chaque joueur pour sauter (en secondes)
   turn-time: 15
+  # Nombre de joueurs maximum par partie
   max-players: 8
+  # Préfixe des mondes DAC pour leur identification
+  world-prefix: "dac"
 
+# Récompenses en Coins (Base de données globale)
 rewards:
-  # --- Récompenses de base ---
-  coins-per-thimble: 5     # Coins donnés pour chaque "Dé à coudre" (atterrissage dans un bloc entouré)
-  coins-per-jump: 1        # Coins donnés pour un saut réussi simple
-  
-  # --- Bonus de Fin de Match (si le joueur reste jusqu'au bout) ---
-  match-win-bonus: 20      # Bonus supplémentaire pour avoir remporté le match entier.
-  match-lose-bonus: 5      # Bonus de "consolation" pour les perdants qui n'ont pas quitté.
+  # Coins donnés pour un "Dé à coudre" (atterrissage dans un bloc de taille 1x1 entouré)
+  coins-per-thimble: 5     
+  # Coins donnés pour un saut classique réussi
+  coins-per-jump: 1        
+  # Bonus supplémentaire pour avoir remporté le match
+  match-win-bonus: 20      
+  # Bonus de "consolation" pour les perdants qui n'ont pas quitté
+  match-lose-bonus: 5      
 
+# Tableau des scores en jeu
 scoreboard:
   title: "&6&lDÉ À COUDRE"
   ip: "&eplay.corehost.fr"

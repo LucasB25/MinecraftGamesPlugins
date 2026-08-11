@@ -27,8 +27,10 @@ public class DacListener implements Listener {
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
         String worldName = event.getWorld().getName();
-        if (worldName.toLowerCase().startsWith("dac")) {
-            plugin.getGameManager().createInstance(worldName, "default");
+        String prefix = plugin.getConfig().getString("gameplay.world-prefix", "dac");
+        if (worldName.toLowerCase().startsWith(prefix.toLowerCase())) {
+            String template = plugin.getConfig().getString("slimeworld.default-template", "default");
+            plugin.getGameManager().createInstance(worldName, template);
         }
     }
 
@@ -36,7 +38,8 @@ public class DacListener implements Listener {
     public void onPlayerChangedWorld(org.bukkit.event.player.PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         String worldName = player.getWorld().getName();
-        if (worldName.toLowerCase().startsWith("dac")) {
+        String prefix = plugin.getConfig().getString("gameplay.world-prefix", "dac");
+        if (worldName.toLowerCase().startsWith(prefix.toLowerCase())) {
             DacGameInstance instance = plugin.getGameManager().getInstance(worldName);
             if (instance != null) {
                 instance.addPlayer(player);
@@ -55,7 +58,8 @@ public class DacListener implements Listener {
             instance.addPlayer(player);
         } else {
             boolean isDac = false;
-            if (worldName.toLowerCase().contains("dac")) {
+            String prefix = plugin.getConfig().getString("gameplay.world-prefix", "dac");
+            if (worldName.toLowerCase().contains(prefix.toLowerCase())) {
                 isDac = true;
             } else {
                 try {
@@ -64,7 +68,7 @@ public class DacListener implements Listener {
                         fr.corehost.api.host.HostManager hostManager = new fr.corehost.api.host.HostManager(coreGame.getRedisManager());
                         java.util.UUID hostId = java.util.UUID.fromString(worldName);
                         fr.corehost.api.host.HostData data = hostManager.getHost(hostId);
-                        if (data != null && "dac".equalsIgnoreCase(data.getGameType())) {
+                        if (data != null && prefix.equalsIgnoreCase(data.getGameType())) {
                             isDac = true;
                         }
                     }
@@ -72,7 +76,8 @@ public class DacListener implements Listener {
             }
             
             if (isDac) {
-                instance = plugin.getGameManager().createInstance(worldName, "default");
+                String template = plugin.getConfig().getString("slimeworld.default-template", "default");
+                instance = plugin.getGameManager().createInstance(worldName, template);
                 if (instance != null) {
                     instance.addPlayer(player);
                 }
@@ -89,7 +94,8 @@ public class DacListener implements Listener {
 
     @EventHandler
     public void onPreSlimeCreate(fr.corehost.game.events.PreSlimeInstanceCreateEvent event) {
-        if (event.getGameType().equalsIgnoreCase("dac")) {
+        String prefix = plugin.getConfig().getString("gameplay.world-prefix", "dac");
+        if (event.getGameType().equalsIgnoreCase(prefix)) {
             DacMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
             if (mapConfig != null) {
                 event.setTemplateName(mapConfig.getTemplateName());
@@ -229,7 +235,7 @@ public class DacListener implements Listener {
                         try {
                             com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
                             out.writeUTF("Connect");
-                            out.writeUTF("lobby");
+                            out.writeUTF(plugin.getConfig().getString("bungeecord.fallback-server", "lobby"));
                             player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
                         } catch (Exception e) {
                             player.sendMessage(org.bukkit.ChatColor.RED + "Impossible de se connecter au lobby.");

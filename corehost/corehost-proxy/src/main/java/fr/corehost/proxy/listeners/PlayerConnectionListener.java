@@ -27,8 +27,9 @@ public class PlayerConnectionListener {
     @Subscribe
     public void onChooseInitialServer(PlayerChooseInitialServerEvent event) {
         // Automatically send players to a Lobby server when they connect
+        String lobbyKeyword = plugin.getConfig().getLobbyKeyword();
         Optional<RegisteredServer> lobby = plugin.getServer().getAllServers().stream()
-                .filter(server -> server.getServerInfo().getName().toLowerCase().contains("lobby"))
+                .filter(server -> server.getServerInfo().getName().toLowerCase().contains(lobbyKeyword.toLowerCase()))
                 .findFirst();
         
         lobby.ifPresent(event::setInitialServer);

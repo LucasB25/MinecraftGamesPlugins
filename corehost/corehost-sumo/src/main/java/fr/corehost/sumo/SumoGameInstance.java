@@ -735,7 +735,7 @@ public class SumoGameInstance {
         try {
             com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
             out.writeUTF("Connect");
-            out.writeUTF("lobby");
+            out.writeUTF(plugin.getConfig().getString("bungeecord.fallback-server", "lobby"));
             player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
             
             // Fallback for local testing if BungeeCord isn't available

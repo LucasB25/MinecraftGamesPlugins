@@ -1,12 +1,33 @@
-redis:
-  host: "127.0.0.1"
-  port: 6379
-  password: ""
+# ====================================================== #
+#                                                        #
+#               COREHOST STAFF MOD CONFIG                #
+#                                                        #
+# ====================================================== #
 
+# ------------------------------------------------------ #
+# Permissions StaffMod :
+# - staffmod.use         : Permet d'ouvrir le menu de signalement (Click droit triangle)
+# - staffmod.mod         : Activer le mode modération (/mod)
+# - staffmod.staffchat   : Lire/écrire dans le Staff Chat (/sc)
+# - staffmod.vanish.see  : Voir les autres staffs en vanish
+# - staffmod.bypasschat  : Ignorer le filtre anti-insultes
+# - staffmod.mute        : Utiliser le menu de Mute
+# - staffmod.unmute      : Retirer un Mute
+# ------------------------------------------------------ #
+
+# Paramètres généraux
 settings:
   prefix: "&8[&6Staff&8] &7"
 
+luckperms:
+  default-group: "default"
+
+bungeecord:
+  fallback-server: "lobby"
+
+# Système de modération automatique du Chat
 chat:
+  # Mots interdits. S'ils sont détectés, le joueur est auto-mute
   forbidden_words:
     - "fdp"
     - "connard"
@@ -17,24 +38,14 @@ chat:
     - "pute"
     - "enculé"
     - "ez"
-  auto_mute_duration: 15 # Durée de l'auto-mute en minutes
+  # Durée de l'auto-mute en cas de mot interdit (en minutes)
+  auto_mute_duration: 15
 
-# -----------------------------------------------------
-# Permissions du plugin CoreHost-StaffMod :
-# -----------------------------------------------------
-# - staffmod.use         : Permet de cliquer sur le triangle pour signaler un message (default: true)
-# - staffmod.mod         : Permet d'utiliser /mod et d'ouvrir le menu de modération (default: false)
-# - staffmod.staffchat   : Permet de lire et écrire dans le /sc (Staff Chat) (default: false)
-# - staffmod.vanish.see  : Permet de voir les joueurs en vanish (default: false)
-# - staffmod.bypasschat  : Permet d'ignorer le filtrage automatique du chat (default: false)
-# - staffmod.mute        : Permet d'utiliser le menu de mute (default: false)
-# - staffmod.unmute      : Permet de unmute un joueur (default: false)
-# -----------------------------------------------------
-
+# Configuration du menu de sanctions (Mute) - Durées disponibles
 mute_durations:
   1:
     name: "5 Minutes"
-    duration: 300
+    duration: 300 # en secondes
     material: "CLOCK"
   2:
     name: "15 Minutes"
@@ -58,9 +69,10 @@ mute_durations:
     material: "CLOCK"
   7:
     name: "Permanent"
-    duration: 0
+    duration: 0 # 0 = permanent
     material: "CLOCK"
 
+# Configuration du menu de sanctions (Mute) - Raisons
 mute_reasons:
   1:
     name: "Spam"
@@ -80,3 +92,9 @@ mute_reasons:
   6:
     name: "Menaces"
     material: "BOOK"
+
+# Connexion Redis & Base de données
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""

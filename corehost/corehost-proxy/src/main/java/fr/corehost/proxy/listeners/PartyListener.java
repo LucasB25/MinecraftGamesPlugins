@@ -39,7 +39,8 @@ public class PartyListener {
             }
             
             // Do not warp if the destination is a lobby, to prevent pulling players out of games
-            if (server.getServerInfo().getName().toLowerCase().contains("lobby")) {
+            String lobbyKeyword = plugin.getConfig().getLobbyKeyword();
+            if (server.getServerInfo().getName().toLowerCase().contains(lobbyKeyword.toLowerCase())) {
                 return;
             }
 

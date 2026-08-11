@@ -80,7 +80,8 @@ public class NametagManager implements Listener {
                     } else {
                         String group = user.getPrimaryGroup();
                         if (group != null) {
-                            if (group.equalsIgnoreCase("default")) {
+                            String defaultGroup = plugin.getConfig().getString("luckperms.default-group", "default");
+                            if (group.equalsIgnoreCase(defaultGroup)) {
                                 prefixText = "&7Joueurs ";
                             } else if (group.equalsIgnoreCase("admin") || group.equalsIgnoreCase("administrateur")) {
                                 prefixText = "&c" + group.substring(0, 1).toUpperCase() + group.substring(1) + " ";

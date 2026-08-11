@@ -1,19 +1,40 @@
-# Configuration de CoreHostLobby
-# 
-# // Permissions:
-# // - corehost.command.spawn : Permet d'utiliser la commande de spawn
-# // - corehost.command.friend : Permet d'utiliser les commandes d'amis
-# // - corehost.admin : Permet d'utiliser les commandes d'administration
+# ====================================================== #
+#                                                        #
+#                 COREHOST LOBBY CONFIG                  #
+#                                                        #
+# ====================================================== #
 
+# ------------------------------------------------------ #
+# Permissions du Lobby :
+# - corehost.command.spawn  : Se téléporter au point de spawn
+# - corehost.command.friend : Ouvrir le menu d'amis
+# - corehost.admin          : Commandes d'administration
+# ------------------------------------------------------ #
+
+# Paramètres généraux
 settings:
+  # Préfixe affiché dans le chat
   prefix: "&8[&6CoreHost&8] &7"
+  # Lien d'invitation Discord affiché aux joueurs
   discord-url: "https://discord.gg/aqQM4B7jxH"
 
+# Configuration des rangs (LuckPerms)
+luckperms:
+  # Groupe attribué par défaut aux nouveaux joueurs
+  default-group: "default"
+
+# Configuration BungeeCord
+bungeecord:
+  # Serveur de repli par défaut
+  fallback-server: "lobby"
+
+# Configuration du tableau des scores (Scoreboard)
 scoreboard:
   enabled: true
   title: "&6&lCOREHOST"
   ip: "&eplay.corehost.fr"
 
+# Configuration de la barre d'inventaire (Hotbar)
 hotbar:
   search_host:
     material: "COMPASS"
@@ -26,19 +47,9 @@ hotbar:
     slot: 7
   visibility_off:
     material: "GRAY_DYE"
+    slot: 7 # Note: visibility_off replace visibility_on on click
 
-redis:
-  host: "127.0.0.1"
-  port: 6379
-  password: ""
-
-database:
-  host: "127.0.0.1"
-  port: 3306
-  database: "corehost"
-  user: "root"
-  password: ""
-
+# Configuration des Jeux Hébergés (SlimeWorldManager)
 games:
   Sumo:
     name: "&e&lCréer un Mini-Jeu (Sumo)"
@@ -68,16 +79,16 @@ games:
       - "&7sans vous écraser !"
       - ""
       - "&a► Cliquez pour héberger"
-  CTF:
-    name: "&c&lCréer un Mini-Jeu (CTF)"
-    material: "RED_BANNER"
-    slot: 15
-    max-players: 20
-    max-slime-instances: 3
-    lore:
-      - ""
-      - "&7Capture the Flag !"
-      - "&7Volez le drapeau adverse"
-      - "&7pour gagner la partie."
-      - ""
-      - "&a► Cliquez pour héberger"
+
+# Connexion Redis & Base de données
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  password: ""
+
+database:
+  host: "127.0.0.1"
+  port: 3306
+  database: "corehost"
+  user: "root"
+  password: ""

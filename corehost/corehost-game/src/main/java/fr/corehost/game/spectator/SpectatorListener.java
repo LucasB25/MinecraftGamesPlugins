@@ -86,14 +86,17 @@ public class SpectatorListener implements Listener {
                 else if (item.getType() == Material.FEATHER && name.contains("Vitesse")) {
                     event.setCancelled(true);
                     float currentSpeed = player.getFlySpeed();
-                    float newSpeed = 0.1f; // x1
+                    float level1 = (float) plugin.getConfig().getDouble("spectator.speeds.level-1", 0.1);
+                    float level2 = (float) plugin.getConfig().getDouble("spectator.speeds.level-2", 0.2);
+                    float level3 = (float) plugin.getConfig().getDouble("spectator.speeds.level-3", 0.3);
+                    float newSpeed = level1; // x1
                     String speedText = "x1";
                     
-                    if (currentSpeed < 0.15f) { // Currently x1
-                        newSpeed = 0.2f;
+                    if (currentSpeed < (level1 + 0.05f)) { // Currently x1
+                        newSpeed = level2;
                         speedText = "x2";
-                    } else if (currentSpeed < 0.25f) { // Currently x2
-                        newSpeed = 0.3f;
+                    } else if (currentSpeed < (level2 + 0.05f)) { // Currently x2
+                        newSpeed = level3;
                         speedText = "x3";
                     }
                     
@@ -110,7 +113,7 @@ public class SpectatorListener implements Listener {
                     try {
                         com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
                         out.writeUTF("Connect");
-                        out.writeUTF("lobby"); // Assuming the target server name is "lobby"
+                        out.writeUTF(plugin.getConfig().getString("bungeecord.fallback-server", "lobby"));
                         player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
                     } catch (Exception e) {
                         player.kickPlayer("Retour au Hub");
@@ -262,7 +265,9 @@ public class SpectatorListener implements Listener {
         if (!manager.isSpectator(event.getPlayer())) return;
         
         // Very basic distance limit from world spawn to prevent chunk loading lag
-        if (event.getTo() != null && event.getTo().distanceSquared(event.getPlayer().getWorld().getSpawnLocation()) > 250000) { // 500 blocks (500*500)
+        int maxDist = plugin.getConfig().getInt("spectator.max-distance", 500);
+        int maxDistSq = maxDist * maxDist;
+        if (event.getTo() != null && event.getTo().distanceSquared(event.getPlayer().getWorld().getSpawnLocation()) > maxDistSq) {
             event.getPlayer().teleport(event.getPlayer().getWorld().getSpawnLocation());
             event.getPlayer().sendMessage(ChatColor.RED + "Vous ne pouvez pas vous éloigner plus.");
         }

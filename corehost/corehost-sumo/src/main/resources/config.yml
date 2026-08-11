@@ -1,14 +1,40 @@
-# // Permissions:
-# // - corehost.admin : Permet d'utiliser les commandes d'administration de CoreHost Sumo
+# ====================================================== #
+#                                                        #
+#                 COREHOST SUMO CONFIG                   #
+#                                                        #
+# ====================================================== #
+
+# ------------------------------------------------------ #
+# Permissions Sumo :
+# - corehost.admin : Administration du plugin Sumo
+# ------------------------------------------------------ #
+
+# Paramètres généraux
 settings:
   prefix: "&8[&eSumo&8] &7"
 
-gameplay:
-  countdown-seconds: 5
-  void-level: 50
-  round-time: 60
-  max-draws: 3
+# Configuration de la sauvegarde et redirection
+bungeecord:
+  fallback-server: "lobby"
 
+slimeworld:
+  # Template SlimeWorldManager utilisé pour cloner les maps
+  default-template: "default"
+
+# Règles du jeu
+gameplay:
+  # Temps avant le début de la partie (en secondes)
+  countdown-seconds: 5
+  # Hauteur Y à partir de laquelle un joueur est éliminé
+  void-level: 50
+  # Durée maximale d'une manche (en secondes)
+  round-time: 60
+  # Nombre maximum de matchs nuls avant arrêt forcé
+  max-draws: 3
+  # Préfixe des mondes Sumo pour leur identification
+  world-prefix: "sumo"
+
+# Personnalisation du recul (Knockback) spécifique au Sumo
 custom-kb:
   horizontal: 0.45
   vertical: 0.36
@@ -17,19 +43,20 @@ custom-kb:
   max-y: 0.4
   friction: 2.0
 
+# Récompenses en Coins (Base de données globale)
 rewards:
-  # --- Récompenses de base (à la manche) ---
-  coins-per-round-won: 2   # Coins donnés pour CHAQUE manche gagnée.
-  
-  # --- Bonus de Fin de Match (si le joueur reste jusqu'au bout) ---
-  match-win-bonus: 5       # Bonus supplémentaire pour avoir remporté le match entier.
-  match-lose-bonus: 2      # Bonus de "consolation" pour le perdant qui n'a pas quitté.
-  
-  # --- Bonus Spéciaux ---
-  flawless-bonus: 5        # Bonus "Parfait" (Victoire 3-0, 4-0, etc sans perdre une manche).
-  forfeit-win-bonus: 8     # Bonus donné au vainqueur si l'adversaire a "ragequit".
+  # Coins donnés pour CHAQUE manche gagnée.
+  coins-per-round-won: 2   
+  # Bonus pour avoir remporté le match entier (3 manches gagnantes)
+  match-win-bonus: 5       
+  # Bonus de "consolation" pour le perdant qui reste jusqu'à la fin
+  match-lose-bonus: 2      
+  # Bonus "Parfait" (Victoire sans perdre une manche)
+  flawless-bonus: 5        
+  # Bonus si l'adversaire quitte la partie (Ragequit)
+  forfeit-win-bonus: 8     
 
-
+# Tableau des scores en jeu
 scoreboard:
   title: "&6&lSUMO"
   ip: "&eplay.corehost.fr"

@@ -1,31 +1,48 @@
-# // Permissions:
-# // - corehost.command.friend : Permet d'utiliser les commandes d'amis
-# // - corehost.command.party : Permet d'utiliser les commandes de groupe
-# // - corehost.command.msg : Permet d'envoyer des messages privés
-# // - corehost.command.reply : Permet de répondre aux messages privés
-# // - corehost.command.ignore : Permet d'ignorer un joueur
-# // - corehost.command.hub : Permet de retourner au hub
-# // - corehost.admin : Permet d'utiliser les commandes d'administration du proxy
-# // - corehost.party.limit.<x> : Fixe la limite de taille du groupe (ex: corehost.party.limit.10)
-# // - corehost.friend.limit.<x> : Fixe la limite d'amis maximum (ex: corehost.friend.limit.100)
+# ====================================================== #
+#                                                        #
+#                 COREHOST PROXY CONFIG                  #
+#                                                        #
+# ====================================================== #
 
+# ------------------------------------------------------ #
+# Permissions du Proxy :
+# - corehost.command.friend : Utiliser les commandes d'amis
+# - corehost.command.party  : Utiliser les commandes de groupe
+# - corehost.command.msg    : Envoyer des messages privés
+# - corehost.command.reply  : Répondre aux messages privés
+# - corehost.command.ignore : Ignorer un joueur
+# - corehost.command.hub    : Retourner au hub
+# - corehost.admin          : Commandes d'administration du proxy
+# - corehost.party.limit.<x>: Taille maximum du groupe (ex: 10)
+# - corehost.friend.limit.<x>: Nombre d'amis maximum (ex: 100)
+# ------------------------------------------------------ #
+
+# Paramètres généraux du Proxy
 settings:
+  # Préfixe affiché dans le chat
   prefix: "&8[&6CoreHost&8] &7"
+  # Limite par défaut des groupes (sans permission spécifique)
   party-limit-default: 5
+  # Limite par défaut des amis (sans permission spécifique)
   friend-limit-default: 10
+  # Mot-clé pour détecter les serveurs de type hub/lobby
+  lobby-keyword: "lobby"
 
+# Connexion au serveur Redis (Pub/Sub & Cache)
 redis:
   host: "127.0.0.1"
   port: 6379
   password: ""
 
-discord:
-  bot-token: ""
-  bot-id: ""
-
+# Connexion à la base de données MySQL
 database:
   host: "127.0.0.1"
   port: 3306
   database: "corehost"
   user: "root"
   password: ""
+
+# Configuration du Bot Discord (synchronisation des rôles)
+discord:
+  bot-token: ""
+  bot-id: ""

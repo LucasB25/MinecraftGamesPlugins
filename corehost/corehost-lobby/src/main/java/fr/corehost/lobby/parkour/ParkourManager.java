@@ -12,6 +12,10 @@ import org.bukkit.scheduler.BukkitTask;
 import fr.corehost.lobby.CoreHostLobby;
 import fr.corehost.lobby.utils.Constants;
 
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 @SuppressWarnings("deprecation")
@@ -22,6 +26,8 @@ public class ParkourManager {
     private final Map<UUID, BukkitTask> timeoutTasks;
     
     private final CoreHostLobby plugin;
+    private File parkourFile;
+    private FileConfiguration parkourConfig;
 
     public ParkourManager(CoreHostLobby plugin) {
         this.plugin = plugin;
@@ -29,7 +35,40 @@ public class ParkourManager {
         this.activeSessions = new HashMap<>();
         this.timeoutTasks = new HashMap<>();
         
+        setupParkourFile();
         loadConfigData();
+    }
+
+    private void setupParkourFile() {
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdir();
+        }
+        parkourFile = new File(plugin.getDataFolder(), "parkour.yml");
+        if (!parkourFile.exists()) {
+            try {
+                parkourFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        parkourConfig = YamlConfiguration.loadConfiguration(parkourFile);
+
+        // Migrate from config.yml if parkour section exists
+        if (plugin.getConfig().contains("parkour")) {
+            parkourConfig.set("parkour", plugin.getConfig().get("parkour"));
+            plugin.getConfig().set("parkour", null);
+            plugin.saveConfig();
+            saveParkourConfig();
+            plugin.getLogger().info("Migrated parkour data from config.yml to parkour.yml");
+        }
+    }
+
+    private void saveParkourConfig() {
+        try {
+            parkourConfig.save(parkourFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     
     public void loadConfigData() {
@@ -40,28 +79,28 @@ public class ParkourManager {
         ParkourCourse hardCourse = new ParkourCourse(plugin, "hard", "Difficile");
         
         // Migration from old config format to new format
-        if (plugin.getConfig().contains("parkour.start")) {
+        if (parkourConfig.contains("parkour.start")) {
             // Migrate to easy
-            plugin.getConfig().set("parkour.courses.easy.start", plugin.getConfig().get("parkour.start"));
-            plugin.getConfig().set("parkour.start", null);
+            parkourConfig.set("parkour.courses.easy.start", parkourConfig.get("parkour.start"));
+            parkourConfig.set("parkour.start", null);
             
-            if (plugin.getConfig().contains("parkour.end")) {
-                plugin.getConfig().set("parkour.courses.easy.end", plugin.getConfig().get("parkour.end"));
-                plugin.getConfig().set("parkour.end", null);
+            if (parkourConfig.contains("parkour.end")) {
+                parkourConfig.set("parkour.courses.easy.end", parkourConfig.get("parkour.end"));
+                parkourConfig.set("parkour.end", null);
             }
-            if (plugin.getConfig().contains("parkour.checkpoints")) {
-                plugin.getConfig().set("parkour.courses.easy.checkpoints", plugin.getConfig().get("parkour.checkpoints"));
-                plugin.getConfig().set("parkour.checkpoints", null);
+            if (parkourConfig.contains("parkour.checkpoints")) {
+                parkourConfig.set("parkour.courses.easy.checkpoints", parkourConfig.get("parkour.checkpoints"));
+                parkourConfig.set("parkour.checkpoints", null);
             }
-            if (plugin.getConfig().contains("parkour.times")) {
-                plugin.getConfig().set("parkour.courses.easy.times", plugin.getConfig().get("parkour.times"));
-                plugin.getConfig().set("parkour.times", null);
+            if (parkourConfig.contains("parkour.times")) {
+                parkourConfig.set("parkour.courses.easy.times", parkourConfig.get("parkour.times"));
+                parkourConfig.set("parkour.times", null);
             }
-            if (plugin.getConfig().contains("parkour.hologram")) {
-                plugin.getConfig().set("parkour.courses.easy.hologram", plugin.getConfig().get("parkour.hologram"));
-                plugin.getConfig().set("parkour.hologram", null);
+            if (parkourConfig.contains("parkour.hologram")) {
+                parkourConfig.set("parkour.courses.easy.hologram", parkourConfig.get("parkour.hologram"));
+                parkourConfig.set("parkour.hologram", null);
             }
-            plugin.saveConfig();
+            saveParkourConfig();
         }
 
         courses.put("easy", easyCourse);
@@ -71,14 +110,14 @@ public class ParkourManager {
         for (ParkourCourse course : courses.values()) {
             String path = "parkour.courses." + course.getId();
             
-            if (plugin.getConfig().contains(path + ".start")) {
-                course.setStartPlate(plugin.getConfig().getLocation(path + ".start"));
+            if (parkourConfig.contains(path + ".start")) {
+                course.setStartPlate(parkourConfig.getLocation(path + ".start"));
             }
-            if (plugin.getConfig().contains(path + ".end")) {
-                course.setEndPlate(plugin.getConfig().getLocation(path + ".end"));
+            if (parkourConfig.contains(path + ".end")) {
+                course.setEndPlate(parkourConfig.getLocation(path + ".end"));
             }
-            if (plugin.getConfig().contains(path + ".checkpoints")) {
-                List<?> list = plugin.getConfig().getList(path + ".checkpoints");
+            if (parkourConfig.contains(path + ".checkpoints")) {
+                List<?> list = parkourConfig.getList(path + ".checkpoints");
                 if (list != null) {
                     for (Object obj : list) {
                         if (obj instanceof Location) {
@@ -87,14 +126,14 @@ public class ParkourManager {
                     }
                 }
             }
-            if (plugin.getConfig().contains(path + ".times")) {
+            if (parkourConfig.contains(path + ".times")) {
                 if (plugin.getDatabaseManager() != null && plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
                     // Migrate config times to Redis and MySQL
                     Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-                        for (String key : plugin.getConfig().getConfigurationSection(path + ".times").getKeys(false)) {
+                        for (String key : parkourConfig.getConfigurationSection(path + ".times").getKeys(false)) {
                             try {
                                 UUID uuid = UUID.fromString(key);
-                                long time = plugin.getConfig().getLong(path + ".times." + key);
+                                long time = parkourConfig.getLong(path + ".times." + key);
                                 
                                 saveRecord(uuid, course.getId(), time);
                             } catch (Exception e) {
@@ -104,14 +143,14 @@ public class ParkourManager {
                         
                         // Delete from config
                         Bukkit.getScheduler().runTask(plugin, () -> {
-                            plugin.getConfig().set(path + ".times", null);
-                            plugin.saveConfig();
+                            parkourConfig.set(path + ".times", null);
+                            saveParkourConfig();
                         });
                     });
                 }
             }
-            if (plugin.getConfig().contains(path + ".hologram")) {
-                course.setHologramLocation(plugin.getConfig().getLocation(path + ".hologram"));
+            if (parkourConfig.contains(path + ".hologram")) {
+                course.setHologramLocation(parkourConfig.getLocation(path + ".hologram"));
             }
         }
     }
@@ -122,8 +161,8 @@ public class ParkourManager {
         ParkourCourse course = courses.get(courseId);
         if (course != null) {
             course.setStartPlate(loc);
-            plugin.getConfig().set("parkour.courses." + courseId + ".start", loc);
-            plugin.saveConfig();
+            parkourConfig.set("parkour.courses." + courseId + ".start", loc);
+            saveParkourConfig();
         }
     }
     
@@ -131,8 +170,8 @@ public class ParkourManager {
         ParkourCourse course = courses.get(courseId);
         if (course != null) {
             course.setEndPlate(loc);
-            plugin.getConfig().set("parkour.courses." + courseId + ".end", loc);
-            plugin.saveConfig();
+            parkourConfig.set("parkour.courses." + courseId + ".end", loc);
+            saveParkourConfig();
         }
     }
     
@@ -140,8 +179,8 @@ public class ParkourManager {
         ParkourCourse course = courses.get(courseId);
         if (course != null) {
             course.addCheckpoint(loc);
-            plugin.getConfig().set("parkour.courses." + courseId + ".checkpoints", course.getCheckpoints());
-            plugin.saveConfig();
+            parkourConfig.set("parkour.courses." + courseId + ".checkpoints", course.getCheckpoints());
+            saveParkourConfig();
         }
     }
     
@@ -149,8 +188,8 @@ public class ParkourManager {
         ParkourCourse course = courses.get(courseId);
         if (course != null) {
             course.clearCheckpoints();
-            plugin.getConfig().set("parkour.courses." + courseId + ".checkpoints", null);
-            plugin.saveConfig();
+            parkourConfig.set("parkour.courses." + courseId + ".checkpoints", null);
+            saveParkourConfig();
         }
     }
 
@@ -158,8 +197,8 @@ public class ParkourManager {
         ParkourCourse course = courses.get(courseId);
         if (course != null) {
             course.setHologramLocation(loc);
-            plugin.getConfig().set("parkour.courses." + courseId + ".hologram", loc);
-            plugin.saveConfig();
+            parkourConfig.set("parkour.courses." + courseId + ".hologram", loc);
+            saveParkourConfig();
         }
     }
 

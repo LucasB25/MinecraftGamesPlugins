@@ -25,13 +25,12 @@ public class SumoListener implements Listener {
 
     @EventHandler
     public void onWorldLoad(WorldLoadEvent event) {
-        // If the world is a sumo instance, we should initialize it.
-        // For simplicity, let's assume world names starting with "sumo-" are sumo instances.
-        // Or we can rely on Redis. We'll check if the world name is something we track.
         String worldName = event.getWorld().getName();
-        if (worldName.toLowerCase().startsWith("sumo")) {
+        String prefix = plugin.getConfig().getString("gameplay.world-prefix", "sumo");
+        if (worldName.toLowerCase().startsWith(prefix.toLowerCase())) {
             // Create instance immediately so spawn location is set BEFORE players teleport
-            plugin.getGameManager().createInstance(worldName, "default");
+            String template = plugin.getConfig().getString("slimeworld.default-template", "default");
+            plugin.getGameManager().createInstance(worldName, template);
         }
     }
 
@@ -39,7 +38,8 @@ public class SumoListener implements Listener {
     public void onPlayerChangedWorld(org.bukkit.event.player.PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
         String worldName = player.getWorld().getName();
-        if (worldName.toLowerCase().startsWith("sumo")) {
+        String prefix = plugin.getConfig().getString("gameplay.world-prefix", "sumo");
+        if (worldName.toLowerCase().startsWith(prefix.toLowerCase())) {
             SumoGameInstance instance = plugin.getGameManager().getInstance(worldName);
             if (instance != null) {
                 instance.addPlayer(player);
@@ -61,8 +61,9 @@ public class SumoListener implements Listener {
         } else {
             // Might be a dynamically loaded world that wasn't registered yet?
             boolean isSumo = false;
+            String prefix = plugin.getConfig().getString("gameplay.world-prefix", "sumo");
             
-            if (worldName.toLowerCase().contains("sumo")) {
+            if (worldName.toLowerCase().contains(prefix.toLowerCase())) {
                 isSumo = true;
             } else {
                 try {
@@ -71,7 +72,7 @@ public class SumoListener implements Listener {
                         fr.corehost.api.host.HostManager hostManager = new fr.corehost.api.host.HostManager(coreGame.getRedisManager());
                         java.util.UUID hostId = java.util.UUID.fromString(worldName);
                         fr.corehost.api.host.HostData data = hostManager.getHost(hostId);
-                        if (data != null && "sumo".equalsIgnoreCase(data.getGameType())) {
+                        if (data != null && prefix.equalsIgnoreCase(data.getGameType())) {
                             isSumo = true;
                         }
                     }
@@ -81,7 +82,8 @@ public class SumoListener implements Listener {
             }
             
             if (isSumo) {
-                instance = plugin.getGameManager().createInstance(worldName, "default");
+                String template = plugin.getConfig().getString("slimeworld.default-template", "default");
+                instance = plugin.getGameManager().createInstance(worldName, template);
                 if (instance != null) {
                     instance.addPlayer(player);
                 }
@@ -115,7 +117,7 @@ public class SumoListener implements Listener {
                         try {
                             com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
                             out.writeUTF("Connect");
-                            out.writeUTF("lobby");
+                            out.writeUTF(plugin.getConfig().getString("bungeecord.fallback-server", "lobby"));
                             player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
                         } catch (Exception e) {
                             player.sendMessage(org.bukkit.ChatColor.RED + "Impossible de se connecter au lobby.");
@@ -128,7 +130,8 @@ public class SumoListener implements Listener {
 
     @EventHandler
     public void onPreSlimeCreate(fr.corehost.game.events.PreSlimeInstanceCreateEvent event) {
-        if (event.getGameType().equalsIgnoreCase("sumo")) {
+        String prefix = plugin.getConfig().getString("gameplay.world-prefix", "sumo");
+        if (event.getGameType().equalsIgnoreCase(prefix)) {
             SumoMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
             if (mapConfig != null) {
                 event.setTemplateName(mapConfig.getTemplateName());

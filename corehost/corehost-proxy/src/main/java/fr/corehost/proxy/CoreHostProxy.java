@@ -170,6 +170,7 @@ public class CoreHostProxy {
                     if (settingsData.containsKey("prefix")) config.setPrefix(String.valueOf(settingsData.get("prefix")));
                     if (settingsData.containsKey("party-limit-default")) config.setPartyLimitDefault(Integer.parseInt(String.valueOf(settingsData.get("party-limit-default"))));
                     if (settingsData.containsKey("friend-limit-default")) config.setFriendLimitDefault(Integer.parseInt(String.valueOf(settingsData.get("friend-limit-default"))));
+                    if (settingsData.containsKey("lobby-keyword")) config.setLobbyKeyword(String.valueOf(settingsData.get("lobby-keyword")));
                 }
                 return config;
             } catch (Exception e) {

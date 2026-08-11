@@ -16,16 +16,12 @@ import java.util.Arrays;
 
 public class MuteConfirmGUI {
 
-    private final StaffModPlugin plugin;
     private final String targetName;
-    private final int durationSeconds;
     private final String durationStr;
     private final String reason;
 
     public MuteConfirmGUI(StaffModPlugin plugin, String targetName, int durationSeconds, String durationStr, String reason) {
-        this.plugin = plugin;
         this.targetName = targetName;
-        this.durationSeconds = durationSeconds;
         this.durationStr = durationStr;
         this.reason = reason;
     }

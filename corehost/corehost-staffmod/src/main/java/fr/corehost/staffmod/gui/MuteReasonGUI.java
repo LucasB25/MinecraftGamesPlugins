@@ -19,13 +19,11 @@ public class MuteReasonGUI {
 
     private final StaffModPlugin plugin;
     private final String targetName;
-    private final int durationSeconds;
     private final String durationStr;
 
     public MuteReasonGUI(StaffModPlugin plugin, String targetName, int durationSeconds, String durationStr) {
         this.plugin = plugin;
         this.targetName = targetName;
-        this.durationSeconds = durationSeconds;
         this.durationStr = durationStr;
     }
 

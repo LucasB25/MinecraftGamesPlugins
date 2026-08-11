@@ -27,7 +27,7 @@ public class HostSearchMenu implements CustomMenu {
     private final Inventory inventory;
     private String gameFilter = "ALL";
     private HostStatus statusFilter = null;
-    private org.bukkit.scheduler.BukkitTask refreshTask;
+
 
     public HostSearchMenu() {
         this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.GOLD + "Recherche de Serveurs");
@@ -176,7 +176,7 @@ public class HostSearchMenu implements CustomMenu {
         player.openInventory(inventory);
         
         CoreHostLobby plugin = JavaPlugin.getPlugin(CoreHostLobby.class);
-        this.refreshTask = new org.bukkit.scheduler.BukkitRunnable() {
+        new org.bukkit.scheduler.BukkitRunnable() {
             @Override
             public void run() {
                 if (player.getOpenInventory().getTopInventory().equals(inventory)) {

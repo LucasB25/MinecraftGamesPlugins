@@ -192,7 +192,7 @@ public class IsolationListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
-        String worldName = victim.getWorld().getName();
+
         
         // If there's a death message, we only want players in this world to see it
         // We cancel the global one and broadcast manually to the world

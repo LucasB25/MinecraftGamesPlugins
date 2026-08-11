@@ -6,7 +6,7 @@ import eu.cloudnetservice.driver.event.events.service.CloudServiceLifecycleChang
 import eu.cloudnetservice.driver.service.ServiceLifeCycle;
 import eu.cloudnetservice.driver.service.ServiceInfoSnapshot;
 import fr.corehost.api.host.HostData;
-import fr.corehost.api.host.HostData;
+
 import fr.corehost.api.host.HostManager;
 import fr.corehost.proxy.CoreHostProxy;
 import com.google.gson.JsonObject;

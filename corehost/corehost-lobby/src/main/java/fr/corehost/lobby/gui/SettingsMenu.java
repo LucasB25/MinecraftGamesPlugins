@@ -241,7 +241,7 @@ public class SettingsMenu implements CustomMenu {
         // ── Ignored Players ──
         if (slot == 15) {
             player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
-            new IgnoreMenu(plugin, player).open(player);
+            new IgnoreMenu(plugin).open(player);
             return;
         }
     }

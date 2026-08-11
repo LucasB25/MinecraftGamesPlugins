@@ -20,11 +20,9 @@ import java.util.Arrays;
 
 public class PlayerSSGUI {
 
-    private final StaffModPlugin plugin;
     private final String targetName;
 
     public PlayerSSGUI(StaffModPlugin plugin, String targetName) {
-        this.plugin = plugin;
         this.targetName = targetName;
     }
 

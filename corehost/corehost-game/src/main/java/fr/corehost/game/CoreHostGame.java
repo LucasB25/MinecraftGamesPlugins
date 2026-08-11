@@ -42,7 +42,7 @@ public class CoreHostGame extends JavaPlugin {
         fr.corehost.game.slime.SlimeManager slimeManager = new fr.corehost.game.slime.SlimeManager(this, redisManager, serverName);
         
         // Initialiser PubSub Listener
-        this.pubSubListener = new fr.corehost.game.redis.GamePubSubListener(this, slimeManager, redisManager, serverName);
+        this.pubSubListener = new fr.corehost.game.redis.GamePubSubListener(this, slimeManager, serverName);
         redisManager.subscribe(pubSubListener, "corehost:game:" + serverName);
         
         // Initialiser SpectatorManager

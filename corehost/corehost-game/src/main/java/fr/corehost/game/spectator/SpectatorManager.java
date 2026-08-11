@@ -63,7 +63,7 @@ public class SpectatorManager {
     }
     
     private void hideSpectator(Player spectator) {
-        String worldName = spectator.getWorld().getName();
+
         for (Player online : Bukkit.getOnlinePlayers()) {
             if (online.equals(spectator)) continue;
             

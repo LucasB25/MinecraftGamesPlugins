@@ -576,7 +576,7 @@ public class DacGameInstance {
             Player winner = alivePlayers.size() == 1 ? Bukkit.getPlayer(alivePlayers.get(0)) : null;
             
             if (winner != null) {
-                String colorCode = ChatColor.translateAlternateColorCodes('&', playerChatColors.get(winner.getUniqueId()));
+
                 broadcast(ChatColor.GOLD + winner.getName() + " a gagné la partie !");
                 
                 int totalCoins = matchWinBonus + earnedCoins.getOrDefault(winner.getUniqueId(), 0);

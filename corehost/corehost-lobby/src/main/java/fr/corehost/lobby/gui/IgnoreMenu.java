@@ -22,13 +22,12 @@ import java.util.UUID;
 public class IgnoreMenu implements CustomMenu {
 
     private final CoreHostLobby plugin;
-    private final Player targetPlayer;
+
     private Inventory inventory;
     private final List<UUID> ignoredPlayersList = new ArrayList<>();
 
-    public IgnoreMenu(CoreHostLobby plugin, Player player) {
+    public IgnoreMenu(CoreHostLobby plugin) {
         this.plugin = plugin;
-        this.targetPlayer = player;
     }
 
     @Override

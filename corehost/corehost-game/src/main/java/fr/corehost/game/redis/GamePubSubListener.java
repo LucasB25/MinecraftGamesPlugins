@@ -2,7 +2,7 @@ package fr.corehost.game.redis;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import fr.corehost.api.redis.RedisManager;
+
 import fr.corehost.game.CoreHostGame;
 import fr.corehost.game.slime.SlimeManager;
 import redis.clients.jedis.JedisPubSub;
@@ -12,14 +12,12 @@ public class GamePubSubListener extends JedisPubSub {
 
     private final CoreHostGame plugin;
     private final SlimeManager slimeManager;
-    private final RedisManager redisManager;
     private final String serverName;
     private final Gson gson = new Gson();
 
-    public GamePubSubListener(CoreHostGame plugin, SlimeManager slimeManager, RedisManager redisManager, String serverName) {
+    public GamePubSubListener(CoreHostGame plugin, SlimeManager slimeManager, String serverName) {
         this.plugin = plugin;
         this.slimeManager = slimeManager;
-        this.redisManager = redisManager;
         this.serverName = serverName;
     }
 

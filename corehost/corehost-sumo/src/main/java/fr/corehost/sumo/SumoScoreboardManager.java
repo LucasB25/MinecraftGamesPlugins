@@ -14,7 +14,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-
+@SuppressWarnings({"deprecation", "removal"})
 public class SumoScoreboardManager {
 
     private final SumoGameInstance instance;

@@ -29,17 +29,6 @@ rewards:
   flawless-bonus: 5        # Bonus "Parfait" (Victoire 3-0, 4-0, etc sans perdre une manche).
   forfeit-win-bonus: 8     # Bonus donné au vainqueur si l'adversaire a "ragequit".
 
-redis:
-  host: "127.0.0.1"
-  port: 6379
-  password: ""
-
-database:
-  host: "127.0.0.1"
-  port: 3306
-  database: "corehost"
-  user: "root"
-  password: ""
 
 scoreboard:
   title: "&6&lSUMO"

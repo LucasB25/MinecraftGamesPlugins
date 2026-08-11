@@ -1,7 +1,7 @@
 name: CoreHostSumo
 version: 1.0-SNAPSHOT
 main: fr.corehost.sumo.CoreHostSumo
-api-version: 1.13
+api-version: '1.21'
 authors: [CoreHost]
 description: Plugin de jeu Sumo pour CoreHost
 depend: [CoreHostGame]

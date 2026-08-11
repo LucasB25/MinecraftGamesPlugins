@@ -1,7 +1,7 @@
 name: CoreHostDac
 version: 1.0-SNAPSHOT
 main: fr.corehost.dac.CoreHostDac
-api-version: 1.13
+api-version: '1.21'
 authors: [CoreHost]
 description: Plugin de jeu Dé à Coudre pour CoreHost
 depend: [CoreHostGame]

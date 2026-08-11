@@ -15,7 +15,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.Material;
 
 import java.util.Optional;
-
+@SuppressWarnings({"deprecation", "removal"})
 public class DacListener implements Listener {
 
     private final CoreHostDac plugin;

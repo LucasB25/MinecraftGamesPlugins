@@ -1,7 +1,7 @@
 name: CoreHostGame
 version: 1.0-SNAPSHOT
 main: fr.corehost.game.CoreHostGame
-api-version: 1.13
+api-version: '1.21'
 authors: [CoreHost]
 description: Module de gestion des instances de jeux via AdvancedSlimePaper
 softdepend: [CloudNet-Bridge]

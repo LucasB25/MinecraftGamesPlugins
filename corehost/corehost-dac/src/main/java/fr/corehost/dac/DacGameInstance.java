@@ -22,7 +22,7 @@ import fr.corehost.api.host.HostData;
 import fr.corehost.api.host.HostManager;
 import fr.corehost.game.CoreHostGame;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "removal"})
 public class DacGameInstance {
 
     public enum GameState {

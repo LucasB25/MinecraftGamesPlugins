@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
+@SuppressWarnings({"deprecation", "removal"})
 public class ReportManager {
     
     private final RedisManager redisManager;

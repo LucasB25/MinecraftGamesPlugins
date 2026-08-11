@@ -2,6 +2,7 @@
 # // - corehost.admin : Permet d'utiliser les commandes d'administration de CoreHost Game
 settings:
   prefix: "&8[&6CoreHost&8] &7"
+  server-name: "Local-1"
 
 redis:
   host: "127.0.0.1"

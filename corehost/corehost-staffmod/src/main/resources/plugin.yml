@@ -1,7 +1,7 @@
 name: CoreHost-StaffMod
 version: 1.0-SNAPSHOT
 main: fr.corehost.staffmod.StaffModPlugin
-api-version: 1.20
+api-version: '1.21'
 commands:
   staffmod_report:
     description: Internal command to report a chat message

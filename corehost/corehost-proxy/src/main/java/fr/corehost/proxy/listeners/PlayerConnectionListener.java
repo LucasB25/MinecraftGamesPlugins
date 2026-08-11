@@ -37,6 +37,16 @@ public class PlayerConnectionListener {
     @Subscribe
     public void onPostLogin(PostLoginEvent event) {
         Player player = event.getPlayer();
+        
+        if (plugin.getDiscordManager() != null && plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
+            plugin.getServer().getScheduler().buildTask(plugin, () -> {
+                String discordId = plugin.getDiscordManager().getDiscordId(player.getUniqueId());
+                if (discordId != null) {
+                    plugin.getRedisManager().set("corehost:discord_link:player:" + player.getUniqueId().toString(), discordId);
+                }
+            }).schedule();
+        }
+        
         if (plugin.getFriendManager() != null) {
             // Cache player name/UUID for the friends system
             plugin.getFriendManager().cachePlayer(player.getUsername(), player.getUniqueId());
@@ -68,6 +78,7 @@ public class PlayerConnectionListener {
         Player player = event.getPlayer();
         if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
             plugin.getRedisManager().del("corehost:discord_auth:" + player.getUniqueId().toString());
+            plugin.getRedisManager().del("corehost:discord_link:player:" + player.getUniqueId().toString());
         }
         
         if (plugin.getFriendManager() != null) {

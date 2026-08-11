@@ -1,0 +1,21 @@
+settings:
+  prefix: "&8[&6DAC&8] &7"
+
+gameplay:
+  countdown-seconds: 10
+  void-level: 50
+  turn-time: 15
+  max-players: 8
+
+rewards:
+  # --- Récompenses de base ---
+  coins-per-thimble: 5     # Coins donnés pour chaque "Dé à coudre" (atterrissage dans un bloc entouré)
+  coins-per-jump: 1        # Coins donnés pour un saut réussi simple
+  
+  # --- Bonus de Fin de Match (si le joueur reste jusqu'au bout) ---
+  match-win-bonus: 20      # Bonus supplémentaire pour avoir remporté le match entier.
+  match-lose-bonus: 5      # Bonus de "consolation" pour les perdants qui n'ont pas quitté.
+
+scoreboard:
+  title: "&6&lDÉ À COUDRE"
+  ip: "&eplay.corehost.fr"

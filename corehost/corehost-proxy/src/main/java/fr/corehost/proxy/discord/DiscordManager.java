@@ -131,7 +131,7 @@ public class DiscordManager extends ListenerAdapter {
         }
     }
 
-    private String getDiscordId(UUID uuid) {
+    public String getDiscordId(UUID uuid) {
         DatabaseManager db = plugin.getDatabaseManager();
         if (db == null) return null;
         try (Connection conn = db.getConnection();
@@ -191,6 +191,7 @@ public class DiscordManager extends ListenerAdapter {
             
             plugin.getRedisManager().del("corehost:discord_link:code:" + code);
             plugin.getRedisManager().setEx("corehost:discord_auth:" + playerUuid.toString(), "true", 3600);
+            plugin.getRedisManager().set("corehost:discord_link:player:" + playerUuid.toString(), discordId);
             event.getChannel().sendMessage("✅ Votre compte Minecraft a été lié avec succès ! Vous pouvez maintenant jouer.").queue();
         } catch (SQLException e) {
             e.printStackTrace();

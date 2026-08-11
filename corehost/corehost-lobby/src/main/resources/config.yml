@@ -55,6 +55,19 @@ games:
       - "&7de l'arène !"
       - ""
       - "&a► Cliquez pour héberger"
+  DAC:
+    name: "&b&lCréer un Mini-Jeu (DAC)"
+    material: "CYAN_WOOL"
+    slot: 13
+    max-players: 8
+    max-slime-instances: 5
+    lore:
+      - ""
+      - "&7Démarrez un serveur Dé à Coudre"
+      - "&7et sautez dans le bassin"
+      - "&7sans vous écraser !"
+      - ""
+      - "&a► Cliquez pour héberger"
   CTF:
     name: "&c&lCréer un Mini-Jeu (CTF)"
     material: "RED_BANNER"

@@ -41,6 +41,16 @@ public class GamePubSubListener extends JedisPubSub {
                     event.setTemplateName(defaultTemplate);
                     org.bukkit.Bukkit.getPluginManager().callEvent(event);
                     
+                    if (event.isCancelled()) {
+                        plugin.getLogger().warning("Slime instance creation cancelled by event for host " + hostId);
+                        // Mettre le host en erreur ou le supprimer
+                        try {
+                            fr.corehost.api.host.HostManager hostManager = new fr.corehost.api.host.HostManager(plugin.getRedisManager());
+                            hostManager.deleteHost(java.util.UUID.fromString(hostId));
+                        } catch (Exception e) {}
+                        return;
+                    }
+                    
                     String templateName = event.getTemplateName();
                     plugin.getLogger().info("Received request to create slime instance for host " + hostId + " (game: " + gameType + ", template: " + templateName + ")");
                     

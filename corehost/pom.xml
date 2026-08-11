@@ -15,6 +15,7 @@
         <module>corehost-lobby</module>
         <module>corehost-game</module>
         <module>corehost-sumo</module>
+        <module>corehost-dac</module>
         <module>corehost-staffmod</module>
     </modules>
 

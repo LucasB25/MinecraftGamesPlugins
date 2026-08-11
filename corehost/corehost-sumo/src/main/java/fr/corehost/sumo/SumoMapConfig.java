@@ -41,9 +41,8 @@ public class SumoMapConfig {
     }
 
     public void save(ConfigurationSection section) {
-        if (explicitTemplateName != null) {
-            section.set("template", explicitTemplateName);
-        }
+        section.set("template", getTemplateName());
+        
         if (spawn1 != null) {
             saveLocation(section.createSection("spawn1"), spawn1);
         }
@@ -54,7 +53,7 @@ public class SumoMapConfig {
     }
 
     private void saveLocation(ConfigurationSection section, Location loc) {
-        section.set("world", loc.getWorld() != null ? loc.getWorld().getName() : "world");
+        section.set("world", getTemplateName());
         section.set("x", loc.getX());
         section.set("y", loc.getY());
         section.set("z", loc.getZ());

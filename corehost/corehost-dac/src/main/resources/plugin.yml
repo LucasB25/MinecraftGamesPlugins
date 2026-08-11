@@ -1,0 +1,26 @@
+name: CoreHostDac
+version: 1.0-SNAPSHOT
+main: fr.corehost.dac.CoreHostDac
+api-version: 1.13
+authors: [CoreHost]
+description: Plugin de jeu Dé à Coudre pour CoreHost
+depend: [CoreHostGame]
+
+commands:
+  dacsetup:
+    description: Configuration des maps DAC
+    usage: /dacsetup <mapName> <action>
+    permission: corehost.admin
+  dac:
+    description: Commandes de test local DAC
+    usage: /dac <create|join|list|leave>
+    permission: corehost.admin
+  corehostdac:
+    description: Commande principale de CoreHost DAC
+    permission: corehost.admin
+    permission-message: §cVous n'avez pas la permission d'exécuter cette commande.
+
+permissions:
+  corehost.admin:
+    description: Permet d'utiliser les commandes d'administration de CoreHost DAC
+    default: op

@@ -117,13 +117,15 @@ public class CloudNetServiceManager {
                     String serverName = warmService.name();
                     int maxPlayers = plugin.getConfig().getInt("games." + gameType + ".max-players", 20);
                     
+                    String worldName = gameType.toLowerCase() + "-" + hostId.toString().substring(0, 8);
+                    
                     HostData hostData = new HostData(
                             hostId,
                             player.getUniqueId(),
                             player.getName(),
                             gameType,
                             serverName,
-                            hostId.toString(),
+                            worldName,
                             maxPlayers
                     );
                     hostData.setBestOf(bestOf);
@@ -141,7 +143,7 @@ public class CloudNetServiceManager {
                     // Send PubSub message to the game server to create the slime instance
                     JsonObject request = new JsonObject();
                     request.addProperty("action", "create_slime_instance");
-                    request.addProperty("hostId", hostId.toString());
+                    request.addProperty("hostId", worldName);
                     request.addProperty("gameType", gameType);
                     
                     plugin.getRedisManager().publish("corehost:game:" + serverName, request.toString());
@@ -161,13 +163,15 @@ public class CloudNetServiceManager {
                         String serverName = serviceInfo.name();
                         int maxPlayers = plugin.getConfig().getInt("games." + gameType + ".max-players", 20);
                         
+                        String worldName = gameType.toLowerCase() + "-" + hostId.toString().substring(0, 8);
+                        
                         HostData hostData = new HostData(
                                 hostId,
                                 player.getUniqueId(),
                                 player.getName(),
                                 gameType,
                                 serverName,
-                                hostId.toString(),
+                                worldName,
                                 maxPlayers
                         );
                         hostData.setBestOf(bestOf);

@@ -2,7 +2,7 @@ package fr.corehost.game.spectator.gui;
 
 import fr.corehost.game.spectator.SpectatorManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -16,7 +16,7 @@ import java.util.List;
 public class SpectatorTeleportMenu {
 
     private final SpectatorManager manager;
-    private static final String MENU_TITLE = ChatColor.AQUA + "Téléportation";
+    private static final String MENU_TITLE = CC.AQUA + "Téléportation";
 
     public SpectatorTeleportMenu(SpectatorManager manager) {
         this.manager = manager;
@@ -43,9 +43,9 @@ public class SpectatorTeleportMenu {
             SkullMeta meta = (SkullMeta) head.getItemMeta();
             if (meta != null) {
                 meta.setOwningPlayer(target); // For 1.12+ it's setOwningPlayer
-                meta.setDisplayName(ChatColor.GREEN + target.getName());
+                meta.setDisplayName(CC.GREEN + target.getName());
                 List<String> lore = new ArrayList<>();
-                lore.add(ChatColor.GRAY + "Cliquez pour vous téléporter à " + ChatColor.YELLOW + target.getName());
+                lore.add(CC.GRAY + "Cliquez pour vous téléporter à " + CC.YELLOW + target.getName());
                 meta.setLore(lore);
                 head.setItemMeta(meta);
             }
@@ -67,10 +67,10 @@ public class SpectatorTeleportMenu {
                 Player target = meta.getOwningPlayer().getPlayer();
                 if (target != null && target.isOnline() && !manager.isSpectator(target)) {
                     spectator.teleport(target.getLocation());
-                    spectator.sendMessage(ChatColor.GRAY + "Téléporté vers " + ChatColor.GREEN + target.getName() + ChatColor.GRAY + ".");
+                    spectator.sendMessage(CC.GRAY + "Téléporté vers " + CC.GREEN + target.getName() + CC.GRAY + ".");
                     spectator.closeInventory();
                 } else {
-                    spectator.sendMessage(ChatColor.RED + "Ce joueur n'est plus disponible.");
+                    spectator.sendMessage(CC.RED + "Ce joueur n'est plus disponible.");
                     spectator.closeInventory();
                 }
             }

@@ -3,7 +3,7 @@ package fr.corehost.lobby.listeners;
 import fr.corehost.lobby.gui.CustomMenu;
 import fr.corehost.lobby.gui.HostSearchMenu;
 import fr.corehost.lobby.gui.PlayerProfileMenu;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -82,7 +82,7 @@ public class LobbyListener implements Listener {
         ItemStack searchHost = new ItemStack(searchMat);
         ItemMeta searchMeta = searchHost.getItemMeta();
         if (searchMeta != null) {
-            searchMeta.setDisplayName(ChatColor.AQUA + "" + ChatColor.BOLD + "Jouer " + ChatColor.GRAY + "(Clic-Droit)");
+            searchMeta.setDisplayName(CC.AQUA + "" + CC.BOLD + "Jouer " + CC.GRAY + "(Clic-Droit)");
             searchHost.setItemMeta(searchMeta);
         }
         player.getInventory().setItem(searchSlot, searchHost);
@@ -95,7 +95,7 @@ public class LobbyListener implements Listener {
         SkullMeta profileMeta = (SkullMeta) profile.getItemMeta();
         if (profileMeta != null) {
             profileMeta.setOwningPlayer(player);
-            profileMeta.setDisplayName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Mon Profil " + ChatColor.GRAY + "(Clic-Droit)");
+            profileMeta.setDisplayName(CC.LIGHT_PURPLE + "" + CC.BOLD + "Mon Profil " + CC.GRAY + "(Clic-Droit)");
             profile.setItemMeta(profileMeta);
         }
         player.getInventory().setItem(profileSlot, profile);
@@ -106,7 +106,7 @@ public class LobbyListener implements Listener {
         ItemStack visibility = new ItemStack(visMat);
         ItemMeta visMeta = visibility.getItemMeta();
         if (visMeta != null) {
-            visMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Joueurs : Visibles " + ChatColor.GRAY + "(Clic-Droit)");
+            visMeta.setDisplayName(CC.GREEN + "" + CC.BOLD + "Joueurs : Visibles " + CC.GRAY + "(Clic-Droit)");
             visibility.setItemMeta(visMeta);
         }
         player.getInventory().setItem(visSlot, visibility);
@@ -201,12 +201,12 @@ public class LobbyListener implements Listener {
                 ItemStack visibility = new ItemStack(visMatOn);
                 ItemMeta visMeta = visibility.getItemMeta();
                 if (visMeta != null) {
-                    visMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Joueurs : Visibles " + ChatColor.GRAY + "(Clic-Droit)");
+                    visMeta.setDisplayName(CC.GREEN + "" + CC.BOLD + "Joueurs : Visibles " + CC.GRAY + "(Clic-Droit)");
                     visibility.setItemMeta(visMeta);
                 }
                 int visSlot = plugin.getConfig().getInt("hotbar.visibility_on.slot", 7);
                 player.getInventory().setItem(visSlot, visibility);
-                player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Les joueurs sont maintenant visibles.");
+                player.sendMessage(Constants.PREFIX + CC.GREEN + "Les joueurs sont maintenant visibles.");
             } else {
                 // Currently visible -> Make hidden
                 hiddenPlayers.add(player.getUniqueId());
@@ -217,12 +217,12 @@ public class LobbyListener implements Listener {
                 ItemStack visibility = new ItemStack(visMatOff);
                 ItemMeta visMeta = visibility.getItemMeta();
                 if (visMeta != null) {
-                    visMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Joueurs : Cachés " + ChatColor.GRAY + "(Clic-Droit)");
+                    visMeta.setDisplayName(CC.RED + "" + CC.BOLD + "Joueurs : Cachés " + CC.GRAY + "(Clic-Droit)");
                     visibility.setItemMeta(visMeta);
                 }
                 int visSlot = plugin.getConfig().getInt("hotbar.visibility_on.slot", 7);
                 player.getInventory().setItem(visSlot, visibility);
-                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Les joueurs sont maintenant cachés.");
+                player.sendMessage(Constants.PREFIX + CC.YELLOW + "Les joueurs sont maintenant cachés.");
             }
         }
     }
@@ -415,12 +415,12 @@ public class LobbyListener implements Listener {
             pendingFriendAdd.remove(player.getUniqueId());
             String message = event.getMessage().trim();
             if (message.equalsIgnoreCase("annuler") || message.equalsIgnoreCase("cancel")) {
-                player.sendMessage(ChatColor.YELLOW + "Ajout d'ami annulé.");
+                player.sendMessage(CC.YELLOW + "Ajout d'ami annulé.");
             } else {
                 String prefix = Constants.BUNGEE_PREFIX;
-                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour envoyer une demande d'ami à " + net.md_5.bungee.api.ChatColor.YELLOW + message + net.md_5.bungee.api.ChatColor.GRAY + " !");
+                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour envoyer une demande d'ami à " + CC.YELLOW + message + CC.GRAY + " !");
                 msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/friend add " + message));
-                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour ajouter")));
+                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(CC.GREEN + "Cliquez pour ajouter")));
                 player.spigot().sendMessage(msg);
             }
             return;
@@ -431,12 +431,12 @@ public class LobbyListener implements Listener {
             pendingPartyInvite.remove(player.getUniqueId());
             String message = event.getMessage().trim();
             if (message.equalsIgnoreCase("annuler") || message.equalsIgnoreCase("cancel")) {
-                player.sendMessage(ChatColor.YELLOW + "Invitation annulée.");
+                player.sendMessage(CC.YELLOW + "Invitation annulée.");
             } else {
                 String prefix = Constants.BUNGEE_PREFIX;
-                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour inviter " + net.md_5.bungee.api.ChatColor.YELLOW + message + net.md_5.bungee.api.ChatColor.GRAY + " dans votre groupe !");
+                net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(prefix + "Cliquez ici pour inviter " + CC.YELLOW + message + CC.GRAY + " dans votre groupe !");
                 msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/party invite " + message));
-                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.GREEN + "Cliquez pour inviter")));
+                msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(CC.GREEN + "Cliquez pour inviter")));
                 player.spigot().sendMessage(msg);
             }
         }

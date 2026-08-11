@@ -1,7 +1,7 @@
 package fr.corehost.game.spectator;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -48,7 +48,7 @@ public class SpectatorManager {
             // Give Items
             setupInventory(player);
             
-            player.sendMessage(ChatColor.GRAY + "Vous êtes maintenant en " + ChatColor.AQUA + "Mode Spectateur" + ChatColor.GRAY + ".");
+            player.sendMessage(CC.GRAY + "Vous êtes maintenant en " + CC.AQUA + "Mode Spectateur" + CC.GRAY + ".");
         } else {
             spectators.remove(player.getUniqueId());
             player.setAllowFlight(false);
@@ -112,7 +112,7 @@ public class SpectatorManager {
         ItemStack compass = new ItemStack(Material.COMPASS);
         ItemMeta compassMeta = compass.getItemMeta();
         if (compassMeta != null) {
-            compassMeta.setDisplayName(ChatColor.AQUA + "Téléportation");
+            compassMeta.setDisplayName(CC.AQUA + "Téléportation");
             compass.setItemMeta(compassMeta);
         }
         player.getInventory().setItem(0, compass);
@@ -121,7 +121,7 @@ public class SpectatorManager {
         ItemStack feather = new ItemStack(Material.FEATHER);
         ItemMeta featherMeta = feather.getItemMeta();
         if (featherMeta != null) {
-            featherMeta.setDisplayName(ChatColor.YELLOW + "Vitesse de vol: x1");
+            featherMeta.setDisplayName(CC.YELLOW + "Vitesse de vol: x1");
             feather.setItemMeta(featherMeta);
         }
         player.getInventory().setItem(4, feather);
@@ -130,7 +130,7 @@ public class SpectatorManager {
         ItemStack bed = new ItemStack(Material.RED_BED);
         ItemMeta bedMeta = bed.getItemMeta();
         if (bedMeta != null) {
-            bedMeta.setDisplayName(ChatColor.RED + "Quitter vers le Lobby");
+            bedMeta.setDisplayName(CC.RED + "Quitter vers le Lobby");
             bed.setItemMeta(bedMeta);
         }
         player.getInventory().setItem(8, bed);

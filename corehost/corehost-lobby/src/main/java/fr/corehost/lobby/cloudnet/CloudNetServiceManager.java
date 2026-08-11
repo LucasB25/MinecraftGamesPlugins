@@ -11,7 +11,7 @@ import eu.cloudnetservice.driver.service.ServiceTask;
 import fr.corehost.api.host.HostData;
 import fr.corehost.lobby.CoreHostLobby;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.entity.Player;
 
 import eu.cloudnetservice.driver.provider.CloudServiceProvider;
@@ -40,13 +40,13 @@ public class CloudNetServiceManager {
         String prefix = Constants.PREFIX;
         
         if (player.hasMetadata("modmode")) {
-            player.sendMessage(prefix + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            player.sendMessage(prefix + CC.RED + "Vous ne pouvez pas créer un host en mode Modération !");
             return;
         }
 
         if (!isCloudNetEnabled || plugin.getHostManager() == null) {
             // Local Test Mode Bypass
-            player.sendMessage(prefix + ChatColor.YELLOW + "[Mode Test Local] " + ChatColor.GRAY + "Génération du monde en cours...");
+            player.sendMessage(prefix + CC.YELLOW + "[Mode Test Local] " + CC.GRAY + "Génération du monde en cours...");
             
             UUID hostId = UUID.randomUUID();
             String worldName = gameType.toLowerCase() + "-" + hostId.toString().substring(0, 8);
@@ -81,7 +81,7 @@ public class CloudNetServiceManager {
             return;
         }
 
-        player.sendMessage(prefix + "Préparation de votre serveur " + ChatColor.YELLOW + gameType + ChatColor.GRAY + " en cours...");
+        player.sendMessage(prefix + "Préparation de votre serveur " + CC.YELLOW + gameType + CC.GRAY + " en cours...");
 
         // Start async to avoid blocking main thread during API calls
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -90,7 +90,7 @@ public class CloudNetServiceManager {
                 ServiceTask task = taskProvider.serviceTask(gameType); // "Sumo" or "CTF"
 
                 if (task == null) {
-                    player.sendMessage(ChatColor.RED + "Erreur: La tâche CloudNet '" + gameType + "' n'existe pas !");
+                    player.sendMessage(CC.RED + "Erreur: La tâche CloudNet '" + gameType + "' n'existe pas !");
                     return;
                 }
                 
@@ -137,7 +137,7 @@ public class CloudNetServiceManager {
                     plugin.getHostManager().saveHost(hostData);
                     
                     if (player.isOnline()) {
-                        player.sendMessage(prefix + ChatColor.GREEN + "Serveur CloudNet trouvé ! Génération du monde Slime en cours...");
+                        player.sendMessage(prefix + CC.GREEN + "Serveur CloudNet trouvé ! Génération du monde Slime en cours...");
                     }
                     
                     // Send PubSub message to the game server to create the slime instance
@@ -179,7 +179,7 @@ public class CloudNetServiceManager {
                         plugin.getHostManager().saveHost(hostData);
 
                         if (player.isOnline()) {
-                            player.sendMessage(prefix + ChatColor.GREEN + "Aucun serveur prêt. Démarrage complet du serveur " + ChatColor.GOLD + serverName + ChatColor.GREEN + " en cours...");
+                            player.sendMessage(prefix + CC.GREEN + "Aucun serveur prêt. Démarrage complet du serveur " + CC.GOLD + serverName + CC.GREEN + " en cours...");
                         }
                         
                         // Start the CloudNet service, proxy will catch it when RUNNING
@@ -191,7 +191,7 @@ public class CloudNetServiceManager {
                         serviceInfo.provider().start();
                     } else {
                         if (player.isOnline()) {
-                            player.sendMessage(prefix + ChatColor.RED + "Erreur: Impossible de créer l'instance de serveur. (" + createResult.state().name() + ")");
+                            player.sendMessage(prefix + CC.RED + "Erreur: Impossible de créer l'instance de serveur. (" + createResult.state().name() + ")");
                         }
                     }
                 }
@@ -199,7 +199,7 @@ public class CloudNetServiceManager {
             } catch (Exception e) {
                 e.printStackTrace();
                 if (player.isOnline()) {
-                    player.sendMessage(prefix + ChatColor.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");
+                    player.sendMessage(prefix + CC.RED + "Le système de Host est actuellement en maintenance ou en mise à jour. Veuillez réessayer plus tard.");
                 }
             }
         });

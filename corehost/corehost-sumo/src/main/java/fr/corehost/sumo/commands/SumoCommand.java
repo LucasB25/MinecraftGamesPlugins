@@ -3,7 +3,7 @@ package fr.corehost.sumo.commands;
 import fr.corehost.sumo.CoreHostSumo;
 import fr.corehost.sumo.SumoGameInstance;
 import fr.corehost.api.host.HostData;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,19 +22,19 @@ public class SumoCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
         Player player = (Player) sender;
 
         if (!player.hasPermission("corehost.admin")) {
-            player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Vous n'avez pas la permission.");
+            player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Vous n'avez pas la permission.");
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Usage: /sumo <create|join|list|leave>");
+            player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Usage: /sumo <create|join|list|leave>");
             return true;
         }
 
@@ -47,7 +47,7 @@ public class SumoCommand implements CommandExecutor {
                     try {
                         bestOf = Integer.parseInt(args[1]);
                     } catch (NumberFormatException e) {
-                        player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Le format BO doit être un nombre.");
+                        player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Le format BO doit être un nombre.");
                         return true;
                     }
                 }
@@ -55,7 +55,7 @@ public class SumoCommand implements CommandExecutor {
                 break;
             case "join":
                 if (args.length < 2) {
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Usage: /sumo join <hostId>");
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Usage: /sumo join <hostId>");
                     return true;
                 }
                 String hostId = args[1];
@@ -64,22 +64,22 @@ public class SumoCommand implements CommandExecutor {
                     player.teleport(instance.getWorld().getSpawnLocation());
                     instance.addPlayer(player);
                 } else {
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Instance introuvable.");
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Instance introuvable.");
                 }
                 break;
             case "list":
-                player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.YELLOW + "Instances actives :");
-                player.sendMessage(ChatColor.GRAY + "- (Commande en cours de développement)");
+                player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.YELLOW + "Instances actives :");
+                player.sendMessage(CC.GRAY + "- (Commande en cours de développement)");
                 break;
             case "leave":
                 plugin.getGameManager().getInstanceForPlayer(player).ifPresent(inst -> {
                     inst.removePlayer(player);
                     player.teleport(org.bukkit.Bukkit.getWorlds().get(0).getSpawnLocation());
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Vous avez quitté la partie.");
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Vous avez quitté la partie.");
                 });
                 break;
             default:
-                player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Usage: /sumo <create|join|list|leave>");
+                player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Usage: /sumo <create|join|list|leave>");
                 break;
         }
 
@@ -87,7 +87,7 @@ public class SumoCommand implements CommandExecutor {
     }
 
     private void createLocalSumo(Player player, int bestOf) {
-        player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.YELLOW + "Création d'une instance Sumo locale...");
+        player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.YELLOW + "Création d'une instance Sumo locale...");
         
         UUID hostId = UUID.randomUUID();
         String worldName = "sumo-" + hostId.toString().substring(0, 8);
@@ -97,7 +97,7 @@ public class SumoCommand implements CommandExecutor {
         
         fr.corehost.sumo.SumoMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
         if (mapConfig == null) {
-            player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Aucune map n'est configurée pour héberger une partie.");
+            player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Aucune map n'est configurée pour héberger une partie.");
             return;
         }
 
@@ -126,7 +126,7 @@ public class SumoCommand implements CommandExecutor {
             
             coreGame.getRedisManager().publish("corehost:game:" + localServerName, request.toString());
         } else {
-            player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "CoreHostGame ou Redis n'est pas disponible.");
+            player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "CoreHostGame ou Redis n'est pas disponible.");
         }
     }
 }

@@ -1,5 +1,7 @@
 package fr.corehost.dac;
 
+import fr.corehost.api.utils.CC;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -231,14 +233,14 @@ public class DacListener implements Listener {
                 if (optInstance.isPresent()) {
                     DacGameInstance instance = optInstance.get();
                     if (instance.getState() == DacGameInstance.GameState.WAITING || instance.getState() == DacGameInstance.GameState.STARTING) {
-                        player.sendMessage(org.bukkit.ChatColor.GREEN + "Retour au lobby...");
+                        player.sendMessage(CC.GREEN + "Retour au lobby...");
                         try {
                             com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
                             out.writeUTF("Connect");
                             out.writeUTF(plugin.getConfig().getString("bungeecord.fallback-server", "lobby"));
                             player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
                         } catch (Exception e) {
-                            player.sendMessage(org.bukkit.ChatColor.RED + "Impossible de se connecter au lobby.");
+                            player.sendMessage(CC.RED + "Impossible de se connecter au lobby.");
                         }
                     }
                 }

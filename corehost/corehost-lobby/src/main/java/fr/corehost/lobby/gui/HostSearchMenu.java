@@ -1,7 +1,7 @@
 package fr.corehost.lobby.gui;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -30,7 +30,7 @@ public class HostSearchMenu implements CustomMenu {
 
 
     public HostSearchMenu() {
-        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.GOLD + "Recherche de Serveurs");
+        this.inventory = Bukkit.createInventory(this, 54, CC.DARK_GRAY + "» " + CC.GOLD + "Recherche de Serveurs");
         initializeItems();
     }
 
@@ -48,43 +48,43 @@ public class HostSearchMenu implements CustomMenu {
         String currentStatusFilter = statusFilter == null ? "Tous" : statusFilter.name();
 
         ItemStack createItem = new ItemBuilder(Material.NETHER_STAR)
-            .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Créer un Host")
+            .setName(CC.GOLD + "" + CC.BOLD + "Créer un Host")
             .setLore(
                 "",
-                ChatColor.GRAY + "Créez votre propre serveur",
-                ChatColor.GRAY + "et invitez vos amis !",
+                CC.GRAY + "Créez votre propre serveur",
+                CC.GRAY + "et invitez vos amis !",
                 "",
-                ChatColor.YELLOW + "► Cliquez pour créer"
+                CC.YELLOW + "► Cliquez pour créer"
             ).build();
         inventory.setItem(53, createItem);
 
         // Refresh item
         ItemStack refreshItem = new ItemBuilder(Material.EMERALD)
-            .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Rafraîchir la liste")
+            .setName(CC.GREEN + "" + CC.BOLD + "Rafraîchir la liste")
             .setLore(
                 "",
-                ChatColor.GRAY + "Mettre à jour les serveurs",
-                ChatColor.DARK_GRAY + "(Actualisation automatique toutes les 2s)"
+                CC.GRAY + "Mettre à jour les serveurs",
+                CC.DARK_GRAY + "(Actualisation automatique toutes les 2s)"
             ).build();
         inventory.setItem(49, refreshItem);
         
         // Filter by Game item
         ItemStack gameFilterItem = new ItemBuilder(Material.HOPPER)
-            .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Jeu")
+            .setName(CC.AQUA + "" + CC.BOLD + "Filtre par Jeu")
             .setLore(
-                ChatColor.GRAY + "Actuel: " + ChatColor.YELLOW + currentFilter,
+                CC.GRAY + "Actuel: " + CC.YELLOW + currentFilter,
                 "",
-                ChatColor.YELLOW + "► Cliquez pour changer"
+                CC.YELLOW + "► Cliquez pour changer"
             ).build();
         inventory.setItem(45, gameFilterItem);
         
         // Filter by Status item
         ItemStack statusFilterItem = new ItemBuilder(Material.COMPARATOR)
-            .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Filtre par Statut")
+            .setName(CC.AQUA + "" + CC.BOLD + "Filtre par Statut")
             .setLore(
-                ChatColor.GRAY + "Actuel: " + ChatColor.YELLOW + currentStatusFilter,
+                CC.GRAY + "Actuel: " + CC.YELLOW + currentStatusFilter,
                 "",
-                ChatColor.YELLOW + "► Cliquez pour changer"
+                CC.YELLOW + "► Cliquez pour changer"
             ).build();
         inventory.setItem(46, statusFilterItem);
     }
@@ -98,11 +98,11 @@ public class HostSearchMenu implements CustomMenu {
                 inventory.setItem(i, new ItemStack(Material.AIR));
             }
             ItemStack maintenanceItem = new ItemBuilder(Material.BARRIER)
-                .setName(ChatColor.RED + "" + ChatColor.BOLD + "Système en Maintenance")
+                .setName(CC.RED + "" + CC.BOLD + "Système en Maintenance")
                 .setLore(
                     "",
-                    ChatColor.GRAY + "La recherche de Host est",
-                    ChatColor.GRAY + "temporairement désactivée."
+                    CC.GRAY + "La recherche de Host est",
+                    CC.GRAY + "temporairement désactivée."
                 ).build();
             inventory.setItem(22, maintenanceItem); // Center of the inventory
             return;
@@ -138,28 +138,28 @@ public class HostSearchMenu implements CustomMenu {
                     Material mat = Material.matchMaterial(materialName);
                     if (mat == null) mat = Material.BEDROCK;
                     
-                    String statusColor = host.getStatus() == HostStatus.PLAYING ? ChatColor.RED.toString() : ChatColor.GREEN.toString();
+                    String statusColor = host.getStatus() == HostStatus.PLAYING ? CC.RED.toString() : CC.GREEN.toString();
                     List<String> lore = new java.util.ArrayList<>();
                     lore.add("");
-                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Hôte : " + ChatColor.WHITE + host.getOwnerName());
-                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Statut : " + statusColor + host.getStatus().name());
-                    lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Joueurs : " + ChatColor.YELLOW + host.getCurrentPlayers() + ChatColor.DARK_GRAY + "/" + ChatColor.YELLOW + host.getMaxPlayers());
+                    lore.add(CC.DARK_GRAY + "▪ " + CC.GRAY + "Hôte : " + CC.WHITE + host.getOwnerName());
+                    lore.add(CC.DARK_GRAY + "▪ " + CC.GRAY + "Statut : " + statusColor + host.getStatus().name());
+                    lore.add(CC.DARK_GRAY + "▪ " + CC.GRAY + "Joueurs : " + CC.YELLOW + host.getCurrentPlayers() + CC.DARK_GRAY + "/" + CC.YELLOW + host.getMaxPlayers());
                     
                     if (host.getGameType().equalsIgnoreCase("sumo")) {
                         lore.add("");
-                        lore.add(ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Configuration :");
-                        lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Manches : " + ChatColor.AQUA + "BO" + host.getBestOf());
-                        String djStatus = host.isDoubleJumpEnabled() ? ChatColor.GREEN + "Actif" : ChatColor.RED + "Inactif";
-                        lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Double Saut : " + djStatus);
-                        String kbStatus = host.isCustomKB() ? ChatColor.GREEN + "Custom" : ChatColor.RED + "Vanilla";
-                        lore.add(ChatColor.DARK_GRAY + "  » " + ChatColor.GRAY + "Knockback : " + kbStatus);
+                        lore.add(CC.DARK_GRAY + "▪ " + CC.GRAY + "Configuration :");
+                        lore.add(CC.DARK_GRAY + "  » " + CC.GRAY + "Manches : " + CC.AQUA + "BO" + host.getBestOf());
+                        String djStatus = host.isDoubleJumpEnabled() ? CC.GREEN + "Actif" : CC.RED + "Inactif";
+                        lore.add(CC.DARK_GRAY + "  » " + CC.GRAY + "Double Saut : " + djStatus);
+                        String kbStatus = host.isCustomKB() ? CC.GREEN + "Custom" : CC.RED + "Vanilla";
+                        lore.add(CC.DARK_GRAY + "  » " + CC.GRAY + "Knockback : " + kbStatus);
                     }
                     
                     lore.add("");
-                    lore.add(ChatColor.GREEN + "► Cliquez pour rejoindre !");
+                    lore.add(CC.GREEN + "► Cliquez pour rejoindre !");
                     
                     ItemStack hostItem = new ItemBuilder(mat)
-                        .setName(ChatColor.YELLOW + "Serveur " + host.getGameType())
+                        .setName(CC.YELLOW + "Serveur " + host.getGameType())
                         .setLore(lore)
                         .addPersistentData(hostKey, PersistentDataType.STRING, host.getHostId().toString())
                         .addPersistentData(serverKey, PersistentDataType.STRING, host.getServerName())
@@ -212,7 +212,7 @@ public class HostSearchMenu implements CustomMenu {
             drawHosts();
         } else if (clicked.getType() == Material.NETHER_STAR) {
             if (player.hasMetadata("modmode")) {
-                player.sendMessage(prefix + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+                player.sendMessage(prefix + CC.RED + "Vous ne pouvez pas créer un host en mode Modération !");
                 player.closeInventory();
                 return;
             }
@@ -249,7 +249,7 @@ public class HostSearchMenu implements CustomMenu {
                 
                 if (serverName != null && hostId != null) {
                     if (player.hasMetadata("modmode")) {
-                        player.sendMessage(prefix + ChatColor.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
+                        player.sendMessage(prefix + CC.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
                         player.closeInventory();
                         return;
                     }
@@ -264,7 +264,7 @@ public class HostSearchMenu implements CustomMenu {
                     }
                     
                     player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-                    player.sendMessage(prefix + "Connexion au serveur " + ChatColor.GREEN + serverName + ChatColor.GRAY + "...");
+                    player.sendMessage(prefix + "Connexion au serveur " + CC.GREEN + serverName + CC.GRAY + "...");
                     plugin.connectToServer(player, serverName);
                     player.closeInventory();
                 }

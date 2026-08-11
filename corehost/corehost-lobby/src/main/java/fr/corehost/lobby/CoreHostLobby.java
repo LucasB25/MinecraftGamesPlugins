@@ -1,5 +1,7 @@
 package fr.corehost.lobby;
 
+import fr.corehost.api.utils.CC;
+
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
@@ -114,7 +116,7 @@ public class CoreHostLobby extends JavaPlugin {
         getServer().setSpawnRadius(0);
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"deprecation", "removal"})
     private void setupWorlds() {
         for (World world : Bukkit.getWorlds()) {
             world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
@@ -197,7 +199,7 @@ public class CoreHostLobby extends JavaPlugin {
 
     public void connectToServer(Player player, String serverName) {
         if (player.hasMetadata("modmode")) {
-            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + org.bukkit.ChatColor.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + CC.RED + "Vous ne pouvez pas rejoindre un host en mode Modération !");
             return;
         }
 
@@ -224,7 +226,7 @@ public class CoreHostLobby extends JavaPlugin {
                     player.sendPluginMessage(this, "BungeeCord", out.toByteArray());
 
                     if (onlineMember != null && !onlineMember.getUniqueId().equals(player.getUniqueId())) {
-                        onlineMember.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + org.bukkit.ChatColor.YELLOW + "Le chef du groupe vous a téléporté sur " + serverName + " !");
+                        onlineMember.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + CC.YELLOW + "Le chef du groupe vous a téléporté sur " + serverName + " !");
                     }
                 }
             }

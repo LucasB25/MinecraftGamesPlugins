@@ -1,7 +1,7 @@
 package fr.corehost.lobby.gui;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -24,7 +24,7 @@ public class HostCreateMenu implements CustomMenu {
     private final Inventory inventory;
 
     public HostCreateMenu() {
-        this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.GOLD + "Créer un Serveur");
+        this.inventory = Bukkit.createInventory(this, 27, CC.DARK_GRAY + "» " + CC.GOLD + "Créer un Serveur");
         initializeItems();
     }
 
@@ -48,13 +48,13 @@ public class HostCreateMenu implements CustomMenu {
                 if (mat == null) mat = Material.BEDROCK;
                 
                 ItemBuilder builder = new ItemBuilder(mat)
-                    .setName(ChatColor.translateAlternateColorCodes('&', name))
+                    .setName(CC.translate( name))
                     .addPersistentData(gameKey, PersistentDataType.STRING, gameId);
                     
                 if (configLore != null) {
                     List<String> lore = new ArrayList<>();
                     for (String line : configLore) {
-                        lore.add(ChatColor.translateAlternateColorCodes('&', line));
+                        lore.add(CC.translate( line));
                     }
                     builder.setLore(lore);
                 }
@@ -70,7 +70,7 @@ public class HostCreateMenu implements CustomMenu {
 
     public void open(Player player) {
         if (player.hasMetadata("modmode")) {
-            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + CC.RED + "Vous ne pouvez pas créer un host en mode Modération !");
             return;
         }
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
@@ -85,7 +85,7 @@ public class HostCreateMenu implements CustomMenu {
     @Override
     public void onClick(InventoryClickEvent event, Player player) {
         if (player.hasMetadata("modmode")) {
-            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + CC.RED + "Vous ne pouvez pas créer un host en mode Modération !");
             player.closeInventory();
             return;
         }

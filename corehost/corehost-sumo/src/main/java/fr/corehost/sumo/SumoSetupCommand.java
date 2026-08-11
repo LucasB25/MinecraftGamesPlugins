@@ -1,6 +1,6 @@
 package fr.corehost.sumo;
 
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,19 +26,19 @@ public class SumoSetupCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
         Player player = (Player) sender;
 
         if (!player.hasPermission("corehost.admin")) {
-            player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Vous n'avez pas la permission.");
+            player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Vous n'avez pas la permission.");
             return true;
         }
 
         if (args.length < 2) {
-            player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Usage: /sumosetup <mapName> <action>");
+            player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Usage: /sumosetup <mapName> <action>");
             return true;
         }
 
@@ -51,44 +51,44 @@ public class SumoSetupCommand implements CommandExecutor, TabCompleter {
             case "setspawn1":
                 mapConfig.setSpawn1(player.getLocation());
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Spawn 1 défini et sauvegardé pour la map " + mapName);
+                player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Spawn 1 défini et sauvegardé pour la map " + mapName);
                 break;
             case "setspawn2":
                 mapConfig.setSpawn2(player.getLocation());
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Spawn 2 défini et sauvegardé pour la map " + mapName);
+                player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Spawn 2 défini et sauvegardé pour la map " + mapName);
                 break;
             case "setdeathheight":
                 mapConfig.setDeathHeight(player.getLocation().getBlockY());
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Death height défini à " + player.getLocation().getBlockY() + " et sauvegardé pour la map " + mapName);
+                player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Death height défini à " + player.getLocation().getBlockY() + " et sauvegardé pour la map " + mapName);
                 break;
             case "save":
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Configuration de la map " + mapName + " sauvegardée avec succès!");
+                player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Configuration de la map " + mapName + " sauvegardée avec succès!");
                 break;
             case "tp":
             case "tp1":
                 if (mapConfig.getSpawn1() != null) {
                     player.teleport(mapConfig.getSpawn1());
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Téléporté au Spawn 1 de " + mapName);
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Téléporté au Spawn 1 de " + mapName);
                 } else if (org.bukkit.Bukkit.getWorld(mapName) != null) {
                     player.teleport(org.bukkit.Bukkit.getWorld(mapName).getSpawnLocation());
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Téléporté au spawn du monde " + mapName);
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Téléporté au spawn du monde " + mapName);
                 } else {
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Aucun spawn défini pour " + mapName + " et le monde n'est pas chargé.");
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Aucun spawn défini pour " + mapName + " et le monde n'est pas chargé.");
                 }
                 break;
             case "tp2":
                 if (mapConfig.getSpawn2() != null) {
                     player.teleport(mapConfig.getSpawn2());
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.GREEN + "Téléporté au Spawn 2 de " + mapName);
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.GREEN + "Téléporté au Spawn 2 de " + mapName);
                 } else {
-                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Aucun Spawn 2 défini pour la map " + mapName);
+                    player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Aucun Spawn 2 défini pour la map " + mapName);
                 }
                 break;
             default:
-                player.sendMessage(SumoGameInstance.SUMO_PREFIX + ChatColor.RED + "Action inconnue. Actions valides: " + String.join(", ", actions));
+                player.sendMessage(SumoGameInstance.SUMO_PREFIX + CC.RED + "Action inconnue. Actions valides: " + String.join(", ", actions));
                 break;
         }
 

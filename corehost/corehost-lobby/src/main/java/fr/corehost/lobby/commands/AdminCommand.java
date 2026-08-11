@@ -1,7 +1,7 @@
 package fr.corehost.lobby.commands;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -27,14 +27,14 @@ public class AdminCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(Constants.PREFIX + ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(Constants.PREFIX + CC.RED + "Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
         Player player = (Player) sender;
 
         if (!player.hasPermission("corehost.admin")) {
-            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Vous n'avez pas la permission d'exécuter cette commande.");
+            player.sendMessage(Constants.PREFIX + CC.RED + "Vous n'avez pas la permission d'exécuter cette commande.");
             return true;
         }
 
@@ -43,30 +43,30 @@ public class AdminCommand implements TabExecutor {
             String sub = args[2].toLowerCase();
             
             if (!courseId.equals("easy") && !courseId.equals("hard")) {
-                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Parcours invalide. Utilisez 'easy' ou 'hard'.");
+                player.sendMessage(Constants.PREFIX + CC.RED + "Parcours invalide. Utilisez 'easy' ou 'hard'.");
                 return true;
             }
             
             switch (sub) {
                 case "sethologram":
                     plugin.getParkourManager().setHologramLocation(courseId, player.getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Hologramme du parkour " + courseId + " défini.");
+                    player.sendMessage(Constants.PREFIX + CC.GREEN + "Hologramme du parkour " + courseId + " défini.");
                     return true;
                 case "setstart":
                     plugin.getParkourManager().setStartPlate(courseId, player.getLocation().getBlock().getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de départ du parkour " + courseId + " définie.");
+                    player.sendMessage(Constants.PREFIX + CC.GREEN + "Plaque de départ du parkour " + courseId + " définie.");
                     return true;
                 case "setend":
                     plugin.getParkourManager().setEndPlate(courseId, player.getLocation().getBlock().getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Plaque de fin du parkour " + courseId + " définie.");
+                    player.sendMessage(Constants.PREFIX + CC.GREEN + "Plaque de fin du parkour " + courseId + " définie.");
                     return true;
                 case "addcheckpoint":
                     plugin.getParkourManager().addCheckpoint(courseId, player.getLocation().getBlock().getLocation());
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Checkpoint ajouté pour le parkour " + courseId + ".");
+                    player.sendMessage(Constants.PREFIX + CC.GREEN + "Checkpoint ajouté pour le parkour " + courseId + ".");
                     return true;
                 case "clearcheckpoints":
                     plugin.getParkourManager().clearCheckpoints(courseId);
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Checkpoints effacés pour le parkour " + courseId + ".");
+                    player.sendMessage(Constants.PREFIX + CC.GREEN + "Checkpoints effacés pour le parkour " + courseId + ".");
                     return true;
             }
         } else if (args.length >= 2 && args[0].equalsIgnoreCase("headhunt")) {
@@ -77,12 +77,12 @@ public class AdminCommand implements TabExecutor {
                     if (targetBlockAdd != null && (targetBlockAdd.getType() == org.bukkit.Material.PLAYER_HEAD || targetBlockAdd.getType() == org.bukkit.Material.PLAYER_WALL_HEAD)) {
                         boolean added = plugin.getHeadHuntManager().addHead(targetBlockAdd.getLocation());
                         if (added) {
-                            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Tête ajoutée à la chasse aux trésors !");
+                            player.sendMessage(Constants.PREFIX + CC.GREEN + "Tête ajoutée à la chasse aux trésors !");
                         } else {
-                            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Cette tête fait déjà partie de la chasse.");
+                            player.sendMessage(Constants.PREFIX + CC.RED + "Cette tête fait déjà partie de la chasse.");
                         }
                     } else {
-                        player.sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez regarder une tête de joueur (à moins de 5 blocs).");
+                        player.sendMessage(Constants.PREFIX + CC.RED + "Vous devez regarder une tête de joueur (à moins de 5 blocs).");
                     }
                     return true;
                 case "remove":
@@ -90,23 +90,23 @@ public class AdminCommand implements TabExecutor {
                     if (targetBlockRemove != null && (targetBlockRemove.getType() == org.bukkit.Material.PLAYER_HEAD || targetBlockRemove.getType() == org.bukkit.Material.PLAYER_WALL_HEAD)) {
                         boolean removed = plugin.getHeadHuntManager().removeHead(targetBlockRemove.getLocation());
                         if (removed) {
-                            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Tête retirée de la chasse aux trésors !");
+                            player.sendMessage(Constants.PREFIX + CC.GREEN + "Tête retirée de la chasse aux trésors !");
                         } else {
-                            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Cette tête ne faisait pas partie de la chasse.");
+                            player.sendMessage(Constants.PREFIX + CC.RED + "Cette tête ne faisait pas partie de la chasse.");
                         }
                     } else {
-                        player.sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez regarder une tête de joueur (à moins de 5 blocs).");
+                        player.sendMessage(Constants.PREFIX + CC.RED + "Vous devez regarder une tête de joueur (à moins de 5 blocs).");
                     }
                     return true;
                 case "list":
-                    player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Têtes enregistrées : " + plugin.getHeadHuntManager().getTotalHeads());
+                    player.sendMessage(Constants.PREFIX + CC.YELLOW + "Têtes enregistrées : " + plugin.getHeadHuntManager().getTotalHeads());
                     java.util.List<org.bukkit.Location> heads = plugin.getHeadHuntManager().getHeads();
                     for (int i = 0; i < heads.size(); i++) {
                         org.bukkit.Location loc = heads.get(i);
                         net.md_5.bungee.api.chat.TextComponent msg = new net.md_5.bungee.api.chat.TextComponent(" - Tête #" + i + " : " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
                         msg.setColor(net.md_5.bungee.api.ChatColor.GRAY);
                         msg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.RUN_COMMAND, "/admin headhunt tp " + i));
-                        msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(ChatColor.GREEN + "Clique pour te téléporter !")));
+                        msg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT, new net.md_5.bungee.api.chat.hover.content.Text(CC.GREEN + "Clique pour te téléporter !")));
                         player.spigot().sendMessage(msg);
                     }
                     return true;
@@ -120,12 +120,12 @@ public class AdminCommand implements TabExecutor {
                                 // Add 0.5 to X/Z and some Y to spawn on top safely
                                 target.add(0.5, 1, 0.5);
                                 player.teleport(target);
-                                player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Téléporté à la tête #" + index);
+                                player.sendMessage(Constants.PREFIX + CC.GREEN + "Téléporté à la tête #" + index);
                             } else {
-                                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Index invalide.");
+                                player.sendMessage(Constants.PREFIX + CC.RED + "Index invalide.");
                             }
                         } catch (NumberFormatException e) {
-                            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Index invalide.");
+                            player.sendMessage(Constants.PREFIX + CC.RED + "Index invalide.");
                         }
                     }
                     return true;
@@ -134,16 +134,16 @@ public class AdminCommand implements TabExecutor {
                         Player target = Bukkit.getPlayer(args[2]);
                         if (target != null) {
                             plugin.getHeadHuntManager().resetPlayer(target.getUniqueId());
-                            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Progression HeadHunt de " + target.getName() + " réinitialisée !");
-                            target.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Votre progression des têtes cachées a été réinitialisée.");
+                            player.sendMessage(Constants.PREFIX + CC.GREEN + "Progression HeadHunt de " + target.getName() + " réinitialisée !");
+                            target.sendMessage(Constants.PREFIX + CC.YELLOW + "Votre progression des têtes cachées a été réinitialisée.");
                             if (plugin.getScoreboardManager() != null) {
                                 Bukkit.getScheduler().runTask(plugin, () -> plugin.getScoreboardManager().updateScoreboard(target));
                             }
                         } else {
-                            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Joueur introuvable.");
+                            player.sendMessage(Constants.PREFIX + CC.RED + "Joueur introuvable.");
                         }
                     } else {
-                        player.sendMessage(Constants.PREFIX + ChatColor.RED + "Usage: /admin headhunt reset <joueur>");
+                        player.sendMessage(Constants.PREFIX + CC.RED + "Usage: /admin headhunt reset <joueur>");
                     }
                     return true;
             }
@@ -152,11 +152,11 @@ public class AdminCommand implements TabExecutor {
         if (buildModePlayers.contains(player.getUniqueId())) {
             buildModePlayers.remove(player.getUniqueId());
             player.setGameMode(GameMode.ADVENTURE);
-            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Mode Admin (Build) désactivé.");
+            player.sendMessage(Constants.PREFIX + CC.RED + "Mode Admin (Build) désactivé.");
         } else {
             buildModePlayers.add(player.getUniqueId());
             player.setGameMode(GameMode.CREATIVE);
-            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Mode Admin (Build) activé. Vous êtes en mode créatif.");
+            player.sendMessage(Constants.PREFIX + CC.GREEN + "Mode Admin (Build) activé. Vous êtes en mode créatif.");
         }
 
         return true;

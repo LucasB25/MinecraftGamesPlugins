@@ -3,7 +3,7 @@ package fr.corehost.lobby.gui;
 import fr.corehost.lobby.utils.Constants;
 import fr.corehost.lobby.CoreHostLobby;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
@@ -36,7 +36,7 @@ public class IgnoreMenu implements CustomMenu {
     }
 
     public void open(Player player) {
-        this.inventory = Bukkit.createInventory(this, 54, ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Joueurs Ignorés");
+        this.inventory = Bukkit.createInventory(this, 54, CC.DARK_GRAY + "» " + CC.LIGHT_PURPLE + "Joueurs Ignorés");
 
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
 
@@ -72,15 +72,15 @@ public class IgnoreMenu implements CustomMenu {
 
                     ItemStack skull = new ItemBuilder(Material.PLAYER_HEAD)
                         .setSkullOwner(name)
-                        .setName(ChatColor.RED + name)
+                        .setName(CC.RED + name)
                         .setLore(
                             "",
-                            ChatColor.GRAY + "Ce joueur est actuellement",
-                            ChatColor.GRAY + "ignoré. Vous ne recevrez",
-                            ChatColor.GRAY + "plus de messages privés",
-                            ChatColor.GRAY + "de sa part.",
+                            CC.GRAY + "Ce joueur est actuellement",
+                            CC.GRAY + "ignoré. Vous ne recevrez",
+                            CC.GRAY + "plus de messages privés",
+                            CC.GRAY + "de sa part.",
                             "",
-                            ChatColor.GREEN + "► Cliquez pour ne plus l'ignorer"
+                            CC.GREEN + "► Cliquez pour ne plus l'ignorer"
                         ).build();
                     inventory.setItem(slot, skull);
                     slot++;
@@ -88,10 +88,10 @@ public class IgnoreMenu implements CustomMenu {
 
                 if (ignoredPlayersList.isEmpty()) {
                     ItemStack empty = new ItemBuilder(Material.BARRIER)
-                        .setName(ChatColor.RED + "Aucun joueur ignoré")
+                        .setName(CC.RED + "Aucun joueur ignoré")
                         .setLore(
                             "",
-                            ChatColor.GRAY + "Vous n'avez ignoré personne."
+                            CC.GRAY + "Vous n'avez ignoré personne."
                         ).build();
                     inventory.setItem(22, empty); // Center of inventory
                 }
@@ -134,7 +134,7 @@ public class IgnoreMenu implements CustomMenu {
                 }
 
                 Bukkit.getScheduler().runTask(plugin, () -> {
-                    player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Vous n'ignorez plus " + name + ".");
+                    player.sendMessage(Constants.PREFIX + CC.GREEN + "Vous n'ignorez plus " + name + ".");
                     open(player); // Refresh current menu
                 });
             });

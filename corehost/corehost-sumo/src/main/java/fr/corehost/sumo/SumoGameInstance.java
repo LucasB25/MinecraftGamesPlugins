@@ -1,7 +1,7 @@
 package fr.corehost.sumo;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -170,7 +170,7 @@ public class SumoGameInstance {
 
     public void addPlayer(Player player) {
         if (mapConfig == null || !mapConfig.isSetup()) {
-            player.sendMessage(SUMO_PREFIX + ChatColor.RED + "Désolé, il y a un souci dans le mode de jeu : aucune carte n'est disponible ou configurée correctement.");
+            player.sendMessage(SUMO_PREFIX + CC.RED + "Désolé, il y a un souci dans le mode de jeu : aucune carte n'est disponible ou configurée correctement.");
             return;
         }
 
@@ -184,7 +184,7 @@ public class SumoGameInstance {
             if (coreGame != null && coreGame.getSpectatorManager() != null) {
                 coreGame.getSpectatorManager().setSpectator(player, true);
                 player.teleport(world.getSpawnLocation());
-                player.sendMessage(SUMO_PREFIX + ChatColor.YELLOW + "La partie est en cours. Vous avez rejoint en tant que spectateur.");
+                player.sendMessage(SUMO_PREFIX + CC.YELLOW + "La partie est en cours. Vous avez rejoint en tant que spectateur.");
                 if (scoreboardManager != null) {
                     scoreboardManager.setupScoreboard(player);
                 }
@@ -203,7 +203,7 @@ public class SumoGameInstance {
             scoreboardManager.setupScoreboard(player);
             plugin.getGameManager().registerPlayer(player.getUniqueId(), this);
 
-            broadcast(ChatColor.YELLOW + player.getName() + " a rejoint la partie (" + players.size() + "/2)");
+            broadcast(CC.YELLOW + player.getName() + " a rejoint la partie (" + players.size() + "/2)");
 
             syncHostData();
             checkStart(true);
@@ -221,7 +221,7 @@ public class SumoGameInstance {
             handleDeath(player, true);
         } else {
             alivePlayers.remove(player.getUniqueId());
-            broadcast(ChatColor.YELLOW + player.getName() + " a quitté la partie.");
+            broadcast(CC.YELLOW + player.getName() + " a quitté la partie.");
             scoreboardManager.updateAll();
         }
 
@@ -250,9 +250,9 @@ public class SumoGameInstance {
         if (player.isOnline()) {
             int loserWins = wins.getOrDefault(player.getUniqueId(), 0);
             if (outOfBounds) {
-                player.sendTitle(ChatColor.RED + "MANCHE PERDUE", ChatColor.GRAY + "Score: " + loserWins + "/" + targetScore, 5, 40, 10);
+                player.sendTitle(CC.RED + "MANCHE PERDUE", CC.GRAY + "Score: " + loserWins + "/" + targetScore, 5, 40, 10);
             } else {
-                player.sendTitle(ChatColor.RED + "ÉLIMINÉ !", ChatColor.GRAY + "Par les statistiques", 5, 40, 10);
+                player.sendTitle(CC.RED + "ÉLIMINÉ !", CC.GRAY + "Par les statistiques", 5, 40, 10);
             }
             player.playSound(player.getLocation(), Sound.ENTITY_BLAZE_DEATH, 1.0f, 1.0f);
         }
@@ -265,18 +265,18 @@ public class SumoGameInstance {
                 wins.put(winner.getUniqueId(), currentWins);
                 
                 // Visual feedback for winner
-                winner.sendTitle(ChatColor.AQUA + "MANCHE GAGNÉE", ChatColor.GRAY + "Score: " + currentWins + "/" + targetScore, 5, 40, 10);
+                winner.sendTitle(CC.AQUA + "MANCHE GAGNÉE", CC.GRAY + "Score: " + currentWins + "/" + targetScore, 5, 40, 10);
                 winner.playSound(winner.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
                 
                 if (outOfBounds) {
                     // Random Death Message only if they fell
                     String randomMsg = DEATH_MESSAGES[new java.util.Random().nextInt(DEATH_MESSAGES.length)];
-                    randomMsg = randomMsg.replace("{loser}", ChatColor.RED + player.getName() + ChatColor.GRAY);
-                    randomMsg = randomMsg.replace("{winner}", ChatColor.AQUA + winner.getName() + ChatColor.GRAY);
+                    randomMsg = randomMsg.replace("{loser}", CC.RED + player.getName() + CC.GRAY);
+                    randomMsg = randomMsg.replace("{winner}", CC.AQUA + winner.getName() + CC.GRAY);
                     broadcast(randomMsg);
                 }
                 
-                broadcast(ChatColor.AQUA + winner.getName() + " a gagné cette manche ! (" + currentWins + "/" + targetScore + ")");
+                broadcast(CC.AQUA + winner.getName() + " a gagné cette manche ! (" + currentWins + "/" + targetScore + ")");
             }
         }
         
@@ -307,7 +307,7 @@ public class SumoGameInstance {
                         state = GameState.WAITING;
                         frozen = false;
                         scoreboardManager.updateAll();
-                        broadcast(ChatColor.RED + "Pas assez de joueurs, annulation du démarrage.");
+                        broadcast(CC.RED + "Pas assez de joueurs, annulation du démarrage.");
                         
                         // TP remaining player back to wait area
                         for (UUID uuid : players) {
@@ -320,7 +320,7 @@ public class SumoGameInstance {
                     }
 
                     if (totalWait == 10) {
-                        broadcast(ChatColor.YELLOW + "La partie commencera dans 10 secondes...");
+                        broadcast(CC.YELLOW + "La partie commencera dans 10 secondes...");
                     }
 
                     if (totalWait == 5) {
@@ -329,12 +329,12 @@ public class SumoGameInstance {
                     }
 
                     if (totalWait <= 5 && totalWait > 0) {
-                        broadcast(ChatColor.YELLOW + "Début dans " + totalWait + " secondes...");
+                        broadcast(CC.YELLOW + "Début dans " + totalWait + " secondes...");
                         if (totalWait <= 3) {
                             for (UUID uuid : players) {
                                 Player p = Bukkit.getPlayer(uuid);
                                 if (p != null) {
-                                    p.sendTitle(ChatColor.YELLOW + "" + totalWait, "", 2, 15, 2);
+                                    p.sendTitle(CC.YELLOW + "" + totalWait, "", 2, 15, 2);
                                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f + ((4 - totalWait) * 0.2f));
                                 }
                             }
@@ -352,12 +352,12 @@ public class SumoGameInstance {
                             Player p = Bukkit.getPlayer(uuid);
                             if (p != null) {
                                 p.getInventory().clear();
-                                p.sendTitle(ChatColor.GREEN + "C'EST PARTI !", "", 5, 20, 5);
+                                p.sendTitle(CC.GREEN + "C'EST PARTI !", "", 5, 20, 5);
                                 p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f);
                             }
                         }
 
-                        broadcast(ChatColor.GREEN + "La partie commence !");
+                        broadcast(CC.GREEN + "La partie commence !");
                         startRoundTimer();
                         cancel();
                         return;
@@ -396,8 +396,8 @@ public class SumoGameInstance {
                 CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
                 
                 if (roundWinner != null) {
-                    broadcast(ChatColor.GOLD + roundWinner.getName() + " a gagné la partie !");
-                    broadcast(ChatColor.YELLOW + "Retour au lobby dans 10 secondes...");
+                    broadcast(CC.GOLD + roundWinner.getName() + " a gagné la partie !");
+                    broadcast(CC.YELLOW + "Retour au lobby dans 10 secondes...");
                     
                     boolean forfeit = players.size() < 2;
                     
@@ -426,15 +426,15 @@ public class SumoGameInstance {
                                     }
                                 }
                                 
-                                p.sendTitle(ChatColor.GOLD + "VICTOIRE", ChatColor.YELLOW + "Bien joué ! (+" + totalCoins + " coins)", 10, 60, 20);
+                                p.sendTitle(CC.GOLD + "VICTOIRE", CC.YELLOW + "Bien joué ! (+" + totalCoins + " coins)", 10, 60, 20);
                                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                             } else {
                                 // Loser logic
                                 totalCoins += matchLoseBonus;
-                                p.sendTitle(ChatColor.RED + "DÉFAITE", ChatColor.GRAY + "Tu gagnes " + totalCoins + " coins.", 10, 60, 20);
+                                p.sendTitle(CC.RED + "DÉFAITE", CC.GRAY + "Tu gagnes " + totalCoins + " coins.", 10, 60, 20);
                             }
                             
-                            p.sendMessage(SUMO_PREFIX + ChatColor.GOLD + "Récompense : " + ChatColor.YELLOW + "+" + totalCoins + " Coins");
+                            p.sendMessage(SUMO_PREFIX + CC.GOLD + "Récompense : " + CC.YELLOW + "+" + totalCoins + " Coins");
                             
                             // Send coins to Redis
                             if (coreGame != null && coreGame.getRedisManager() != null && totalCoins > 0) {
@@ -443,7 +443,7 @@ public class SumoGameInstance {
                         }
                     }
                 } else {
-                    broadcast(ChatColor.YELLOW + "Égalité / Forfait !");
+                    broadcast(CC.YELLOW + "Égalité / Forfait !");
                 }
                 
                 for (UUID uuid : players) {
@@ -500,14 +500,14 @@ public class SumoGameInstance {
                 }
                 
                 if (roundTime <= 0) {
-                    broadcast(ChatColor.YELLOW + "Temps écoulé ! Évaluation des statistiques pour départage...");
+                    broadcast(CC.YELLOW + "Temps écoulé ! Évaluation des statistiques pour départage...");
                     resolveTieBreaker();
                     cancel();
                     return;
                 }
                 
                 if (roundTime == 10 || roundTime <= 3) {
-                    broadcast(ChatColor.RED + "Fin de la manche dans " + roundTime + " seconde" + (roundTime > 1 ? "s" : "") + " !");
+                    broadcast(CC.RED + "Fin de la manche dans " + roundTime + " seconde" + (roundTime > 1 ? "s" : "") + " !");
                     for (UUID uuid : players) {
                         Player p = Bukkit.getPlayer(uuid);
                         if (p != null) p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 2.0f);
@@ -536,11 +536,11 @@ public class SumoGameInstance {
                     Player p = Bukkit.getPlayer(uuid);
                     if (p != null && p.isOnline()) {
                         int combo = currentCombos.getOrDefault(uuid, 0);
-                        String actionBarMsg = ChatColor.GOLD + "Combo: " + ChatColor.YELLOW + combo;
+                        String actionBarMsg = CC.GOLD + "Combo: " + CC.YELLOW + combo;
                         
                         if (doubleJumpEnabled) {
-                            String djStatus = usedDoubleJump.contains(uuid) ? (ChatColor.RED + "✖ Utilisé") : (ChatColor.GREEN + "✔ Prêt");
-                            actionBarMsg += ChatColor.DARK_GRAY + " | " + ChatColor.AQUA + "Double Jump: " + djStatus;
+                            String djStatus = usedDoubleJump.contains(uuid) ? (CC.RED + "✖ Utilisé") : (CC.GREEN + "✔ Prêt");
+                            actionBarMsg += CC.DARK_GRAY + " | " + CC.AQUA + "Double Jump: " + djStatus;
                         }
                         
                         p.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, net.md_5.bungee.api.chat.TextComponent.fromLegacyText(actionBarMsg));
@@ -589,10 +589,10 @@ public class SumoGameInstance {
             int lHits = totalHits.getOrDefault(loser.getUniqueId(), 0);
             int lCombos = maxCombos.getOrDefault(loser.getUniqueId(), 0);
             
-            broadcast(ChatColor.GOLD + "Victoire par statistiques : " + ChatColor.YELLOW + winner.getName() 
-                + ChatColor.GRAY + " (" + wHits + " coups, " + wCombos + " max combo) " 
-                + ChatColor.DARK_GRAY + "vs " + ChatColor.RED + loser.getName() 
-                + ChatColor.DARK_GRAY + " (" + lHits + " coups, " + lCombos + " max combo)");
+            broadcast(CC.GOLD + "Victoire par statistiques : " + CC.YELLOW + winner.getName() 
+                + CC.GRAY + " (" + wHits + " coups, " + wCombos + " max combo) " 
+                + CC.DARK_GRAY + "vs " + CC.RED + loser.getName() 
+                + CC.DARK_GRAY + " (" + lHits + " coups, " + lCombos + " max combo)");
                 
             handleDeath(loser, false);
         } else {
@@ -600,9 +600,9 @@ public class SumoGameInstance {
                 UUID p1 = alivePlayers.get(0);
                 int h1 = totalHits.getOrDefault(p1, 0);
                 int c1 = maxCombos.getOrDefault(p1, 0);
-                broadcast(ChatColor.YELLOW + "Égalité parfaite aux statistiques ! " + ChatColor.GRAY + "(" + h1 + " coups, " + c1 + " max combo chacun)");
+                broadcast(CC.YELLOW + "Égalité parfaite aux statistiques ! " + CC.GRAY + "(" + h1 + " coups, " + c1 + " max combo chacun)");
             } else {
-                broadcast(ChatColor.YELLOW + "Égalité parfaite aux statistiques !");
+                broadcast(CC.YELLOW + "Égalité parfaite aux statistiques !");
             }
             handleDraw();
         }
@@ -617,7 +617,7 @@ public class SumoGameInstance {
         teleportToFightSpawns();
         
         if (consecutiveDraws >= maxDraws) {
-            broadcast(ChatColor.RED + "Trop d'égalités consécutives. La partie est annulée.");
+            broadcast(CC.RED + "Trop d'égalités consécutives. La partie est annulée.");
             checkWin(null); // End the game as a global draw/forfeit
             return;
         }
@@ -625,7 +625,7 @@ public class SumoGameInstance {
         for (UUID uuid : players) {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) {
-                p.sendTitle(ChatColor.YELLOW + "ÉGALITÉ", ChatColor.GRAY + "Temps écoulé", 5, 40, 10);
+                p.sendTitle(CC.YELLOW + "ÉGALITÉ", CC.GRAY + "Temps écoulé", 5, 40, 10);
             }
         }
         
@@ -685,13 +685,13 @@ public class SumoGameInstance {
             org.bukkit.inventory.ItemStack bed = new org.bukkit.inventory.ItemStack(org.bukkit.Material.RED_BED);
             org.bukkit.inventory.meta.ItemMeta meta = bed.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(ChatColor.RED + "Retour au Lobby");
+                meta.setDisplayName(CC.RED + "Retour au Lobby");
                 meta.setLore(java.util.Arrays.asList(
                     "",
-                    ChatColor.GRAY + "Quitter la partie et",
-                    ChatColor.GRAY + "retourner au hub principal.",
+                    CC.GRAY + "Quitter la partie et",
+                    CC.GRAY + "retourner au hub principal.",
                     "",
-                    ChatColor.YELLOW + "► Clic droit pour quitter"
+                    CC.YELLOW + "► Clic droit pour quitter"
                 ));
                 bed.setItemMeta(meta);
             }
@@ -725,7 +725,7 @@ public class SumoGameInstance {
         }
     }
 
-    public static final String SUMO_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "Sumo" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+    public static final String SUMO_PREFIX = CC.DARK_GRAY + "[" + CC.GOLD + "Sumo" + CC.DARK_GRAY + "] " + CC.GRAY;
 
     private void sendPlayerToLobby(Player player) {
         if (player == null || !player.isOnline()) {

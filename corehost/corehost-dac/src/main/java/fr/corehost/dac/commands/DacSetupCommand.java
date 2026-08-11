@@ -1,6 +1,6 @@
 package fr.corehost.dac.commands;
 
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -30,19 +30,19 @@ public class DacSetupCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
         Player player = (Player) sender;
 
         if (!player.hasPermission("corehost.admin")) {
-            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Vous n'avez pas la permission.");
+            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Vous n'avez pas la permission.");
             return true;
         }
 
         if (args.length < 2) {
-            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Usage: /dacsetup <mapName> <action>");
+            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Usage: /dacsetup <mapName> <action>");
             return true;
         }
 
@@ -55,26 +55,26 @@ public class DacSetupCommand implements CommandExecutor, TabCompleter {
             case "setdivingboard":
                 mapConfig.setDivingBoardSpawn(player.getLocation());
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Plongeoir (Diving Board) défini pour la map " + mapName);
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Plongeoir (Diving Board) défini pour la map " + mapName);
                 break;
             case "setspectator":
                 mapConfig.setSpectatorSpawn(player.getLocation());
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Spawn spectateur défini pour la map " + mapName);
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Spawn spectateur défini pour la map " + mapName);
                 break;
             case "setpoolmin":
                 mapConfig.setPoolMin(player.getLocation().getBlock().getLocation());
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Point Min de la piscine défini pour la map " + mapName);
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Point Min de la piscine défini pour la map " + mapName);
                 break;
             case "setpoolmax":
                 mapConfig.setPoolMax(player.getLocation().getBlock().getLocation());
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Point Max de la piscine défini pour la map " + mapName);
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Point Max de la piscine défini pour la map " + mapName);
                 break;
             case "save":
                 plugin.getMapManager().saveMap(mapConfig);
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Configuration de la map " + mapName + " sauvegardée avec succès!");
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Configuration de la map " + mapName + " sauvegardée avec succès!");
                 break;
             case "tp":
                 org.bukkit.Location target = null;
@@ -93,7 +93,7 @@ public class DacSetupCommand implements CommandExecutor, TabCompleter {
                     
                     if (slimeFile.exists()) {
                         org.bukkit.Bukkit.dispatchCommand(org.bukkit.Bukkit.getConsoleSender(), "sw load " + targetWorldName);
-                        player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.YELLOW + "Chargement du SlimeWorld " + targetWorldName + " en cours...");
+                        player.sendMessage(DacGameInstance.DAC_PREFIX + CC.YELLOW + "Chargement du SlimeWorld " + targetWorldName + " en cours...");
                         
                         org.bukkit.Location finalTarget = target;
                         String finalWorldName = targetWorldName;
@@ -106,9 +106,9 @@ public class DacSetupCommand implements CommandExecutor, TabCompleter {
                                 } else {
                                     player.teleport(loaded.getSpawnLocation());
                                 }
-                                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Monde chargé ! Téléportation effectuée.");
+                                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Monde chargé ! Téléportation effectuée.");
                             } else {
-                                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Le monde " + finalWorldName + " n'a pas pu être chargé.");
+                                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Le monde " + finalWorldName + " n'a pas pu être chargé.");
                             }
                         }, 40L);
                     } else if (worldFolder.exists() && worldFolder.isDirectory()) {
@@ -120,26 +120,26 @@ public class DacSetupCommand implements CommandExecutor, TabCompleter {
                             } else {
                                 player.teleport(w.getSpawnLocation());
                             }
-                            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Monde chargé et téléporté.");
+                            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Monde chargé et téléporté.");
                         } else {
-                            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Erreur de chargement du monde.");
+                            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Erreur de chargement du monde.");
                         }
                     } else {
-                        player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Monde " + targetWorldName + " introuvable sur le disque.");
+                        player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Monde " + targetWorldName + " introuvable sur le disque.");
                     }
                 } else {
                     if (target != null) {
                         if (target.getWorld() == null) target.setWorld(w);
                         player.teleport(target);
-                        player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Téléporté au point défini.");
+                        player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Téléporté au point défini.");
                     } else {
                         player.teleport(w.getSpawnLocation());
-                        player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Téléporté au spawn du monde " + targetWorldName);
+                        player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Téléporté au spawn du monde " + targetWorldName);
                     }
                 }
                 break;
             default:
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Action inconnue. Actions valides: " + String.join(", ", actions));
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Action inconnue. Actions valides: " + String.join(", ", actions));
                 break;
         }
 

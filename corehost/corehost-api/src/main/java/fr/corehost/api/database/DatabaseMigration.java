@@ -2,6 +2,7 @@ package fr.corehost.api.database;
 
 import fr.corehost.api.redis.RedisManager;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.params.SetParams;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,7 +16,7 @@ public class DatabaseMigration {
             
             // On utilise un lock Redis pour s'assurer qu'un seul serveur fait la migration
             // Si la clé existe, ça veut dire que la migration a déjà été faite
-            if (jedis.setnx("corehost:migration:sql", "true") == 0) {
+            if (jedis.set("corehost:migration:sql", "true", SetParams.setParams().nx()) == null) {
                 return; // Déjà migré !
             }
 

@@ -1,7 +1,7 @@
 package fr.corehost.dac;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -145,7 +145,7 @@ public class DacGameInstance {
 
     public void addPlayer(Player player) {
         if (mapConfig == null || !mapConfig.isSetup()) {
-            player.sendMessage(DAC_PREFIX + ChatColor.RED + "Erreur : la carte DAC n'est pas configurée correctement (Plongeoir ou Piscine manquants).");
+            player.sendMessage(DAC_PREFIX + CC.RED + "Erreur : la carte DAC n'est pas configurée correctement (Plongeoir ou Piscine manquants).");
             return;
         }
 
@@ -165,7 +165,7 @@ public class DacGameInstance {
                     specSpawn.setWorld(world);
                 }
                 player.teleport(specSpawn != null ? specSpawn : world.getSpawnLocation());
-                player.sendMessage(DAC_PREFIX + ChatColor.YELLOW + "La partie est en cours. Vous êtes spectateur.");
+                player.sendMessage(DAC_PREFIX + CC.YELLOW + "La partie est en cours. Vous êtes spectateur.");
                 if (scoreboardManager != null) scoreboardManager.setupScoreboard(player);
             } else {
                 player.kickPlayer("La partie a déjà commencé.");
@@ -186,7 +186,7 @@ public class DacGameInstance {
             scoreboardManager.setupScoreboard(player);
             plugin.getGameManager().registerPlayer(player.getUniqueId(), this);
 
-            broadcast(ChatColor.YELLOW + player.getName() + " a rejoint la partie (" + players.size() + "/" + maxPlayers + ")");
+            broadcast(CC.YELLOW + player.getName() + " a rejoint la partie (" + players.size() + "/" + maxPlayers + ")");
 
             syncHostData();
             checkStart();
@@ -204,7 +204,7 @@ public class DacGameInstance {
             eliminatePlayer(player, true);
         } else {
             alivePlayers.remove(player.getUniqueId());
-            broadcast(ChatColor.YELLOW + player.getName() + " a quitté la partie.");
+            broadcast(CC.YELLOW + player.getName() + " a quitté la partie.");
             scoreboardManager.updateAll();
         }
 
@@ -230,19 +230,19 @@ public class DacGameInstance {
                     if (players.size() < 2) {
                         state = GameState.WAITING;
                         scoreboardManager.updateAll();
-                        broadcast(ChatColor.RED + "Pas assez de joueurs, annulation du démarrage.");
+                        broadcast(CC.RED + "Pas assez de joueurs, annulation du démarrage.");
                         cancel();
                         return;
                     }
 
                     if (totalWait % 5 == 0 || totalWait <= 5) {
                         if (totalWait > 0) {
-                            broadcast(ChatColor.YELLOW + "Début dans " + totalWait + " secondes...");
+                            broadcast(CC.YELLOW + "Début dans " + totalWait + " secondes...");
                             if (totalWait <= 3) {
                                 for (UUID uuid : players) {
                                     Player p = Bukkit.getPlayer(uuid);
                                     if (p != null) {
-                                        p.sendTitle(ChatColor.YELLOW + "" + totalWait, "", 2, 15, 2);
+                                        p.sendTitle(CC.YELLOW + "" + totalWait, "", 2, 15, 2);
                                         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f + ((4 - totalWait) * 0.2f));
                                     }
                                 }
@@ -277,12 +277,12 @@ public class DacGameInstance {
                     specSpawn.setWorld(world);
                 }
                 p.teleport(specSpawn != null ? specSpawn : world.getSpawnLocation());
-                p.sendTitle(ChatColor.GREEN + "C'EST PARTI !", "", 5, 20, 5);
+                p.sendTitle(CC.GREEN + "C'EST PARTI !", "", 5, 20, 5);
                 p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f);
             }
         }
 
-        broadcast(ChatColor.GREEN + "La partie commence ! Ne touchez pas les bords de la piscine !");
+        broadcast(CC.GREEN + "La partie commence ! Ne touchez pas les bords de la piscine !");
         
         // Start first turn
         currentTurnIndex = -1;
@@ -311,13 +311,13 @@ public class DacGameInstance {
         turnTimeRemaining = plugin.getConfig().getInt("gameplay.turn-time", 15);
         scoreboardManager.updateAll();
         
-        String colorCode = ChatColor.translateAlternateColorCodes('&', playerChatColors.get(current.getUniqueId()));
-        broadcast(ChatColor.YELLOW + "C'est au tour de " + colorCode + current.getName() + ChatColor.YELLOW + " !");
+        String colorCode = CC.translate( playerChatColors.get(current.getUniqueId()));
+        broadcast(CC.YELLOW + "C'est au tour de " + colorCode + current.getName() + CC.YELLOW + " !");
         
         Location diveSpawn = mapConfig.getDivingBoardSpawn().clone();
         diveSpawn.setWorld(world);
         current.teleport(diveSpawn);
-        current.sendTitle(colorCode + "À TOI DE SAUTER !", ChatColor.GRAY + "Tu as " + turnTimeRemaining + "s", 5, 30, 5);
+        current.sendTitle(colorCode + "À TOI DE SAUTER !", CC.GRAY + "Tu as " + turnTimeRemaining + "s", 5, 30, 5);
         current.playSound(current.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 2.0f);
         
         if (hardMode) {
@@ -334,7 +334,7 @@ public class DacGameInstance {
                 }
                 
                 if (turnTimeRemaining <= 0) {
-                    broadcast(colorCode + current.getName() + ChatColor.RED + " a mis trop de temps à sauter !");
+                    broadcast(colorCode + current.getName() + CC.RED + " a mis trop de temps à sauter !");
                     eliminatePlayer(current, false);
                     cancel();
                     return;
@@ -399,11 +399,11 @@ public class DacGameInstance {
             }
         }
         
-        String colorCode = ChatColor.translateAlternateColorCodes('&', playerChatColors.get(player.getUniqueId()));
+        String colorCode = CC.translate( playerChatColors.get(player.getUniqueId()));
         
         if (!insidePool || block.getType() != Material.WATER) {
             // Landed outside pool or on a solid block (wool)
-            broadcast(colorCode + player.getName() + ChatColor.RED + " s'est écrasé !");
+            broadcast(colorCode + player.getName() + CC.RED + " s'est écrasé !");
             player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
             // Spawn some particles
             player.getWorld().spawnParticle(org.bukkit.Particle.LAVA, player.getLocation(), 10);
@@ -432,29 +432,29 @@ public class DacGameInstance {
             int currentLives = lives.getOrDefault(player.getUniqueId(), 0);
             lives.put(player.getUniqueId(), currentLives + 1);
             
-            broadcast(ChatColor.GOLD + "⭐ " + colorCode + ChatColor.BOLD + "DÉ À COUDRE " + ChatColor.GOLD + "pour " + colorCode + player.getName() + ChatColor.GOLD + " ! (+1 Vie) ⭐");
-            player.sendTitle(ChatColor.GOLD + "DÉ À COUDRE !", ChatColor.YELLOW + "+1 Vie", 5, 40, 10);
+            broadcast(CC.GOLD + "⭐ " + colorCode + CC.BOLD + "DÉ À COUDRE " + CC.GOLD + "pour " + colorCode + player.getName() + CC.GOLD + " ! (+1 Vie) ⭐");
+            player.sendTitle(CC.GOLD + "DÉ À COUDRE !", CC.YELLOW + "+1 Vie", 5, 40, 10);
             for (Player p : world.getPlayers()) {
                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
             }
             
             earnedCoins.put(player.getUniqueId(), earnedCoins.getOrDefault(player.getUniqueId(), 0) + coinsPerThimble);
         } else {
-            broadcast(colorCode + player.getName() + ChatColor.GREEN + " a réussi son saut !");
+            broadcast(colorCode + player.getName() + CC.GREEN + " a réussi son saut !");
         }
         
         if (getRemainingWaterBlocks() == 0) {
             if (!hardMode) {
                 hardMode = true;
                 resetPool();
-                broadcast(ChatColor.LIGHT_PURPLE + "La piscine est pleine ! Activation du Mode Difficile !");
+                broadcast(CC.LIGHT_PURPLE + "La piscine est pleine ! Activation du Mode Difficile !");
                 for (Player p : world.getPlayers()) {
-                    p.sendTitle(ChatColor.LIGHT_PURPLE + "MODE DIFFICILE", ChatColor.YELLOW + "La piscine va se remplir !", 10, 40, 10);
+                    p.sendTitle(CC.LIGHT_PURPLE + "MODE DIFFICILE", CC.YELLOW + "La piscine va se remplir !", 10, 40, 10);
                     p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.5f);
                 }
             } else {
                 resetPool();
-                broadcast(ChatColor.AQUA + "La piscine est pleine ! Elle a été vidée.");
+                broadcast(CC.AQUA + "La piscine est pleine ! Elle a été vidée.");
                 for (Player p : world.getPlayers()) {
                     p.playSound(p.getLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f);
                 }
@@ -505,11 +505,11 @@ public class DacGameInstance {
             currentLives--;
             lives.put(player.getUniqueId(), currentLives);
             
-            String colorCode = ChatColor.translateAlternateColorCodes('&', playerChatColors.get(player.getUniqueId()));
+            String colorCode = CC.translate( playerChatColors.get(player.getUniqueId()));
             
             if (currentLives > 0 && !isDisconnect) {
-                broadcast(colorCode + player.getName() + ChatColor.YELLOW + " a perdu une vie ! Il lui en reste " + currentLives + ".");
-                player.sendTitle(ChatColor.RED + "OUCH !", ChatColor.YELLOW + "-1 Vie", 5, 30, 5);
+                broadcast(colorCode + player.getName() + CC.YELLOW + " a perdu une vie ! Il lui en reste " + currentLives + ".");
+                player.sendTitle(CC.RED + "OUCH !", CC.YELLOW + "-1 Vie", 5, 30, 5);
                 Location specSpawn = mapConfig.getSpectatorSpawn();
                 if (specSpawn != null) {
                     specSpawn = specSpawn.clone();
@@ -532,7 +532,7 @@ public class DacGameInstance {
             // Out of lives
             alivePlayers.remove(player.getUniqueId());
             if (!isDisconnect) {
-                player.sendTitle(ChatColor.RED + "ÉLIMINÉ", "", 5, 40, 10);
+                player.sendTitle(CC.RED + "ÉLIMINÉ", "", 5, 40, 10);
                 Location specSpawn = mapConfig.getSpectatorSpawn();
                 if (specSpawn != null) {
                     specSpawn = specSpawn.clone();
@@ -547,7 +547,7 @@ public class DacGameInstance {
                     player.setGameMode(GameMode.SPECTATOR);
                 }
             }
-            broadcast(colorCode + player.getName() + ChatColor.RED + " est éliminé !");
+            broadcast(colorCode + player.getName() + CC.RED + " est éliminé !");
         } else if (player == null) {
             // Disconnect during their turn
             UUID currentId = players.get(currentTurnIndex);
@@ -577,15 +577,15 @@ public class DacGameInstance {
             
             if (winner != null) {
 
-                broadcast(ChatColor.GOLD + winner.getName() + " a gagné la partie !");
+                broadcast(CC.GOLD + winner.getName() + " a gagné la partie !");
                 
                 int totalCoins = matchWinBonus + earnedCoins.getOrDefault(winner.getUniqueId(), 0);
-                winner.sendTitle(ChatColor.GOLD + "VICTOIRE", ChatColor.YELLOW + "Bien joué ! (+" + totalCoins + " coins)", 10, 60, 20);
+                winner.sendTitle(CC.GOLD + "VICTOIRE", CC.YELLOW + "Bien joué ! (+" + totalCoins + " coins)", 10, 60, 20);
                 winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                 
                 giveCoins(winner, totalCoins);
             } else {
-                broadcast(ChatColor.YELLOW + "Match terminé (aucun vainqueur).");
+                broadcast(CC.YELLOW + "Match terminé (aucun vainqueur).");
             }
             
             // Rewards for losers
@@ -599,7 +599,7 @@ public class DacGameInstance {
                 }
             }
             
-            broadcast(ChatColor.GRAY + "Retour au lobby dans 10 secondes...");
+            broadcast(CC.GRAY + "Retour au lobby dans 10 secondes...");
             
             new BukkitRunnable() {
                 @Override
@@ -619,7 +619,7 @@ public class DacGameInstance {
     
     private void giveCoins(Player player, int amount) {
         if (amount <= 0) return;
-        player.sendMessage(DAC_PREFIX + ChatColor.GOLD + "Récompense : " + ChatColor.YELLOW + "+" + amount + " Coins");
+        player.sendMessage(DAC_PREFIX + CC.GOLD + "Récompense : " + CC.YELLOW + "+" + amount + " Coins");
         
         CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
         if (coreGame != null && coreGame.getRedisManager() != null) {
@@ -643,13 +643,13 @@ public class DacGameInstance {
             org.bukkit.inventory.ItemStack bed = new org.bukkit.inventory.ItemStack(org.bukkit.Material.RED_BED);
             org.bukkit.inventory.meta.ItemMeta meta = bed.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(ChatColor.RED + "Retour au Lobby");
+                meta.setDisplayName(CC.RED + "Retour au Lobby");
                 meta.setLore(java.util.Arrays.asList(
                     "",
-                    ChatColor.GRAY + "Quitter la partie et",
-                    ChatColor.GRAY + "retourner au hub principal.",
+                    CC.GRAY + "Quitter la partie et",
+                    CC.GRAY + "retourner au hub principal.",
                     "",
-                    ChatColor.YELLOW + "► Clic droit pour quitter"
+                    CC.YELLOW + "► Clic droit pour quitter"
                 ));
                 bed.setItemMeta(meta);
             }
@@ -666,7 +666,7 @@ public class DacGameInstance {
         }
     }
 
-    public static final String DAC_PREFIX = ChatColor.DARK_GRAY + "[" + ChatColor.GOLD + "DAC" + ChatColor.DARK_GRAY + "] " + ChatColor.GRAY;
+    public static final String DAC_PREFIX = CC.DARK_GRAY + "[" + CC.GOLD + "DAC" + CC.DARK_GRAY + "] " + CC.GRAY;
 
     private void sendPlayerToLobby(Player player) {
         if (player == null || !player.isOnline()) return;
@@ -721,7 +721,7 @@ public class DacGameInstance {
     }
     
     public String getPlayerColorChat(UUID uuid) {
-        return ChatColor.translateAlternateColorCodes('&', playerChatColors.getOrDefault(uuid, "&7"));
+        return CC.translate( playerChatColors.getOrDefault(uuid, "&7"));
     }
 
     private int getRemainingWaterBlocks() {
@@ -776,7 +776,7 @@ public class DacGameInstance {
             
             if (getRemainingWaterBlocks() == 0) {
                 resetPool();
-                broadcast(ChatColor.AQUA + "La piscine est pleine ! Elle a été vidée.");
+                broadcast(CC.AQUA + "La piscine est pleine ! Elle a été vidée.");
                 for (Player p : world.getPlayers()) {
                     p.playSound(p.getLocation(), Sound.ITEM_BUCKET_EMPTY, 1.0f, 1.0f);
                 }

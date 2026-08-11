@@ -3,7 +3,7 @@ package fr.corehost.lobby.gui;
 import fr.corehost.lobby.CoreHostLobby;
 import fr.corehost.lobby.utils.ItemBuilder;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -20,7 +20,7 @@ public class SumoSettingsMenu implements CustomMenu {
 
     public SumoSettingsMenu(CoreHostLobby plugin) {
         this.plugin = plugin;
-        this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.GOLD + "Format Sumo");
+        this.inventory = Bukkit.createInventory(this, 27, CC.DARK_GRAY + "» " + CC.GOLD + "Format Sumo");
         initializeItems();
     }
 
@@ -33,43 +33,43 @@ public class SumoSettingsMenu implements CustomMenu {
 
         // BO3 Item
         ItemStack bo3 = new ItemBuilder(Material.SLIME_BALL, 3)
-            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Best Of 3")
+            .setName(CC.YELLOW + "" + CC.BOLD + "Best Of 3")
             .setLore(
                 "",
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Victoires nécessaires : " + ChatColor.WHITE + "2",
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Victoires nécessaires : " + CC.WHITE + "2",
                 "",
-                ChatColor.GRAY + "Le premier arrivé à 2 victoires",
-                ChatColor.GRAY + "gagne la partie.",
+                CC.GRAY + "Le premier arrivé à 2 victoires",
+                CC.GRAY + "gagne la partie.",
                 "",
-                ChatColor.GREEN + "► Cliquez pour héberger en BO3"
+                CC.GREEN + "► Cliquez pour héberger en BO3"
             ).build();
         inventory.setItem(11, bo3);
 
         // BO5 Item
         ItemStack bo5 = new ItemBuilder(Material.SLIME_BALL, 5)
-            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Best Of 5")
+            .setName(CC.YELLOW + "" + CC.BOLD + "Best Of 5")
             .setLore(
                 "",
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Victoires nécessaires : " + ChatColor.WHITE + "3",
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Victoires nécessaires : " + CC.WHITE + "3",
                 "",
-                ChatColor.GRAY + "Le premier arrivé à 3 victoires",
-                ChatColor.GRAY + "gagne la partie.",
+                CC.GRAY + "Le premier arrivé à 3 victoires",
+                CC.GRAY + "gagne la partie.",
                 "",
-                ChatColor.GREEN + "► Cliquez pour héberger en BO5"
+                CC.GREEN + "► Cliquez pour héberger en BO5"
             ).build();
         inventory.setItem(13, bo5);
 
         // BO7 Item
         ItemStack bo7 = new ItemBuilder(Material.SLIME_BALL, 7)
-            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Best Of 7")
+            .setName(CC.YELLOW + "" + CC.BOLD + "Best Of 7")
             .setLore(
                 "",
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Victoires nécessaires : " + ChatColor.WHITE + "4",
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Victoires nécessaires : " + CC.WHITE + "4",
                 "",
-                ChatColor.GRAY + "Le premier arrivé à 4 victoires",
-                ChatColor.GRAY + "gagne la partie.",
+                CC.GRAY + "Le premier arrivé à 4 victoires",
+                CC.GRAY + "gagne la partie.",
                 "",
-                ChatColor.GREEN + "► Cliquez pour héberger en BO7"
+                CC.GREEN + "► Cliquez pour héberger en BO7"
             ).build();
         inventory.setItem(15, bo7);
 
@@ -81,21 +81,21 @@ public class SumoSettingsMenu implements CustomMenu {
         ItemStack doubleJumpItem;
         if (doubleJumpEnabled) {
             doubleJumpItem = new ItemBuilder(Material.FEATHER)
-                .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Double Saut : " + ChatColor.GREEN + "Activé")
+                .setName(CC.AQUA + "" + CC.BOLD + "Double Saut : " + CC.GREEN + "Activé")
                 .setLore(
                     "",
-                    ChatColor.GRAY + "Permet un double saut par manche.",
+                    CC.GRAY + "Permet un double saut par manche.",
                     "",
-                    ChatColor.YELLOW + "► Cliquez pour " + ChatColor.RED + "désactiver"
+                    CC.YELLOW + "► Cliquez pour " + CC.RED + "désactiver"
                 ).build();
         } else {
             doubleJumpItem = new ItemBuilder(Material.FEATHER)
-                .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Double Saut : " + ChatColor.RED + "Désactivé")
+                .setName(CC.AQUA + "" + CC.BOLD + "Double Saut : " + CC.RED + "Désactivé")
                 .setLore(
                     "",
-                    ChatColor.GRAY + "Permet un double saut par manche.",
+                    CC.GRAY + "Permet un double saut par manche.",
                     "",
-                    ChatColor.YELLOW + "► Cliquez pour " + ChatColor.GREEN + "activer"
+                    CC.YELLOW + "► Cliquez pour " + CC.GREEN + "activer"
                 ).build();
         }
         inventory.setItem(4, doubleJumpItem);
@@ -105,23 +105,23 @@ public class SumoSettingsMenu implements CustomMenu {
         ItemStack customKBItem;
         if (customKBEnabled) {
             customKBItem = new ItemBuilder(Material.ANVIL)
-                .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Knockback : " + ChatColor.GREEN + "Custom")
+                .setName(CC.AQUA + "" + CC.BOLD + "Knockback : " + CC.GREEN + "Custom")
                 .setLore(
                     "",
-                    ChatColor.GRAY + "Utilise un recul customisé et",
-                    ChatColor.GRAY + "optimisé pour le Sumo.",
+                    CC.GRAY + "Utilise un recul customisé et",
+                    CC.GRAY + "optimisé pour le Sumo.",
                     "",
-                    ChatColor.YELLOW + "► Cliquez pour repasser en " + ChatColor.RED + "Vanilla"
+                    CC.YELLOW + "► Cliquez pour repasser en " + CC.RED + "Vanilla"
                 ).build();
         } else {
             customKBItem = new ItemBuilder(Material.ANVIL)
-                .setName(ChatColor.AQUA + "" + ChatColor.BOLD + "Knockback : " + ChatColor.RED + "Vanilla")
+                .setName(CC.AQUA + "" + CC.BOLD + "Knockback : " + CC.RED + "Vanilla")
                 .setLore(
                     "",
-                    ChatColor.GRAY + "Utilise le recul par défaut",
-                    ChatColor.GRAY + "de Minecraft.",
+                    CC.GRAY + "Utilise le recul par défaut",
+                    CC.GRAY + "de Minecraft.",
                     "",
-                    ChatColor.YELLOW + "► Cliquez pour passer en " + ChatColor.GREEN + "Custom"
+                    CC.YELLOW + "► Cliquez pour passer en " + CC.GREEN + "Custom"
                 ).build();
         }
         inventory.setItem(2, customKBItem); // Placé avant le Double Jump (Slot 2)
@@ -129,7 +129,7 @@ public class SumoSettingsMenu implements CustomMenu {
 
     public void open(Player player) {
         if (player.hasMetadata("modmode")) {
-            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + CC.RED + "Vous ne pouvez pas créer un host en mode Modération !");
             return;
         }
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 1.5f);
@@ -144,7 +144,7 @@ public class SumoSettingsMenu implements CustomMenu {
     @Override
     public void onClick(InventoryClickEvent event, Player player) {
         if (player.hasMetadata("modmode")) {
-            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + ChatColor.RED + "Vous ne pouvez pas créer un host en mode Modération !");
+            player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + CC.RED + "Vous ne pouvez pas créer un host en mode Modération !");
             player.closeInventory();
             return;
         }

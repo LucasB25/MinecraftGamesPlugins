@@ -1,6 +1,6 @@
 package fr.corehost.lobby.gui;
 
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -43,22 +43,22 @@ public class LobbyMenuUtils {
     }
     
     public static ItemStack getBackButton() {
-        return new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour au Profil").build();
+        return new ItemBuilder(Material.ARROW).setName(CC.RED + "◄ Retour au Profil").build();
     }
 
     public static ItemStack getPrevPageButton() {
-        return new ItemBuilder(Material.ARROW).setName(ChatColor.YELLOW + "◄ Page Précédente").build();
+        return new ItemBuilder(Material.ARROW).setName(CC.YELLOW + "◄ Page Précédente").build();
     }
 
     public static ItemStack getNextPageButton() {
-        return new ItemBuilder(Material.ARROW).setName(ChatColor.YELLOW + "Page Suivante ►").build();
+        return new ItemBuilder(Material.ARROW).setName(CC.YELLOW + "Page Suivante ►").build();
     }
 
     public static ItemStack getBackToSettingsButton() {
-        return new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour aux Paramètres").build();
+        return new ItemBuilder(Material.ARROW).setName(CC.RED + "◄ Retour aux Paramètres").build();
     }
 
     public static ItemStack getBackToCreateButton() {
-        return new ItemBuilder(Material.ARROW).setName(ChatColor.RED + "◄ Retour à la Création").build();
+        return new ItemBuilder(Material.ARROW).setName(CC.RED + "◄ Retour à la Création").build();
     }
 }

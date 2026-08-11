@@ -5,7 +5,7 @@ import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -95,7 +95,7 @@ public class NametagManager implements Listener {
                 }
             } catch (Exception ignored) {}
             
-            String prefix = ChatColor.translateAlternateColorCodes('&', prefixText);
+            String prefix = CC.translate( prefixText);
             if (prefix.length() > 63) prefix = prefix.substring(0, 63);
             prefixes.put(target.getUniqueId(), prefix);
         }
@@ -114,12 +114,12 @@ public class NametagManager implements Listener {
                     team.setOption(Team.Option.COLLISION_RULE, Team.OptionStatus.NEVER);
                 }
 
-                String prefix = prefixes.getOrDefault(target.getUniqueId(), ChatColor.GRAY + "Joueurs ");
+                String prefix = prefixes.getOrDefault(target.getUniqueId(), CC.GRAY + "Joueurs ");
                 team.setPrefix(prefix);
 
-                String lastColors = ChatColor.getLastColors(prefix);
+                String lastColors = org.bukkit.ChatColor.getLastColors(prefix);
                 if (!lastColors.isEmpty()) {
-                    ChatColor color = ChatColor.getByChar(lastColors.charAt(lastColors.length() - 1));
+                    org.bukkit.ChatColor color = org.bukkit.ChatColor.getByChar(lastColors.charAt(lastColors.length() - 1));
                     if (color != null) {
                         team.setColor(color);
                     }

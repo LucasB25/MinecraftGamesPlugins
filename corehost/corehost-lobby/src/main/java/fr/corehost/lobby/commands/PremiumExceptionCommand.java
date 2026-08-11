@@ -1,7 +1,7 @@
 package fr.corehost.lobby.commands;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.command.Command;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,17 +24,17 @@ public class PremiumExceptionCommand implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("corehost.admin")) {
-            sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission d'exécuter cette commande.");
+            sender.sendMessage(CC.RED + "Vous n'avez pas la permission d'exécuter cette commande.");
             return true;
         }
 
         if (plugin.getRedisManager() == null || !plugin.getRedisManager().isConnected()) {
-            sender.sendMessage(ChatColor.RED + "Le système Redis est actuellement indisponible.");
+            sender.sendMessage(CC.RED + "Le système Redis est actuellement indisponible.");
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Utilisation : /premiumexception <add|remove> <pseudo>");
+            sender.sendMessage(CC.RED + "Utilisation : /premiumexception <add|remove> <pseudo>");
             return true;
         }
 
@@ -44,12 +44,12 @@ public class PremiumExceptionCommand implements TabExecutor {
 
         if (action.equals("add")) {
             plugin.getRedisManager().set(redisKey, "true");
-            sender.sendMessage(ChatColor.GREEN + "Exception premium ajoutée pour le joueur " + username + ".");
+            sender.sendMessage(CC.GREEN + "Exception premium ajoutée pour le joueur " + username + ".");
         } else if (action.equals("remove")) {
             plugin.getRedisManager().del(redisKey);
-            sender.sendMessage(ChatColor.YELLOW + "Exception premium retirée pour le joueur " + username + ".");
+            sender.sendMessage(CC.YELLOW + "Exception premium retirée pour le joueur " + username + ".");
         } else {
-            sender.sendMessage(ChatColor.RED + "Action inconnue. Utilisation : /premiumexception <add|remove> <pseudo>");
+            sender.sendMessage(CC.RED + "Action inconnue. Utilisation : /premiumexception <add|remove> <pseudo>");
         }
 
         return true;

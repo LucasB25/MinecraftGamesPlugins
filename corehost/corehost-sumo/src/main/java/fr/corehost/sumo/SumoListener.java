@@ -1,5 +1,7 @@
 package fr.corehost.sumo;
 
+import fr.corehost.api.utils.CC;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -112,7 +114,7 @@ public class SumoListener implements Listener {
                 if (optInstance.isPresent()) {
                     SumoGameInstance instance = optInstance.get();
                     if (instance.getState() == SumoGameInstance.GameState.WAITING || instance.getState() == SumoGameInstance.GameState.STARTING) {
-                        player.sendMessage(org.bukkit.ChatColor.GREEN + "Retour au lobby...");
+                        player.sendMessage(CC.GREEN + "Retour au lobby...");
                         
                         try {
                             com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
@@ -120,7 +122,7 @@ public class SumoListener implements Listener {
                             out.writeUTF(plugin.getConfig().getString("bungeecord.fallback-server", "lobby"));
                             player.sendPluginMessage(plugin, "BungeeCord", out.toByteArray());
                         } catch (Exception e) {
-                            player.sendMessage(org.bukkit.ChatColor.RED + "Impossible de se connecter au lobby.");
+                            player.sendMessage(CC.RED + "Impossible de se connecter au lobby.");
                         }
                     }
                 }

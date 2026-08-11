@@ -89,7 +89,7 @@ public class PartyManager {
     public void sendInvite(UUID sender, UUID target) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             // L'invitation expire après 60 secondes
-            jedis.setex("corehost:party:invites:" + target.toString() + ":" + sender.toString(), 60, "true");
+            jedis.set("corehost:party:invites:" + target.toString() + ":" + sender.toString(), "true", redis.clients.jedis.params.SetParams.setParams().ex(60));
         }
     }
 

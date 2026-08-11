@@ -1,6 +1,6 @@
 package fr.corehost.lobby.commands;
 
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,7 +13,7 @@ public class SpawnCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(CC.RED + "Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
@@ -26,7 +26,7 @@ public class SpawnCommand implements CommandExecutor {
         spawn.setYaw(spawn.getYaw() + 180f);
         player.teleport(spawn);
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Téléportation au spawn du Lobby !");
+        player.sendMessage(Constants.PREFIX + CC.GREEN + "Téléportation au spawn du Lobby !");
         
         return true;
     }

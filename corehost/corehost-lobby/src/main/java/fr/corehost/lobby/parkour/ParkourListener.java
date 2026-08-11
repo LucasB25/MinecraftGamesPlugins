@@ -1,5 +1,7 @@
 package fr.corehost.lobby.parkour;
 
+import fr.corehost.api.utils.CC;
+
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
@@ -65,7 +67,7 @@ public class ParkourListener implements Listener {
                 }
                 long lastMsg = interactCooldown.getOrDefault(player.getUniqueId(), 0L);
                 if (currentTime - lastMsg > 3000) {
-                    player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + org.bukkit.ChatColor.RED + "Vous ne pouvez pas participer au parkour en mode Modération !");
+                    player.sendMessage(fr.corehost.lobby.utils.Constants.PREFIX + CC.RED + "Vous ne pouvez pas participer au parkour en mode Modération !");
                     interactCooldown.put(player.getUniqueId(), currentTime);
                 }
                 return;

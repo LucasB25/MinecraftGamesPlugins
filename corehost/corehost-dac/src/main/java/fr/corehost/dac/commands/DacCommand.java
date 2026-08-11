@@ -3,7 +3,7 @@ package fr.corehost.dac.commands;
 import fr.corehost.dac.CoreHostDac;
 import fr.corehost.dac.DacGameInstance;
 import fr.corehost.api.host.HostData;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,19 +22,19 @@ public class DacCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
         Player player = (Player) sender;
 
         if (!player.hasPermission("corehost.admin")) {
-            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Vous n'avez pas la permission.");
+            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Vous n'avez pas la permission.");
             return true;
         }
 
         if (args.length == 0) {
-            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Usage: /dac <create|join|list|leave>");
+            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Usage: /dac <create|join|list|leave>");
             return true;
         }
 
@@ -47,7 +47,7 @@ public class DacCommand implements CommandExecutor {
                     try {
                         maxPlayers = Integer.parseInt(args[1]);
                     } catch (NumberFormatException e) {
-                        player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Le nombre de joueurs doit être un nombre.");
+                        player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Le nombre de joueurs doit être un nombre.");
                         return true;
                     }
                 }
@@ -55,7 +55,7 @@ public class DacCommand implements CommandExecutor {
                 break;
             case "join":
                 if (args.length < 2) {
-                    player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Usage: /dac join <hostId>");
+                    player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Usage: /dac join <hostId>");
                     return true;
                 }
                 String hostId = args[1];
@@ -64,22 +64,22 @@ public class DacCommand implements CommandExecutor {
                     player.teleport(instance.getWorld().getSpawnLocation());
                     instance.addPlayer(player);
                 } else {
-                    player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Instance introuvable.");
+                    player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Instance introuvable.");
                 }
                 break;
             case "list":
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.YELLOW + "Instances actives :");
-                player.sendMessage(ChatColor.GRAY + "- (Commande en cours de développement)");
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.YELLOW + "Instances actives :");
+                player.sendMessage(CC.GRAY + "- (Commande en cours de développement)");
                 break;
             case "leave":
                 plugin.getGameManager().getInstanceForPlayer(player).ifPresent(inst -> {
                     inst.removePlayer(player);
                     player.teleport(org.bukkit.Bukkit.getWorlds().get(0).getSpawnLocation());
-                    player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.GREEN + "Vous avez quitté la partie.");
+                    player.sendMessage(DacGameInstance.DAC_PREFIX + CC.GREEN + "Vous avez quitté la partie.");
                 });
                 break;
             default:
-                player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Usage: /dac <create|join|list|leave>");
+                player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Usage: /dac <create|join|list|leave>");
                 break;
         }
 
@@ -87,7 +87,7 @@ public class DacCommand implements CommandExecutor {
     }
 
     private void createLocalDac(Player player, int maxPlayers) {
-        player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.YELLOW + "Création d'une instance DAC locale...");
+        player.sendMessage(DacGameInstance.DAC_PREFIX + CC.YELLOW + "Création d'une instance DAC locale...");
         
         UUID hostId = UUID.randomUUID();
         String worldName = "dac-" + hostId.toString().substring(0, 8);
@@ -97,7 +97,7 @@ public class DacCommand implements CommandExecutor {
         
         fr.corehost.dac.DacMapConfig mapConfig = plugin.getMapManager().getRandomFunctionalMap();
         if (mapConfig == null) {
-            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "Aucune map n'est configurée pour héberger une partie.");
+            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "Aucune map n'est configurée pour héberger une partie.");
             return;
         }
 
@@ -125,7 +125,7 @@ public class DacCommand implements CommandExecutor {
             
             coreGame.getRedisManager().publish("corehost:game:" + localServerName, request.toString());
         } else {
-            player.sendMessage(DacGameInstance.DAC_PREFIX + ChatColor.RED + "CoreHostGame ou Redis n'est pas disponible.");
+            player.sendMessage(DacGameInstance.DAC_PREFIX + CC.RED + "CoreHostGame ou Redis n'est pas disponible.");
         }
     }
 }

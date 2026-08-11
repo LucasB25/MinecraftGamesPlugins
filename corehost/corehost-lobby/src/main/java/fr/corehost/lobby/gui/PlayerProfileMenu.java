@@ -1,7 +1,7 @@
 package fr.corehost.lobby.gui;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -32,31 +32,31 @@ public class PlayerProfileMenu implements CustomMenu {
 
         long firstPlayed = player.getFirstPlayed();
         String firstPlayedDate = new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date(firstPlayed));
-        String accountType = (player.getUniqueId().version() == 4) ? ChatColor.GOLD + "Premium" : ChatColor.RED + "Crack";
+        String accountType = (player.getUniqueId().version() == 4) ? CC.GOLD + "Premium" : CC.RED + "Crack";
 
         // ── Slot 10: Player Head (General Info) ──
         ItemStack headItem = new ItemBuilder(Material.PLAYER_HEAD)
             .setSkullOwner(player.getName()) // ItemBuilder uses setOwner properly
-            .setName(ChatColor.AQUA + "" + ChatColor.BOLD + player.getName())
+            .setName(CC.AQUA + "" + CC.BOLD + player.getName())
             .setLore(
                 "",
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Grade : " + fr.corehost.lobby.utils.LuckPermsHook.getPlayerPrefix(player),
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Compte : " + accountType,
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Coins : " + ChatColor.GOLD + coins + " ⛃",
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Première connexion : " + ChatColor.WHITE + firstPlayedDate,
-                ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "Ping : " + ChatColor.YELLOW + player.getPing() + "ms",
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Grade : " + fr.corehost.lobby.utils.LuckPermsHook.getPlayerPrefix(player),
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Compte : " + accountType,
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Coins : " + CC.GOLD + coins + " ⛃",
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Première connexion : " + CC.WHITE + firstPlayedDate,
+                CC.DARK_GRAY + "▪ " + CC.GRAY + "Ping : " + CC.YELLOW + player.getPing() + "ms",
                 ""
             ).build();
         inventory.setItem(10, headItem);
 
         // ── Slot 11: Game Stats (Sword) ──
         ItemStack statsItem = new ItemBuilder(Material.DIAMOND_SWORD)
-            .setName(ChatColor.RED + "" + ChatColor.BOLD + "Statistiques de Jeu")
+            .setName(CC.RED + "" + CC.BOLD + "Statistiques de Jeu")
             .setLore(
                 "",
-                ChatColor.GRAY + "Cliquez pour voir vos",
-                ChatColor.GRAY + "statistiques dans les",
-                ChatColor.GRAY + "différents mini-jeux.",
+                CC.GRAY + "Cliquez pour voir vos",
+                CC.GRAY + "statistiques dans les",
+                CC.GRAY + "différents mini-jeux.",
                 ""
             ).build();
         
@@ -70,11 +70,11 @@ public class PlayerProfileMenu implements CustomMenu {
 
         // ── Slot 12: Friends (Name Tag) ──
         ItemStack friendsItem = new ItemBuilder(Material.NAME_TAG)
-            .setName(ChatColor.GREEN + "" + ChatColor.BOLD + "Amis")
+            .setName(CC.GREEN + "" + CC.BOLD + "Amis")
             .setLore(
                 "",
-                ChatColor.GRAY + "Gérez votre liste d'amis",
-                ChatColor.GRAY + "et voyez qui est en ligne.",
+                CC.GRAY + "Gérez votre liste d'amis",
+                CC.GRAY + "et voyez qui est en ligne.",
                 ""
             ).build();
         inventory.setItem(12, friendsItem);
@@ -84,12 +84,12 @@ public class PlayerProfileMenu implements CustomMenu {
 
         // ── Slot 14: Party (Cake) ──
         ItemStack partyItem = new ItemBuilder(Material.CAKE)
-            .setName(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "Groupe (Party)")
+            .setName(CC.LIGHT_PURPLE + "" + CC.BOLD + "Groupe (Party)")
             .setLore(
                 "",
-                ChatColor.GRAY + "Gérez votre groupe,",
-                ChatColor.GRAY + "invitez des joueurs et",
-                ChatColor.GRAY + "jouez ensemble !",
+                CC.GRAY + "Gérez votre groupe,",
+                CC.GRAY + "invitez des joueurs et",
+                CC.GRAY + "jouez ensemble !",
                 ""
             ).build();
         inventory.setItem(14, partyItem);
@@ -98,42 +98,42 @@ public class PlayerProfileMenu implements CustomMenu {
         if (player.getUniqueId().version() == 4) {
             discordLore = Arrays.asList(
                 "",
-                ChatColor.GREEN + "✔ Compte Premium",
-                ChatColor.GRAY + "Sécurisé par Mojang",
+                CC.GREEN + "✔ Compte Premium",
+                CC.GRAY + "Sécurisé par Mojang",
                 ""
             );
         } else {
             if (isLinked) {
                 discordLore = Arrays.asList(
                     "",
-                    ChatColor.GREEN + "✔ Compte Lié",
-                    ChatColor.GRAY + "Sécurisé par Discord",
+                    CC.GREEN + "✔ Compte Lié",
+                    CC.GRAY + "Sécurisé par Discord",
                     ""
                 );
             } else {
                 discordLore = Arrays.asList(
                     "",
-                    ChatColor.RED + "✖ Compte Non Lié",
-                    ChatColor.GRAY + "Liez votre compte Discord",
-                    ChatColor.GRAY + "pour sécuriser ce profil.",
+                    CC.RED + "✖ Compte Non Lié",
+                    CC.GRAY + "Liez votre compte Discord",
+                    CC.GRAY + "pour sécuriser ce profil.",
                     "",
-                    ChatColor.GREEN + "► Cliquez pour lier"
+                    CC.GREEN + "► Cliquez pour lier"
                 );
             }
         }
         
         ItemStack discordItem = new ItemBuilder(Material.LAPIS_LAZULI)
-            .setName(ChatColor.BLUE + "" + ChatColor.BOLD + "Sécurité du Compte")
+            .setName(CC.BLUE + "" + CC.BOLD + "Sécurité du Compte")
             .setLore(discordLore).build();
         inventory.setItem(15, discordItem);
 
         // ── Slot 16: Settings (Redstone Torch) ──
         ItemStack settingsItem = new ItemBuilder(Material.REDSTONE_TORCH)
-            .setName(ChatColor.YELLOW + "" + ChatColor.BOLD + "Paramètres")
+            .setName(CC.YELLOW + "" + CC.BOLD + "Paramètres")
             .setLore(
                 "",
-                ChatColor.GRAY + "Gérez vos préférences",
-                ChatColor.GRAY + "et votre confidentialité.",
+                CC.GRAY + "Gérez vos préférences",
+                CC.GRAY + "et votre confidentialité.",
                 ""
             ).build();
         inventory.setItem(16, settingsItem);
@@ -159,7 +159,7 @@ public class PlayerProfileMenu implements CustomMenu {
             final int coins = fetchedCoins;
             
             Bukkit.getScheduler().runTask(plugin, () -> {
-                this.inventory = Bukkit.createInventory(this, 27, ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Profil de " + player.getName());
+                this.inventory = Bukkit.createInventory(this, 27, CC.DARK_GRAY + "» " + CC.LIGHT_PURPLE + "Profil de " + player.getName());
                 initializeItems(isLinked, coins);
                 player.openInventory(inventory);
             });
@@ -211,7 +211,7 @@ public class PlayerProfileMenu implements CustomMenu {
 
                 if (linked) {
                     Bukkit.getScheduler().runTask(plugin, () -> {
-                        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Votre compte est déjà lié à Discord !");
+                        player.sendMessage(Constants.PREFIX + CC.GREEN + "Votre compte est déjà lié à Discord !");
                     });
                     return;
                 }
@@ -239,21 +239,21 @@ public class PlayerProfileMenu implements CustomMenu {
                     String prefix = Constants.PREFIX;
 
                     player.sendMessage("");
-                    player.sendMessage(prefix + ChatColor.YELLOW + "Liaison de compte Discord");
+                    player.sendMessage(prefix + CC.YELLOW + "Liaison de compte Discord");
                     player.sendMessage("");
-                    player.sendMessage(prefix + "Votre code de liaison : " + ChatColor.GOLD + "" + ChatColor.BOLD + finalCode);
-                    player.sendMessage(prefix + ChatColor.GRAY + "Ce code expire dans " + ChatColor.YELLOW + "15 minutes" + ChatColor.GRAY + ".");
+                    player.sendMessage(prefix + "Votre code de liaison : " + CC.GOLD + "" + CC.BOLD + finalCode);
+                    player.sendMessage(prefix + CC.GRAY + "Ce code expire dans " + CC.YELLOW + "15 minutes" + CC.GRAY + ".");
                     net.md_5.bungee.api.chat.TextComponent clickMsg = new net.md_5.bungee.api.chat.TextComponent(
                         Constants.BUNGEE_PREFIX +
-                        net.md_5.bungee.api.ChatColor.AQUA + "" + net.md_5.bungee.api.ChatColor.BOLD + "👉 Cliquez ici pour ouvrir le profil du Bot 👈"
+                        CC.AQUA + "" + CC.BOLD + "👉 Cliquez ici pour ouvrir le profil du Bot 👈"
                     );
                     clickMsg.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(net.md_5.bungee.api.chat.ClickEvent.Action.OPEN_URL, finalDiscordUrl));
                     clickMsg.setHoverEvent(new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
-                        new net.md_5.bungee.api.chat.hover.content.Text(net.md_5.bungee.api.ChatColor.YELLOW + "Ouvrir Discord pour envoyer un MP")));
+                        new net.md_5.bungee.api.chat.hover.content.Text(CC.YELLOW + "Ouvrir Discord pour envoyer un MP")));
                     player.spigot().sendMessage(clickMsg);
 
                     player.sendMessage("");
-                    player.sendMessage(prefix + "Envoyez le code " + ChatColor.GOLD + finalCode + ChatColor.GRAY + " en MP au Bot Discord !");
+                    player.sendMessage(prefix + "Envoyez le code " + CC.GOLD + finalCode + CC.GRAY + " en MP au Bot Discord !");
                     player.sendMessage("");
                 });
             });

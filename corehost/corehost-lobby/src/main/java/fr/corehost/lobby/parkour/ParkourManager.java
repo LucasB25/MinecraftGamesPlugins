@@ -1,6 +1,6 @@
 package fr.corehost.lobby.parkour;
 
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -242,7 +242,7 @@ public class ParkourManager {
         if (cpIndex != -1) {
             if (cpIndex == session.getCurrentCheckpointIndex()) {
                 session.setCurrentCheckpointIndex(cpIndex + 1);
-                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Checkpoint " + ChatColor.WHITE + (cpIndex + 1) + "/" + course.getCheckpoints().size() + ChatColor.YELLOW + " atteint !");
+                player.sendMessage(Constants.PREFIX + CC.YELLOW + "Checkpoint " + CC.WHITE + (cpIndex + 1) + "/" + course.getCheckpoints().size() + CC.YELLOW + " atteint !");
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1.0f, 2.0f);
                 session.setLastCheckpointLocation(player.getLocation());
             }
@@ -260,13 +260,13 @@ public class ParkourManager {
                 if (System.currentTimeMillis() - currentSession.getStartTime() < 1000) {
                     return; // Anti-spam
                 }
-                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Parkour recommencé !");
+                player.sendMessage(Constants.PREFIX + CC.YELLOW + "Parkour recommencé !");
             } else {
-                player.sendMessage(Constants.PREFIX + ChatColor.YELLOW + "Nouveau parkour (" + course.getDisplayName() + ") commencé !");
+                player.sendMessage(Constants.PREFIX + CC.YELLOW + "Nouveau parkour (" + course.getDisplayName() + ") commencé !");
             }
             cancelTimeout(player);
         } else {
-            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Parkour " + course.getDisplayName() + " commencé ! Vous avez " + ChatColor.WHITE + "2 minutes" + ChatColor.GREEN + ".");
+            player.sendMessage(Constants.PREFIX + CC.GREEN + "Parkour " + course.getDisplayName() + " commencé ! Vous avez " + CC.WHITE + "2 minutes" + CC.GREEN + ".");
         }
         
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 2.0f);
@@ -280,7 +280,7 @@ public class ParkourManager {
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             if (activeSessions.containsKey(player.getUniqueId())) {
                 cancelParkour(player);
-                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Temps écoulé " + ChatColor.GRAY + "(2 minutes)" + ChatColor.RED + " ! Parkour annulé.");
+                player.sendMessage(Constants.PREFIX + CC.RED + "Temps écoulé " + CC.GRAY + "(2 minutes)" + CC.RED + " ! Parkour annulé.");
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             }
         }, 120 * 20L);
@@ -305,7 +305,7 @@ public class ParkourManager {
         ItemStack returnItem = new ItemStack(Material.RED_BED);
         ItemMeta meta = returnItem.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Retour au Checkpoint " + ChatColor.GRAY + "(Clic-Droit)");
+            meta.setDisplayName(CC.RED + "" + CC.BOLD + "Retour au Checkpoint " + CC.GRAY + "(Clic-Droit)");
             returnItem.setItemMeta(meta);
         }
         player.getInventory().setItem(0, returnItem);
@@ -313,7 +313,7 @@ public class ParkourManager {
         ItemStack quitItem = new ItemStack(Material.OAK_DOOR);
         ItemMeta quitMeta = quitItem.getItemMeta();
         if (quitMeta != null) {
-            quitMeta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "Quitter le Parkour " + ChatColor.GRAY + "(Clic-Droit)");
+            quitMeta.setDisplayName(CC.RED + "" + CC.BOLD + "Quitter le Parkour " + CC.GRAY + "(Clic-Droit)");
             quitItem.setItemMeta(quitMeta);
         }
         player.getInventory().setItem(1, quitItem);
@@ -337,7 +337,7 @@ public class ParkourManager {
             int currentCp = session.getCurrentCheckpointIndex();
             
             if (currentCp < requiredCheckpoints) {
-                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Checkpoints manquants : " + ChatColor.WHITE + (requiredCheckpoints - currentCp) + "/" + requiredCheckpoints);
+                player.sendMessage(Constants.PREFIX + CC.RED + "Checkpoints manquants : " + CC.WHITE + (requiredCheckpoints - currentCp) + "/" + requiredCheckpoints);
                 player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
                 return;
             }
@@ -349,7 +349,7 @@ public class ParkourManager {
             activeSessions.remove(player.getUniqueId());
 
             String formattedTime = String.format("%.2f", timeTaken / 1000.0);
-            player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Bravo ! Parkour " + course.getDisplayName() + " terminé en " + ChatColor.YELLOW + formattedTime + "s" + ChatColor.GREEN + " !");
+            player.sendMessage(Constants.PREFIX + CC.GREEN + "Bravo ! Parkour " + course.getDisplayName() + " terminé en " + CC.YELLOW + formattedTime + "s" + CC.GREEN + " !");
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.2f);
 
             if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
@@ -368,7 +368,7 @@ public class ParkourManager {
                     
                     if (isNewRecord) {
                         Bukkit.getScheduler().runTask(plugin, () -> {
-                            player.sendMessage(Constants.PREFIX + ChatColor.GOLD + "✦ Nouveau record personnel !");
+                            player.sendMessage(Constants.PREFIX + CC.GOLD + "✦ Nouveau record personnel !");
                             course.updateHologram();
                             
                             if (plugin.getScoreboardManager() != null) {
@@ -378,7 +378,7 @@ public class ParkourManager {
                     }
                 });
             } else {
-                player.sendMessage(Constants.PREFIX + ChatColor.RED + "Impossible d'enregistrer votre temps (Base de données hors-ligne).");
+                player.sendMessage(Constants.PREFIX + CC.RED + "Impossible d'enregistrer votre temps (Base de données hors-ligne).");
             }
         }
     }
@@ -388,7 +388,7 @@ public class ParkourManager {
             cancelTimeout(player);
             removeReturnItem(player);
             activeSessions.remove(player.getUniqueId());
-            player.sendMessage(Constants.PREFIX + ChatColor.RED + "Parkour annulé.");
+            player.sendMessage(Constants.PREFIX + CC.RED + "Parkour annulé.");
         }
     }
     

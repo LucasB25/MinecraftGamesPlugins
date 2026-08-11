@@ -280,7 +280,7 @@ public class FriendManager {
     public void setOnline(UUID uuid, boolean online) {
         try (Jedis jedis = redisManager.getPool().getResource()) {
             if (online) {
-                jedis.setex("corehost:online:" + uuid.toString(), 86400, "true");
+                jedis.set("corehost:online:" + uuid.toString(), "true", redis.clients.jedis.params.SetParams.setParams().ex(86400));
             } else {
                 jedis.del("corehost:online:" + uuid.toString());
             }

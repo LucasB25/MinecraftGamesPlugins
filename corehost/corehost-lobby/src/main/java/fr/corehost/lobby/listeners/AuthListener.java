@@ -7,7 +7,7 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -69,7 +69,7 @@ public class AuthListener implements Listener {
                 blockedPlayers.put(uuid, code);
                 isPending2FA.put(uuid, false);
 
-                player.sendTitle(ChatColor.RED + "Compte Non Lié", ChatColor.YELLOW + "Liez votre Discord pour jouer !", 10, 70, 20);
+                player.sendTitle(CC.RED + "Compte Non Lié", CC.YELLOW + "Liez votre Discord pour jouer !", 10, 70, 20);
                 
                 String botId = null;
                 if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
@@ -77,7 +77,7 @@ public class AuthListener implements Listener {
                 }
                 String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : plugin.getConfig().getString("settings.discord-url", "https://discord.gg/corehost");
                 
-                TextComponent msg1 = new TextComponent("\n" + Constants.BUNGEE_PREFIX + net.md_5.bungee.api.ChatColor.RED + "Vous devez lier votre compte Discord !\n");
+                TextComponent msg1 = new TextComponent("\n" + Constants.BUNGEE_PREFIX + CC.RED + "Vous devez lier votre compte Discord !\n");
                 TextComponent msg2 = new TextComponent("👉 Cliquez ici pour ouvrir le profil du Bot 👈");
                 msg2.setColor(net.md_5.bungee.api.ChatColor.AQUA);
                 msg2.setBold(true);
@@ -106,7 +106,7 @@ public class AuthListener implements Listener {
                 blockedPlayers.put(uuid, pin);
                 isPending2FA.put(uuid, true);
 
-                player.sendTitle(ChatColor.GOLD + "Vérification 2FA", ChatColor.YELLOW + "Autorisez la connexion via Discord", 10, 70, 20);
+                player.sendTitle(CC.GOLD + "Vérification 2FA", CC.YELLOW + "Autorisez la connexion via Discord", 10, 70, 20);
                 
                 String botId = null;
                 if (plugin.getRedisManager() != null && plugin.getRedisManager().isConnected()) {
@@ -114,7 +114,7 @@ public class AuthListener implements Listener {
                 }
                 String discordUrl = (botId != null && !botId.isEmpty()) ? "https://discord.com/users/" + botId : plugin.getConfig().getString("settings.discord-url", "https://discord.gg/corehost");
                 
-                TextComponent msg1 = new TextComponent("\n" + Constants.BUNGEE_PREFIX + net.md_5.bungee.api.ChatColor.GOLD + "Authentification 2FA requise !\n");
+                TextComponent msg1 = new TextComponent("\n" + Constants.BUNGEE_PREFIX + CC.GOLD + "Authentification 2FA requise !\n");
                 TextComponent msg2 = new TextComponent("👉 Cliquez ici pour MP le Bot 👈");
                 msg2.setColor(net.md_5.bungee.api.ChatColor.AQUA);
                 msg2.setBold(true);
@@ -140,7 +140,7 @@ public class AuthListener implements Listener {
                 
                 timeLeft--;
                 if (timeLeft <= 0) {
-                    player.kickPlayer(ChatColor.RED + "Temps écoulé ! Vous avez mis trop de temps pour envoyer le code.");
+                    player.kickPlayer(CC.RED + "Temps écoulé ! Vous avez mis trop de temps pour envoyer le code.");
                     this.cancel();
                     return;
                 }
@@ -161,11 +161,11 @@ public class AuthListener implements Listener {
                     blockedPlayers.remove(uuid);
                     isPending2FA.remove(uuid);
                     if (is2FA) {
-                        player.sendTitle(ChatColor.GREEN + "Accès Autorisé", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
-                        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Authentification réussie !");
+                        player.sendTitle(CC.GREEN + "Accès Autorisé", CC.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
+                        player.sendMessage(Constants.PREFIX + CC.GREEN + "Authentification réussie !");
                     } else {
-                        player.sendTitle(ChatColor.GREEN + "Liaison Réussie", ChatColor.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
-                        player.sendMessage(Constants.PREFIX + ChatColor.GREEN + "Votre compte a bien été lié à Discord !");
+                        player.sendTitle(CC.GREEN + "Liaison Réussie", CC.GRAY + "Bon jeu sur CoreHost !", 10, 70, 20);
+                        player.sendMessage(Constants.PREFIX + CC.GREEN + "Votre compte a bien été lié à Discord !");
                     }
                     this.cancel();
                     actionbarTasks.remove(uuid);
@@ -174,9 +174,9 @@ public class AuthListener implements Listener {
                 
                 String message;
                 if (is2FA) {
-                    message = ChatColor.GOLD + "Vérification requise ! " + ChatColor.RED + "Envoyez " + ChatColor.YELLOW + expectedCode + ChatColor.RED + " au Bot Discord !";
+                    message = CC.GOLD + "Vérification requise ! " + CC.RED + "Envoyez " + CC.YELLOW + expectedCode + CC.RED + " au Bot Discord !";
                 } else {
-                    message = ChatColor.RED + "Envoyez le code " + ChatColor.YELLOW + expectedCode + ChatColor.RED + " en Message Privé au Bot Discord !";
+                    message = CC.RED + "Envoyez le code " + CC.YELLOW + expectedCode + CC.RED + " en Message Privé au Bot Discord !";
                 }
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(message));
             }
@@ -253,9 +253,9 @@ public class AuthListener implements Listener {
             event.setCancelled(true);
             boolean is2FA = isPending2FA.getOrDefault(uuid, false);
             if (is2FA) {
-                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + CC.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + CC.YELLOW + blockedPlayers.get(uuid));
             } else {
-                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez lier votre compte Discord pour parler ! Code: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + CC.RED + "Vous devez lier votre compte Discord pour parler ! Code: " + CC.YELLOW + blockedPlayers.get(uuid));
             }
         }
     }
@@ -267,9 +267,9 @@ public class AuthListener implements Listener {
             event.setCancelled(true);
             boolean is2FA = isPending2FA.getOrDefault(uuid, false);
             if (is2FA) {
-                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + CC.RED + "Vous devez autoriser la connexion via Discord ! PIN: " + CC.YELLOW + blockedPlayers.get(uuid));
             } else {
-                event.getPlayer().sendMessage(Constants.PREFIX + ChatColor.RED + "Vous devez lier votre compte Discord pour faire des commandes ! Code: " + ChatColor.YELLOW + blockedPlayers.get(uuid));
+                event.getPlayer().sendMessage(Constants.PREFIX + CC.RED + "Vous devez lier votre compte Discord pour faire des commandes ! Code: " + CC.YELLOW + blockedPlayers.get(uuid));
             }
         }
     }

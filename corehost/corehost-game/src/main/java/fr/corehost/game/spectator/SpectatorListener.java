@@ -3,7 +3,7 @@ package fr.corehost.game.spectator;
 import fr.corehost.game.CoreHostGame;
 import fr.corehost.game.spectator.gui.SpectatorTeleportMenu;
 
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 
 import org.bukkit.Material;
 
@@ -102,13 +102,13 @@ public class SpectatorListener implements Listener {
                     
                     player.setFlySpeed(newSpeed);
                     ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(ChatColor.YELLOW + "Vitesse de vol: " + speedText);
+                    meta.setDisplayName(CC.YELLOW + "Vitesse de vol: " + speedText);
                     item.setItemMeta(meta);
-                    player.sendMessage(ChatColor.GRAY + "Vitesse de vol réglée sur " + ChatColor.AQUA + speedText + ChatColor.GRAY + ".");
+                    player.sendMessage(CC.GRAY + "Vitesse de vol réglée sur " + CC.AQUA + speedText + CC.GRAY + ".");
                 }
                 else if (item.getType() == Material.RED_BED && name.contains("Quitter")) {
                     event.setCancelled(true);
-                    player.sendMessage(ChatColor.GRAY + "Retour au lobby...");
+                    player.sendMessage(CC.GRAY + "Retour au lobby...");
                     
                     try {
                         com.google.common.io.ByteArrayDataOutput out = com.google.common.io.ByteStreams.newDataOutput();
@@ -254,7 +254,7 @@ public class SpectatorListener implements Listener {
         if (manager.isSpectator(sender)) {
             // Anti-ghosting: Only spectators hear spectators
             event.getRecipients().removeIf(recipient -> !manager.isSpectator(recipient));
-            event.setFormat(ChatColor.GRAY + "[SPEC] " + ChatColor.WHITE + "%s: %s");
+            event.setFormat(CC.GRAY + "[SPEC] " + CC.WHITE + "%s: %s");
         } else {
             // Optional: Alive players shouldn't hear spectators either, but already handled above.
         }
@@ -269,7 +269,7 @@ public class SpectatorListener implements Listener {
         int maxDistSq = maxDist * maxDist;
         if (event.getTo() != null && event.getTo().distanceSquared(event.getPlayer().getWorld().getSpawnLocation()) > maxDistSq) {
             event.getPlayer().teleport(event.getPlayer().getWorld().getSpawnLocation());
-            event.getPlayer().sendMessage(ChatColor.RED + "Vous ne pouvez pas vous éloigner plus.");
+            event.getPlayer().sendMessage(CC.RED + "Vous ne pouvez pas vous éloigner plus.");
         }
     }
 }

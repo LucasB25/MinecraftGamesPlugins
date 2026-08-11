@@ -1,7 +1,7 @@
 package fr.corehost.lobby.utils;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -109,7 +109,7 @@ public class LobbyScoreboardManager implements PluginMessageListener {
                 }
                 int displayCount = Math.max(globalPlayerCount, Bukkit.getOnlinePlayers().size());
                 displayCount = Math.max(0, displayCount - vanishedLocal);
-                playersTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Joueurs: " + ChatColor.GREEN + displayCount);
+                playersTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Joueurs: " + CC.GREEN + displayCount);
             }
         }
     }
@@ -120,76 +120,76 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         ScoreboardManager manager = Bukkit.getScoreboardManager();
         if (manager == null) return;
 
-        String title = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("scoreboard.title", "&6&lCOREHOST"));
+        String title = CC.translate( plugin.getConfig().getString("scoreboard.title", "&6&lCOREHOST"));
         Scoreboard board = manager.getNewScoreboard();
         Objective objective = board.registerNewObjective("lobbyboard", "dummy", title);
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         // Ligne 15 : Séparateur haut
-        objective.getScore(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                    ").setScore(15);
+        objective.getScore(CC.DARK_GRAY + "" + CC.STRIKETHROUGH + "                    ").setScore(15);
 
         // Ligne 14 : Section Profil
-        objective.getScore(" " + ChatColor.GOLD + "✦ Profil").setScore(14);
+        objective.getScore(" " + CC.GOLD + "✦ Profil").setScore(14);
 
         // Ligne 13 : Grade
         Team gradeTeam = board.registerNewTeam("grade");
-        gradeTeam.addEntry(ChatColor.LIGHT_PURPLE + "");
-        gradeTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Grade: " + LuckPermsHook.getPlayerPrefix(player));
-        objective.getScore(ChatColor.LIGHT_PURPLE + "").setScore(13);
+        gradeTeam.addEntry(CC.LIGHT_PURPLE + "");
+        gradeTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Grade: " + LuckPermsHook.getPlayerPrefix(player));
+        objective.getScore(CC.LIGHT_PURPLE + "").setScore(13);
 
         // Ligne 12 : Pseudo
         Team pseudoTeam = board.registerNewTeam("pseudo");
-        pseudoTeam.addEntry(ChatColor.AQUA + "");
-        pseudoTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Pseudo: " + ChatColor.GREEN + player.getName());
-        objective.getScore(ChatColor.AQUA + "").setScore(12);
+        pseudoTeam.addEntry(CC.AQUA + "");
+        pseudoTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Pseudo: " + CC.GREEN + player.getName());
+        objective.getScore(CC.AQUA + "").setScore(12);
 
         // Ligne 11 : Coins
         Team coinsTeam = board.registerNewTeam("coins");
-        coinsTeam.addEntry(ChatColor.YELLOW + "");
-        coinsTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Coins: " + ChatColor.GOLD + "0 ⛃");
-        objective.getScore(ChatColor.YELLOW + "").setScore(11);
+        coinsTeam.addEntry(CC.YELLOW + "");
+        coinsTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Coins: " + CC.GOLD + "0 ⛃");
+        objective.getScore(CC.YELLOW + "").setScore(11);
 
         // Ligne 10 : Espace
         objective.getScore(" ").setScore(10);
 
         // Ligne 9 : Section Parkour
-        objective.getScore(" " + ChatColor.GOLD + "✦ Parkour").setScore(9);
+        objective.getScore(" " + CC.GOLD + "✦ Parkour").setScore(9);
 
         // Ligne 8 : Record Easy
         Team recordEasyTeam = board.registerNewTeam("record_easy");
-        recordEasyTeam.addEntry(ChatColor.RED + "");
-        recordEasyTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Easy: " + ChatColor.RED + "Aucun");
-        objective.getScore(ChatColor.RED + "").setScore(8);
+        recordEasyTeam.addEntry(CC.RED + "");
+        recordEasyTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Easy: " + CC.RED + "Aucun");
+        objective.getScore(CC.RED + "").setScore(8);
 
         // Ligne 7 : Record Hard
         Team recordHardTeam = board.registerNewTeam("record_hard");
-        recordHardTeam.addEntry(ChatColor.DARK_RED + "");
-        recordHardTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Hard: " + ChatColor.RED + "Aucun");
-        objective.getScore(ChatColor.DARK_RED + "").setScore(7);
+        recordHardTeam.addEntry(CC.DARK_RED + "");
+        recordHardTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Hard: " + CC.RED + "Aucun");
+        objective.getScore(CC.DARK_RED + "").setScore(7);
 
         // Ligne 6 : Espace
         objective.getScore("  ").setScore(6);
         
         // Ligne 5 : Section Serveur
-        objective.getScore(" " + ChatColor.GOLD + "✦ Serveur").setScore(5);
+        objective.getScore(" " + CC.GOLD + "✦ Serveur").setScore(5);
 
         // Ligne 4 : Joueurs en ligne
         Team playersTeam = board.registerNewTeam("players_count");
-        playersTeam.addEntry(ChatColor.GREEN + "");
-        playersTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Joueurs: " + ChatColor.GREEN + "0");
-        objective.getScore(ChatColor.GREEN + "").setScore(4);
+        playersTeam.addEntry(CC.GREEN + "");
+        playersTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Joueurs: " + CC.GREEN + "0");
+        objective.getScore(CC.GREEN + "").setScore(4);
 
         // Ligne 3 : Têtes Progression
         Team headTeam = board.registerNewTeam("heads");
-        headTeam.addEntry(ChatColor.GOLD + "");
-        headTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Têtes: " + ChatColor.GOLD + "0/0");
-        objective.getScore(ChatColor.GOLD + "").setScore(3);
+        headTeam.addEntry(CC.GOLD + "");
+        headTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Têtes: " + CC.GOLD + "0/0");
+        objective.getScore(CC.GOLD + "").setScore(3);
 
         // Ligne 2 : Séparateur bas (identique au haut)
-        objective.getScore(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                     ").setScore(2);
+        objective.getScore(CC.DARK_GRAY + "" + CC.STRIKETHROUGH + "                     ").setScore(2);
 
         // Ligne 1 : IP
-        String ip = ChatColor.translateAlternateColorCodes('&', plugin.getConfig().getString("scoreboard.ip", "&eplay.corehost.fr"));
+        String ip = CC.translate( plugin.getConfig().getString("scoreboard.ip", "&eplay.corehost.fr"));
         objective.getScore(ip).setScore(1);
 
         // Nametags will be handled in updateScoreboard
@@ -241,7 +241,7 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         // Mise à jour du grade
         Team gradeTeam = board.getTeam("grade");
         if (gradeTeam != null) {
-            gradeTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Grade: " + LuckPermsHook.getPlayerPrefix(player));
+            gradeTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Grade: " + LuckPermsHook.getPlayerPrefix(player));
         }
 
         // Mise à jour des joueurs
@@ -255,7 +255,7 @@ public class LobbyScoreboardManager implements PluginMessageListener {
             }
             int displayCount = Math.max(globalPlayerCount, Bukkit.getOnlinePlayers().size());
             displayCount = Math.max(0, displayCount - vanishedLocal);
-            playersTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Joueurs: " + ChatColor.GREEN + displayCount);
+            playersTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Joueurs: " + CC.GREEN + displayCount);
         }
 
         // Mise à jour des coins
@@ -268,30 +268,30 @@ public class LobbyScoreboardManager implements PluginMessageListener {
                     coins = profile.getCoins();
                 }
             }
-            coinsTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Coins: " + ChatColor.GOLD + coins + " ⛃");
+            coinsTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Coins: " + CC.GOLD + coins + " ⛃");
         }
 
         // Update Parkour Times from cache
         Team recordEasyTeam = board.getTeam("record_easy");
         if (recordEasyTeam != null) {
-            String recordText = ChatColor.RED + "Aucun";
+            String recordText = CC.RED + "Aucun";
             Double easy = easyTimes.get(player.getUniqueId());
             if (easy != null) {
                 String formattedTime = String.format("%.2f", easy / 1000.0);
-                recordText = ChatColor.YELLOW + formattedTime + "s";
+                recordText = CC.YELLOW + formattedTime + "s";
             }
-            recordEasyTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Easy: " + recordText);
+            recordEasyTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Easy: " + recordText);
         }
         
         Team recordHardTeam = board.getTeam("record_hard");
         if (recordHardTeam != null) {
-            String recordText = ChatColor.RED + "Aucun";
+            String recordText = CC.RED + "Aucun";
             Double hard = hardTimes.get(player.getUniqueId());
             if (hard != null) {
                 String formattedTime = String.format("%.2f", hard / 1000.0);
-                recordText = ChatColor.YELLOW + formattedTime + "s";
+                recordText = CC.YELLOW + formattedTime + "s";
             }
-            recordHardTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Hard: " + recordText);
+            recordHardTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Hard: " + recordText);
         }
 
         // Mise à jour des têtes
@@ -303,8 +303,8 @@ public class LobbyScoreboardManager implements PluginMessageListener {
                 total = plugin.getHeadHuntManager().getTotalHeads();
                 found = plugin.getHeadHuntManager().getFoundHeads(player.getUniqueId());
             }
-            ChatColor color = (found >= total && total > 0) ? ChatColor.GREEN : ChatColor.GOLD;
-            headTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Têtes: " + color + found + "/" + total);
+            String color = (found >= total && total > 0) ? CC.GREEN : CC.GOLD;
+            headTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Têtes: " + color + found + "/" + total);
         }
 
     }
@@ -321,7 +321,7 @@ public class LobbyScoreboardManager implements PluginMessageListener {
                     coins = profile.getCoins();
                 }
             }
-            coinsTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Coins: " + ChatColor.GOLD + coins + " ⛃");
+            coinsTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Coins: " + CC.GOLD + coins + " ⛃");
         }
     }
 
@@ -331,24 +331,24 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         
         Team recordEasyTeam = board.getTeam("record_easy");
         if (recordEasyTeam != null) {
-            String recordText = ChatColor.RED + "Aucun";
+            String recordText = CC.RED + "Aucun";
             Double easy = easyTimes.get(player.getUniqueId());
             if (easy != null) {
                 String formattedTime = String.format("%.2f", easy / 1000.0);
-                recordText = ChatColor.YELLOW + formattedTime + "s";
+                recordText = CC.YELLOW + formattedTime + "s";
             }
-            recordEasyTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Easy: " + recordText);
+            recordEasyTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Easy: " + recordText);
         }
         
         Team recordHardTeam = board.getTeam("record_hard");
         if (recordHardTeam != null) {
-            String recordText = ChatColor.RED + "Aucun";
+            String recordText = CC.RED + "Aucun";
             Double hard = hardTimes.get(player.getUniqueId());
             if (hard != null) {
                 String formattedTime = String.format("%.2f", hard / 1000.0);
-                recordText = ChatColor.YELLOW + formattedTime + "s";
+                recordText = CC.YELLOW + formattedTime + "s";
             }
-            recordHardTeam.setPrefix(ChatColor.DARK_GRAY + " ▪ " + ChatColor.GRAY + "Hard: " + recordText);
+            recordHardTeam.setPrefix(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Hard: " + recordText);
         }
     }
 }

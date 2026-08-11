@@ -2,7 +2,7 @@ package fr.corehost.lobby.gui;
 
 import fr.corehost.lobby.CoreHostLobby;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -32,10 +32,10 @@ public class SettingsMenu implements CustomMenu {
 
     public void open(Player player, boolean playSound) {
         this.inventory = Bukkit.createInventory(this, 27,
-                ChatColor.DARK_GRAY + "» " + ChatColor.LIGHT_PURPLE + "Paramètres");
+                CC.DARK_GRAY + "» " + CC.LIGHT_PURPLE + "Paramètres");
 
         if (plugin.getFriendManager() == null) {
-            player.sendMessage(ChatColor.RED + "Système d'amis indisponible.");
+            player.sendMessage(CC.RED + "Système d'amis indisponible.");
             return;
         }
 
@@ -62,69 +62,69 @@ public class SettingsMenu implements CustomMenu {
 
                 // ── Slot 11: Friend Requests Toggle ──
                 ItemStack friendRequestToggle = new ItemBuilder(isBlocked ? Material.RED_DYE : Material.LIME_DYE)
-                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Demandes d'amis")
+                    .setName(CC.GOLD + "" + CC.BOLD + "Demandes d'amis")
                     .setLore(
                         "",
-                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (isBlocked ? ChatColor.RED + "Bloqué" : ChatColor.GREEN + "Autorisé"),
+                        CC.DARK_GRAY + "▪ " + CC.GRAY + "État : " + (isBlocked ? CC.RED + "Bloqué" : CC.GREEN + "Autorisé"),
                         "",
-                        isBlocked ? ChatColor.GRAY + "Personne ne peut vous envoyer" : ChatColor.GRAY + "Tout le monde peut vous envoyer",
-                        isBlocked ? ChatColor.GRAY + "de demande d'ami." : ChatColor.GRAY + "des demandes d'amis.",
+                        isBlocked ? CC.GRAY + "Personne ne peut vous envoyer" : CC.GRAY + "Tout le monde peut vous envoyer",
+                        isBlocked ? CC.GRAY + "de demande d'ami." : CC.GRAY + "des demandes d'amis.",
                         "",
-                        isBlocked ? ChatColor.GREEN + "► Cliquez pour Autoriser" : ChatColor.RED + "► Cliquez pour Bloquer"
+                        isBlocked ? CC.GREEN + "► Cliquez pour Autoriser" : CC.RED + "► Cliquez pour Bloquer"
                     ).build();
                 inventory.setItem(11, friendRequestToggle);
 
                 // ── Slot 12: Notifications Toggle ──
                 ItemStack notificationsToggle = new ItemBuilder(notificationsEnabled ? Material.LIME_DYE : Material.RED_DYE)
-                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Notifications de Connexion")
+                    .setName(CC.GOLD + "" + CC.BOLD + "Notifications de Connexion")
                     .setLore(
                         "",
-                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (notificationsEnabled ? ChatColor.GREEN + "Activé" : ChatColor.RED + "Désactivé"),
+                        CC.DARK_GRAY + "▪ " + CC.GRAY + "État : " + (notificationsEnabled ? CC.GREEN + "Activé" : CC.RED + "Désactivé"),
                         "",
-                        notificationsEnabled ? ChatColor.GRAY + "Vous recevrez une alerte quand" : ChatColor.GRAY + "Vous ne recevrez plus d'alerte",
-                        notificationsEnabled ? ChatColor.GRAY + "un ami se connecte." : ChatColor.GRAY + "quand un ami se connecte.",
+                        notificationsEnabled ? CC.GRAY + "Vous recevrez une alerte quand" : CC.GRAY + "Vous ne recevrez plus d'alerte",
+                        notificationsEnabled ? CC.GRAY + "un ami se connecte." : CC.GRAY + "quand un ami se connecte.",
                         "",
-                        notificationsEnabled ? ChatColor.RED + "► Cliquez pour Désactiver" : ChatColor.GREEN + "► Cliquez pour Activer"
+                        notificationsEnabled ? CC.RED + "► Cliquez pour Désactiver" : CC.GREEN + "► Cliquez pour Activer"
                     ).build();
                 inventory.setItem(12, notificationsToggle);
 
                 // ── Slot 13: Party Invitations Toggle ──
                 ItemStack partyToggle = new ItemBuilder(partyBlocked ? Material.RED_DYE : Material.LIME_DYE)
-                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Invitations de Groupe")
+                    .setName(CC.GOLD + "" + CC.BOLD + "Invitations de Groupe")
                     .setLore(
                         "",
-                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (partyBlocked ? ChatColor.RED + "Bloqué" : ChatColor.GREEN + "Autorisé"),
+                        CC.DARK_GRAY + "▪ " + CC.GRAY + "État : " + (partyBlocked ? CC.RED + "Bloqué" : CC.GREEN + "Autorisé"),
                         "",
-                        partyBlocked ? ChatColor.GRAY + "Personne ne peut vous envoyer" : ChatColor.GRAY + "Tout le monde peut vous envoyer",
-                        partyBlocked ? ChatColor.GRAY + "d'invitation de groupe." : ChatColor.GRAY + "des invitations de groupe.",
+                        partyBlocked ? CC.GRAY + "Personne ne peut vous envoyer" : CC.GRAY + "Tout le monde peut vous envoyer",
+                        partyBlocked ? CC.GRAY + "d'invitation de groupe." : CC.GRAY + "des invitations de groupe.",
                         "",
-                        partyBlocked ? ChatColor.GREEN + "► Cliquez pour Autoriser" : ChatColor.RED + "► Cliquez pour Bloquer"
+                        partyBlocked ? CC.GREEN + "► Cliquez pour Autoriser" : CC.RED + "► Cliquez pour Bloquer"
                     ).build();
                 inventory.setItem(13, partyToggle);
 
                 // ── Slot 14: Private Messages Toggle ──
                 ItemStack pmsToggle = new ItemBuilder(pmsBlocked ? Material.RED_DYE : Material.LIME_DYE)
-                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Messages Privés")
+                    .setName(CC.GOLD + "" + CC.BOLD + "Messages Privés")
                     .setLore(
                         "",
-                        ChatColor.DARK_GRAY + "▪ " + ChatColor.GRAY + "État : " + (pmsBlocked ? ChatColor.RED + "Bloqué" : ChatColor.GREEN + "Autorisé"),
+                        CC.DARK_GRAY + "▪ " + CC.GRAY + "État : " + (pmsBlocked ? CC.RED + "Bloqué" : CC.GREEN + "Autorisé"),
                         "",
-                        pmsBlocked ? ChatColor.GRAY + "Personne ne peut vous envoyer" : ChatColor.GRAY + "Tout le monde peut vous envoyer",
-                        pmsBlocked ? ChatColor.GRAY + "de messages privés." : ChatColor.GRAY + "des messages privés.",
+                        pmsBlocked ? CC.GRAY + "Personne ne peut vous envoyer" : CC.GRAY + "Tout le monde peut vous envoyer",
+                        pmsBlocked ? CC.GRAY + "de messages privés." : CC.GRAY + "des messages privés.",
                         "",
-                        pmsBlocked ? ChatColor.GREEN + "► Cliquez pour Autoriser" : ChatColor.RED + "► Cliquez pour Bloquer"
+                        pmsBlocked ? CC.GREEN + "► Cliquez pour Autoriser" : CC.RED + "► Cliquez pour Bloquer"
                     ).build();
                 inventory.setItem(14, pmsToggle);
 
                 // ── Slot 15: Ignored Players ──
                 ItemStack ignoredPlayers = new ItemBuilder(Material.BARRIER)
-                    .setName(ChatColor.GOLD + "" + ChatColor.BOLD + "Joueurs Ignorés")
+                    .setName(CC.GOLD + "" + CC.BOLD + "Joueurs Ignorés")
                     .setLore(
                         "",
-                        ChatColor.GRAY + "Gérez la liste des joueurs",
-                        ChatColor.GRAY + "que vous avez ignorés.",
+                        CC.GRAY + "Gérez la liste des joueurs",
+                        CC.GRAY + "que vous avez ignorés.",
                         "",
-                        ChatColor.YELLOW + "► Cliquez pour Gérer"
+                        CC.YELLOW + "► Cliquez pour Gérer"
                     ).build();
                 inventory.setItem(15, ignoredPlayers);
 
@@ -163,9 +163,9 @@ public class SettingsMenu implements CustomMenu {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     String prefix = Constants.PREFIX;
                     if (isBlocked) {
-                        player.sendMessage(prefix + "Demandes d'amis " + ChatColor.GREEN + "autorisées" + ChatColor.GRAY + ".");
+                        player.sendMessage(prefix + "Demandes d'amis " + CC.GREEN + "autorisées" + CC.GRAY + ".");
                     } else {
-                        player.sendMessage(prefix + "Demandes d'amis " + ChatColor.RED + "bloquées" + ChatColor.GRAY + ".");
+                        player.sendMessage(prefix + "Demandes d'amis " + CC.RED + "bloquées" + CC.GRAY + ".");
                     }
                     open(player, false); // Refresh menu
                 });
@@ -183,9 +183,9 @@ public class SettingsMenu implements CustomMenu {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     String prefix = Constants.PREFIX;
                     if (enabled) {
-                        player.sendMessage(prefix + "Notifications " + ChatColor.RED + "désactivées" + ChatColor.GRAY + ".");
+                        player.sendMessage(prefix + "Notifications " + CC.RED + "désactivées" + CC.GRAY + ".");
                     } else {
-                        player.sendMessage(prefix + "Notifications " + ChatColor.GREEN + "activées" + ChatColor.GRAY + ".");
+                        player.sendMessage(prefix + "Notifications " + CC.GREEN + "activées" + CC.GRAY + ".");
                     }
                     open(player, false); // Refresh menu
                 });
@@ -203,9 +203,9 @@ public class SettingsMenu implements CustomMenu {
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     String prefix = Constants.PREFIX;
                     if (partyBlocked) {
-                        player.sendMessage(prefix + "Invitations de groupe " + ChatColor.GREEN + "autorisées" + ChatColor.GRAY + ".");
+                        player.sendMessage(prefix + "Invitations de groupe " + CC.GREEN + "autorisées" + CC.GRAY + ".");
                     } else {
-                        player.sendMessage(prefix + "Invitations de groupe " + ChatColor.RED + "bloquées" + ChatColor.GRAY + ".");
+                        player.sendMessage(prefix + "Invitations de groupe " + CC.RED + "bloquées" + CC.GRAY + ".");
                     }
                     open(player, false); // Refresh menu
                 });
@@ -227,9 +227,9 @@ public class SettingsMenu implements CustomMenu {
                     Bukkit.getScheduler().runTask(plugin, () -> {
                         String prefix = Constants.PREFIX;
                         if (pmsBlocked) {
-                            player.sendMessage(prefix + "Messages privés " + ChatColor.GREEN + "autorisés" + ChatColor.GRAY + ".");
+                            player.sendMessage(prefix + "Messages privés " + CC.GREEN + "autorisés" + CC.GRAY + ".");
                         } else {
-                            player.sendMessage(prefix + "Messages privés " + ChatColor.RED + "bloqués" + ChatColor.GRAY + ".");
+                            player.sendMessage(prefix + "Messages privés " + CC.RED + "bloqués" + CC.GRAY + ".");
                         }
                         open(player, false); // Refresh menu
                     });

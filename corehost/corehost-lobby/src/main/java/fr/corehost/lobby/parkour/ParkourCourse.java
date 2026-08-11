@@ -1,7 +1,7 @@
 package fr.corehost.lobby.parkour;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.Location;
 
 import fr.corehost.lobby.CoreHostLobby;
@@ -113,11 +113,11 @@ public class ParkourCourse {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 List<String> lines = new ArrayList<>();
                 lines.add("");
-                lines.add(ChatColor.GOLD + "" + ChatColor.BOLD + "✦ Top 10 Parkour - " + displayName + " ✦");
-                lines.add(ChatColor.DARK_GRAY + "" + ChatColor.STRIKETHROUGH + "                    ");
+                lines.add(CC.GOLD + "" + CC.BOLD + "✦ Top 10 Parkour - " + displayName + " ✦");
+                lines.add(CC.DARK_GRAY + "" + CC.STRIKETHROUGH + "                    ");
 
                 if (top10.isEmpty()) {
-                    lines.add(ChatColor.GRAY + "Aucun record pour l'instant.");
+                    lines.add(CC.GRAY + "Aucun record pour l'instant.");
                 } else {
                     int rank = 1;
                     for (Tuple tuple : top10) {
@@ -133,13 +133,13 @@ public class ParkourCourse {
                         
                         String formattedTime = String.format("%.2f", timeTaken / 1000.0);
 
-                        ChatColor rankColor;
-                        if (rank == 1) rankColor = ChatColor.GOLD;
-                        else if (rank == 2) rankColor = ChatColor.GRAY;
-                        else if (rank == 3) rankColor = ChatColor.RED;
-                        else rankColor = ChatColor.GRAY;
+                        String rankColor;
+                        if (rank == 1) rankColor = CC.GOLD;
+                        else if (rank == 2) rankColor = CC.GRAY;
+                        else if (rank == 3) rankColor = CC.RED;
+                        else rankColor = CC.GRAY;
 
-                        lines.add(rankColor + "#" + rank + " " + ChatColor.WHITE + name + ChatColor.DARK_GRAY + " - " + ChatColor.GREEN + formattedTime + "s");
+                        lines.add(rankColor + "#" + rank + " " + CC.WHITE + name + CC.DARK_GRAY + " - " + CC.GREEN + formattedTime + "s");
                         rank++;
                     }
                 }

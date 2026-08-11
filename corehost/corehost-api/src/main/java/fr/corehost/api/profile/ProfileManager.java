@@ -210,7 +210,7 @@ public class ProfileManager {
         if (redisManager != null && redisManager.isConnected()) {
             try (Jedis jedis = redisManager.getPool().getResource()) {
                 // Expire in 1 hour (3600s) if not updated
-                jedis.setex("corehost:profile:data:" + profile.getUuid().toString(), 3600, gson.toJson(profile));
+                jedis.set("corehost:profile:data:" + profile.getUuid().toString(), gson.toJson(profile), redis.clients.jedis.params.SetParams.setParams().ex(3600));
             } catch (Exception e) {
                 logger.severe("Failed to save profile to redis for " + profile.getUuid() + ": " + e.getMessage());
             }

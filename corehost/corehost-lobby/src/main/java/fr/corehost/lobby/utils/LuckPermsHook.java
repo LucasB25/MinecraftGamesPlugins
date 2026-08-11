@@ -3,7 +3,7 @@ package fr.corehost.lobby.utils;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 import org.bukkit.entity.Player;
 
 public class LuckPermsHook {
@@ -24,26 +24,26 @@ public class LuckPermsHook {
             if (user != null) {
                 String prefix = user.getCachedData().getMetaData().getPrefix();
                 if (prefix != null) {
-                    return ChatColor.translateAlternateColorCodes('&', prefix);
+                    return CC.translate( prefix);
                 }
                 
                 String group = user.getPrimaryGroup();
                 if (group != null) {
                     String defaultGroup = org.bukkit.plugin.java.JavaPlugin.getPlugin(fr.corehost.lobby.CoreHostLobby.class).getConfig().getString("luckperms.default-group", "default");
                     if (group.equalsIgnoreCase(defaultGroup)) {
-                        return ChatColor.GRAY + "Joueurs";
+                        return CC.GRAY + "Joueurs";
                     } else if (group.equalsIgnoreCase("admin") || group.equalsIgnoreCase("administrateur")) {
-                        return ChatColor.RED + group.substring(0, 1).toUpperCase() + group.substring(1);
+                        return CC.RED + group.substring(0, 1).toUpperCase() + group.substring(1);
                     } else if (group.equalsIgnoreCase("modo") || group.equalsIgnoreCase("moderateur")) {
-                        return ChatColor.DARK_GREEN + group.substring(0, 1).toUpperCase() + group.substring(1);
+                        return CC.DARK_GREEN + group.substring(0, 1).toUpperCase() + group.substring(1);
                     } else {
-                        return ChatColor.AQUA + group.substring(0, 1).toUpperCase() + group.substring(1);
+                        return CC.AQUA + group.substring(0, 1).toUpperCase() + group.substring(1);
                     }
                 }
             }
         } catch (Exception ignored) {
             // LuckPerms not loaded or error
         }
-        return ChatColor.GRAY + "Joueurs";
+        return CC.GRAY + "Joueurs";
     }
 }

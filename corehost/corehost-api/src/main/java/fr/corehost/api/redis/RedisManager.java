@@ -2,16 +2,16 @@ package fr.corehost.api.redis;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisPubSub;
-import redis.clients.jedis.exceptions.JedisException;
 
+import redis.clients.jedis.JedisPubSub;
+
+@SuppressWarnings("deprecation")
 public class RedisManager {
     
     private final JedisPool jedisPool;
 
     public RedisManager(String host, int port, String password) {
-        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        redis.clients.jedis.JedisPoolConfig poolConfig = new redis.clients.jedis.JedisPoolConfig();
         poolConfig.setMaxTotal(128);
         poolConfig.setMaxIdle(128);
         poolConfig.setMinIdle(16);
@@ -31,9 +31,10 @@ public class RedisManager {
     }
 
     public boolean isConnected() {
+        if (jedisPool == null || jedisPool.isClosed()) return false;
         try (Jedis jedis = jedisPool.getResource()) {
             return "PONG".equals(jedis.ping());
-        } catch (JedisException e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -45,53 +46,61 @@ public class RedisManager {
     }
 
     public String get(String key) {
+        if (jedisPool == null || jedisPool.isClosed()) return null;
         try (Jedis jedis = jedisPool.getResource()) {
             return jedis.get(key);
-        } catch (JedisException e) {
+        } catch (Exception e) {
             return null;
         }
     }
 
     public void set(String key, String value) {
+        if (jedisPool == null || jedisPool.isClosed()) return;
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.set(key, value);
-        } catch (JedisException ignored) {}
+        } catch (Exception ignored) {}
     }
 
     public void setEx(String key, String value, int seconds) {
+        if (jedisPool == null || jedisPool.isClosed()) return;
         try (Jedis jedis = jedisPool.getResource()) {
-            jedis.setex(key, seconds, value);
-        } catch (JedisException ignored) {}
+            jedis.set(key, value, redis.clients.jedis.params.SetParams.setParams().ex(seconds));
+        } catch (Exception ignored) {}
     }
 
     public void del(String key) {
+        if (jedisPool == null || jedisPool.isClosed()) return;
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.del(key);
-        } catch (JedisException ignored) {}
+        } catch (Exception ignored) {}
     }
 
     public void publish(String channel, String message) {
+        if (jedisPool == null || jedisPool.isClosed()) return;
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.publish(channel, message);
-        } catch (JedisException ignored) {}
+        } catch (Exception ignored) {}
     }
     
     public void hset(String key, String field, String value) {
+        if (jedisPool == null || jedisPool.isClosed()) return;
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.hset(key, field, value);
-        } catch (JedisException ignored) {}
+        } catch (Exception ignored) {}
     }
     
     public void hdel(String key, String field) {
+        if (jedisPool == null || jedisPool.isClosed()) return;
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.hdel(key, field);
-        } catch (JedisException ignored) {}
+        } catch (Exception ignored) {}
     }
     
     public java.util.Map<String, String> hgetAll(String key) {
+        if (jedisPool == null || jedisPool.isClosed()) return java.util.Collections.emptyMap();
         try (Jedis jedis = jedisPool.getResource()) {
             return jedis.hgetAll(key);
-        } catch (JedisException e) {
+        } catch (Exception e) {
             return java.util.Collections.emptyMap();
         }
     }
@@ -100,7 +109,7 @@ public class RedisManager {
         new Thread(() -> {
             try (Jedis jedis = jedisPool.getResource()) {
                 jedis.subscribe(jedisPubSub, channels);
-            } catch (JedisException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }, "Redis-PubSub-Thread").start();

@@ -1,6 +1,6 @@
 package fr.corehost.lobby.utils;
 
-import org.bukkit.ChatColor;
+import fr.corehost.api.utils.CC;
 
 public class Constants {
     
@@ -10,8 +10,8 @@ public class Constants {
 
     public static void load(org.bukkit.configuration.file.FileConfiguration config) {
         String rawPrefix = config.getString("settings.prefix", "&8[&6CoreHost&8] &7");
-        PREFIX = ChatColor.translateAlternateColorCodes('&', rawPrefix);
-        BUNGEE_PREFIX = net.md_5.bungee.api.ChatColor.translateAlternateColorCodes('&', rawPrefix);
+        PREFIX = CC.translate( rawPrefix);
+        BUNGEE_PREFIX = CC.translate( rawPrefix);
     }
 
 }

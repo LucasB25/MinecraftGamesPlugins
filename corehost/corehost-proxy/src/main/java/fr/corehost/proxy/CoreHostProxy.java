@@ -106,12 +106,12 @@ public class CoreHostProxy {
             discordManager.start();
             
             // Register Command
-            server.getCommandManager().register("friend", new FriendCommand(this, server), "f", "amie", "amis");
-            server.getCommandManager().register("party", new PartyCommand(this, server), "p", "groupe");
-            server.getCommandManager().register("msg", new MsgCommand(this, server), "w", "tell", "m");
-            server.getCommandManager().register("reply", new ReplyCommand(this, server), "r", "rep");
-            server.getCommandManager().register("ignore", new IgnoreCommand(this, server));
-            server.getCommandManager().register("corehostproxy", new fr.corehost.proxy.commands.CoreHostProxyCommand(this));
+            server.getCommandManager().register(server.getCommandManager().metaBuilder("friend").aliases("f", "amie", "amis").build(), new FriendCommand(this, server));
+            server.getCommandManager().register(server.getCommandManager().metaBuilder("party").aliases("p", "groupe").build(), new PartyCommand(this, server));
+            server.getCommandManager().register(server.getCommandManager().metaBuilder("msg").aliases("w", "tell", "m").build(), new MsgCommand(this, server));
+            server.getCommandManager().register(server.getCommandManager().metaBuilder("reply").aliases("r", "rep").build(), new ReplyCommand(this, server));
+            server.getCommandManager().register(server.getCommandManager().metaBuilder("ignore").build(), new IgnoreCommand(this, server));
+            server.getCommandManager().register(server.getCommandManager().metaBuilder("corehostproxy").build(), new fr.corehost.proxy.commands.CoreHostProxyCommand(this));
             
         } catch (Exception e) {
             logger.error("An error occurred during CoreHostProxy initialization", e);

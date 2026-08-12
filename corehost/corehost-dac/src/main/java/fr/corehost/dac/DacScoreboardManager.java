@@ -157,7 +157,8 @@ public class DacScoreboardManager {
             if (!instance.getPlayers().contains(player.getUniqueId())) {
                 livesTeam.prefix(LegacyComponentSerializer.legacySection().deserialize(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Tu es: " + CC.GRAY + "Spectateur"));
             } else if (lives > 0) {
-                livesTeam.prefix(LegacyComponentSerializer.legacySection().deserialize(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Tu as: " + CC.RED + "❤ " + lives));
+                int extraLives = lives - 1;
+                livesTeam.prefix(LegacyComponentSerializer.legacySection().deserialize(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Vies: " + CC.RED + extraLives));
             } else {
                 livesTeam.prefix(LegacyComponentSerializer.legacySection().deserialize(CC.DARK_GRAY + " ▪ " + CC.GRAY + "Tu es: " + CC.RED + "Éliminé"));
             }

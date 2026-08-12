@@ -180,6 +180,6 @@ public class SumoSettingsMenu implements CustomMenu {
 
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.5f);
         player.closeInventory();
-        plugin.getCloudNetServiceManager().createHost(player, "Sumo", bestOf, doubleJumpEnabled, customKBEnabled);
+        plugin.getCloudNetServiceManager().createHost(player, "Sumo", bestOf, doubleJumpEnabled, customKBEnabled, 1);
     }
 }

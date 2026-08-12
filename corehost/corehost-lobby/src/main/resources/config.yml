@@ -72,6 +72,8 @@ games:
     slot: 13
     max-players: 8
     max-slime-instances: 5
+    has-settings-menu: true
+    settings-menu-class: "fr.corehost.lobby.gui.DacSettingsMenu"
     lore:
       - ""
       - "&7Démarrez un serveur Dé à Coudre"

@@ -23,6 +23,8 @@ gameplay:
   void-level: 50
   # Temps accordé à chaque joueur pour sauter (en secondes)
   turn-time: 15
+  # Nombre de vies supplémentaires maximum (cumulées avec les Dés à coudre)
+  max-lives: 2
   # Nombre de joueurs maximum par partie
   max-players: 8
   # Préfixe des mondes DAC pour leur identification

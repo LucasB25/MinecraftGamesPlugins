@@ -44,6 +44,7 @@ public class DacGameInstance {
     private final Map<UUID, String> playerChatColors = new HashMap<>();
     private final Map<UUID, Integer> earnedCoins = new HashMap<>();
     private boolean hardMode = false;
+    private int initialLives = 1;
     
     private int currentTurnIndex = -1;
     private int turnTimeRemaining = 15;
@@ -55,6 +56,7 @@ public class DacGameInstance {
     private final int coinsPerJump;
     private final int matchWinBonus;
     private final int matchLoseBonus;
+    private final int maxLives;
     
     private final Material[] AVAILABLE_COLORS = {
         Material.RED_WOOL, Material.WHITE_WOOL, Material.LIME_WOOL, Material.YELLOW_WOOL,
@@ -92,6 +94,7 @@ public class DacGameInstance {
         this.coinsPerJump = plugin.getConfig().getInt("rewards.coins-per-jump", 1);
         this.matchWinBonus = plugin.getConfig().getInt("rewards.match-win-bonus", 20);
         this.matchLoseBonus = plugin.getConfig().getInt("rewards.match-lose-bonus", 5);
+        this.maxLives = plugin.getConfig().getInt("gameplay.max-lives", 5) + 1; // +1 because 0 extra lives = 1 attempt
         
         resetPool();
         syncHostData();
@@ -112,6 +115,7 @@ public class DacGameInstance {
         }
         
         if (data != null) {
+            this.initialLives = data.getInitialLives();
             data.setCurrentPlayers(players.size());
             data.setMaxPlayers(maxPlayers);
             
@@ -176,7 +180,7 @@ public class DacGameInstance {
         if (!players.contains(player.getUniqueId())) {
             players.add(player.getUniqueId());
             alivePlayers.add(player.getUniqueId());
-            lives.put(player.getUniqueId(), 1); // 1 life to start
+            lives.put(player.getUniqueId(), this.initialLives);
             
             int colorIndex = (players.size() - 1) % AVAILABLE_COLORS.length;
             playerColors.put(player.getUniqueId(), AVAILABLE_COLORS[colorIndex]);
@@ -194,21 +198,64 @@ public class DacGameInstance {
     }
 
     public void removePlayer(Player player) {
-        players.remove(player.getUniqueId());
+        UUID pId = player.getUniqueId();
+        
+        int pIndex = players.indexOf(pId);
+        boolean wasInGame = pIndex != -1;
+        
+        players.remove(pId);
+        alivePlayers.remove(pId);
+        
+        // Clean up data entirely
+        lives.remove(pId);
+        playerColors.remove(pId);
+        playerChatColors.remove(pId);
+        earnedCoins.remove(pId);
+        
         scoreboardManager.removeScoreboard(player);
-        plugin.getGameManager().unregisterPlayer(player.getUniqueId());
+        plugin.getGameManager().unregisterPlayer(pId);
         
         syncHostData();
         
-        if (state == GameState.PLAYING && alivePlayers.contains(player.getUniqueId())) {
-            eliminatePlayer(player, true);
-        } else {
-            alivePlayers.remove(player.getUniqueId());
+        if (wasInGame) {
             broadcast(CC.YELLOW + player.getName() + " a quitté la partie.");
+            scoreboardManager.updateAll();
+            
+            if (state == GameState.PLAYING) {
+                boolean wasCurrentTurn = (currentTurnIndex == pIndex);
+                
+                if (pIndex < currentTurnIndex) {
+                    currentTurnIndex--;
+                }
+                
+                if (wasCurrentTurn) {
+                    boolean isActivelyPlayingTurn = (turnTimerTask != null);
+                    if (turnTimerTask != null) { turnTimerTask.cancel(); turnTimerTask = null; }
+                    if (landingCheckTask != null) { landingCheckTask.cancel(); landingCheckTask = null; }
+                    
+                    currentTurnIndex--;
+                    
+                    if (isActivelyPlayingTurn) {
+                        if (!checkWin()) {
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    nextTurn();
+                                }
+                            }.runTaskLater(plugin, 20L);
+                        }
+                    } else {
+                        checkWin();
+                    }
+                } else {
+                    checkWin();
+                }
+            }
+        } else {
             scoreboardManager.updateAll();
         }
 
-        if (players.isEmpty()) {
+        if (players.isEmpty() && state != GameState.ENDED) {
             deleteHostData();
             plugin.getGameManager().cleanupInstance(hostId);
         }
@@ -294,7 +341,7 @@ public class DacGameInstance {
         
         if (checkWin()) return;
 
-        if (turnTimerTask != null) turnTimerTask.cancel();
+        if (turnTimerTask != null) { turnTimerTask.cancel(); turnTimerTask = null; }
         
         // Find next alive player
         int startIndex = currentTurnIndex;
@@ -304,7 +351,7 @@ public class DacGameInstance {
         
         Player current = Bukkit.getPlayer(players.get(currentTurnIndex));
         if (current == null) {
-            eliminatePlayer(null, false); // Edge case if player disconnected exactly here
+            eliminatePlayer(null); // Edge case if player disconnected exactly here
             return;
         }
 
@@ -335,7 +382,7 @@ public class DacGameInstance {
                 
                 if (turnTimeRemaining <= 0) {
                     broadcast(colorCode + current.getName() + CC.RED + " a mis trop de temps à sauter !");
-                    eliminatePlayer(current, false);
+                    eliminatePlayer(current);
                     cancel();
                     return;
                 }
@@ -384,8 +431,8 @@ public class DacGameInstance {
         if (state != GameState.PLAYING) return;
         if (currentTurnIndex < 0 || !players.get(currentTurnIndex).equals(player.getUniqueId())) return;
         
-        if (turnTimerTask != null) turnTimerTask.cancel();
-        if (landingCheckTask != null) landingCheckTask.cancel();
+        if (turnTimerTask != null) { turnTimerTask.cancel(); turnTimerTask = null; }
+        if (landingCheckTask != null) { landingCheckTask.cancel(); landingCheckTask = null; }
         
         // Check if inside pool bounds
         BoundingBox pool = mapConfig.getPoolBounds();
@@ -407,7 +454,7 @@ public class DacGameInstance {
             player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
             // Spawn some particles
             player.getWorld().spawnParticle(org.bukkit.Particle.LAVA, player.getLocation(), 10);
-            eliminatePlayer(player, false);
+            eliminatePlayer(player);
             return;
         }
         
@@ -430,10 +477,15 @@ public class DacGameInstance {
         // Check for thimble (Dé à coudre)
         if (isThimble(block)) {
             int currentLives = lives.getOrDefault(player.getUniqueId(), 0);
-            lives.put(player.getUniqueId(), currentLives + 1);
             
-            broadcast(CC.GOLD + "⭐ " + colorCode + CC.BOLD + "DÉ À COUDRE " + CC.GOLD + "pour " + colorCode + player.getName() + CC.GOLD + " ! (+1 Vie) ⭐");
-            player.sendTitle(CC.GOLD + "DÉ À COUDRE !", CC.YELLOW + "+1 Vie", 5, 40, 10);
+            if (currentLives < maxLives) {
+                lives.put(player.getUniqueId(), currentLives + 1);
+                broadcast(CC.GOLD + "⭐ " + colorCode + CC.BOLD + "DÉ À COUDRE " + CC.GOLD + "pour " + colorCode + player.getName() + CC.GOLD + " ! (+1 Vie) ⭐");
+                player.sendTitle(CC.GOLD + "DÉ À COUDRE !", CC.YELLOW + "+1 Vie", 5, 40, 10);
+            } else {
+                broadcast(CC.GOLD + "⭐ " + colorCode + CC.BOLD + "DÉ À COUDRE " + CC.GOLD + "pour " + colorCode + player.getName() + CC.GOLD + " ! ⭐");
+                player.sendTitle(CC.GOLD + "DÉ À COUDRE !", CC.YELLOW + "Vies au max !", 5, 40, 10);
+            }
             for (Player p : world.getPlayers()) {
                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
             }
@@ -496,9 +548,9 @@ public class DacGameInstance {
         return true;
     }
 
-    private void eliminatePlayer(Player player, boolean isDisconnect) {
-        if (turnTimerTask != null) turnTimerTask.cancel();
-        if (landingCheckTask != null) landingCheckTask.cancel();
+    private void eliminatePlayer(Player player) {
+        if (turnTimerTask != null) { turnTimerTask.cancel(); turnTimerTask = null; }
+        if (landingCheckTask != null) { landingCheckTask.cancel(); landingCheckTask = null; }
         
         if (player != null && alivePlayers.contains(player.getUniqueId())) {
             int currentLives = lives.getOrDefault(player.getUniqueId(), 1);
@@ -507,8 +559,9 @@ public class DacGameInstance {
             
             String colorCode = CC.translate( playerChatColors.get(player.getUniqueId()));
             
-            if (currentLives > 0 && !isDisconnect) {
-                broadcast(colorCode + player.getName() + CC.YELLOW + " a perdu une vie ! Il lui en reste " + currentLives + ".");
+            if (currentLives > 0) {
+                int extraLivesLeft = currentLives - 1;
+                broadcast(colorCode + player.getName() + CC.YELLOW + " a perdu une vie ! Il lui en reste " + extraLivesLeft + ".");
                 player.sendTitle(CC.RED + "OUCH !", CC.YELLOW + "-1 Vie", 5, 30, 5);
                 Location specSpawn = mapConfig.getSpectatorSpawn();
                 if (specSpawn != null) {
@@ -531,27 +584,29 @@ public class DacGameInstance {
             
             // Out of lives
             alivePlayers.remove(player.getUniqueId());
-            if (!isDisconnect) {
-                player.sendTitle(CC.RED + "ÉLIMINÉ", "", 5, 40, 10);
-                Location specSpawn = mapConfig.getSpectatorSpawn();
-                if (specSpawn != null) {
-                    specSpawn = specSpawn.clone();
-                    specSpawn.setWorld(world);
-                }
-                player.teleport(specSpawn != null ? specSpawn : world.getSpawnLocation());
-                
-                CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
-                if (coreGame != null && coreGame.getSpectatorManager() != null) {
-                    coreGame.getSpectatorManager().setSpectator(player, true);
-                } else {
-                    player.setGameMode(GameMode.SPECTATOR);
-                }
+            
+            player.sendTitle(CC.RED + "ÉLIMINÉ", "", 5, 40, 10);
+            Location specSpawn = mapConfig.getSpectatorSpawn();
+            if (specSpawn != null) {
+                specSpawn = specSpawn.clone();
+                specSpawn.setWorld(world);
             }
+            player.teleport(specSpawn != null ? specSpawn : world.getSpawnLocation());
+            
+            CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+            if (coreGame != null && coreGame.getSpectatorManager() != null) {
+                coreGame.getSpectatorManager().setSpectator(player, true);
+            } else {
+                player.setGameMode(GameMode.SPECTATOR);
+            }
+            
             broadcast(colorCode + player.getName() + CC.RED + " est éliminé !");
         } else if (player == null) {
-            // Disconnect during their turn
-            UUID currentId = players.get(currentTurnIndex);
-            alivePlayers.remove(currentId);
+            // Disconnect during their turn edge case
+            if (currentTurnIndex >= 0 && currentTurnIndex < players.size()) {
+                UUID currentId = players.get(currentTurnIndex);
+                alivePlayers.remove(currentId);
+            }
         }
         
         scoreboardManager.updateAll();
@@ -569,7 +624,7 @@ public class DacGameInstance {
     private boolean checkWin() {
         if (alivePlayers.size() <= 1) {
             state = GameState.ENDED;
-            if (turnTimerTask != null) turnTimerTask.cancel();
+            if (turnTimerTask != null) { turnTimerTask.cancel(); turnTimerTask = null; }
             scoreboardManager.updateAll();
             syncHostData();
             

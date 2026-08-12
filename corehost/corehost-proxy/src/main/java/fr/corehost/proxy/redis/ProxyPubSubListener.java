@@ -43,9 +43,8 @@ public class ProxyPubSubListener extends JedisPubSub {
                 HostManager hostManager = plugin.getHostManager();
                 if (hostManager == null) return;
 
-                // Trouver le host correspondant
                 HostData targetHost = null;
-                for (HostData h : hostManager.getAllHosts()) {
+                for (HostData h : hostManager.getAllHosts().join()) {
                     if (h.getWorldName().equals(worldName) && h.getServerName().equalsIgnoreCase(serverName)) {
                         targetHost = h;
                         break;
@@ -98,6 +97,20 @@ public class ProxyPubSubListener extends JedisPubSub {
                 
                 if (plugin.getProfileManager() != null) {
                     plugin.getProfileManager().addCoins(UUID.fromString(uuidStr), amount);
+                }
+            } else if ("ADD_STAT".equals(action)) {
+                String uuidStr = json.get("uuid").getAsString();
+                String game = json.get("game").getAsString();
+                String statKey = json.get("statKey").getAsString();
+                int amount = json.get("amount").getAsInt();
+                
+                if (plugin.getDatabaseManager() != null) {
+                    plugin.getDatabaseManager().getStatsDAO().addStat(UUID.fromString(uuidStr), game, statKey, amount);
+                    
+                    // Force update cache on all servers
+                    if (plugin.getProfileManager() != null) {
+                        plugin.getProfileManager().publishProfileUpdate(UUID.fromString(uuidStr));
+                    }
                 }
             } else if ("TELEPORT_STAFF".equals(action)) {
                 String staffUuidStr = json.get("staffUuid").getAsString();

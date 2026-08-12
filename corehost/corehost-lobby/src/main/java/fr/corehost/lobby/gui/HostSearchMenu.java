@@ -109,7 +109,7 @@ public class HostSearchMenu implements CustomMenu {
         }
         
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            List<HostData> hosts = plugin.getHostManager().getAllHosts();
+            List<HostData> hosts = plugin.getHostManager().getAllHosts().join();
             
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (inventory.getViewers().isEmpty()) return;

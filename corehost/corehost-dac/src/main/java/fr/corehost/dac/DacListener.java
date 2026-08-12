@@ -69,7 +69,7 @@ public class DacListener implements Listener {
                     if (coreGame != null && coreGame.getRedisManager() != null) {
                         fr.corehost.api.host.HostManager hostManager = new fr.corehost.api.host.HostManager(coreGame.getRedisManager());
                         java.util.UUID hostId = java.util.UUID.fromString(worldName);
-                        fr.corehost.api.host.HostData data = hostManager.getHost(hostId);
+                        fr.corehost.api.host.HostData data = hostManager.getHost(hostId).join();
                         if (data != null && prefix.equalsIgnoreCase(data.getGameType())) {
                             isDac = true;
                         }

@@ -104,9 +104,9 @@ public class DacGameInstance {
         HostManager hostManager = new HostManager(coreGame.getRedisManager());
         HostData data = null;
         try {
-            data = hostManager.getHost(UUID.fromString(hostId));
+            data = hostManager.getHost(UUID.fromString(hostId)).join();
         } catch (Exception e) {
-            data = hostManager.getAllHosts().stream()
+            data = hostManager.getAllHosts().join().stream()
                     .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
                     .findFirst().orElse(null);
         }
@@ -120,7 +120,7 @@ public class DacGameInstance {
             else if (state == GameState.PLAYING) data.setStatus(fr.corehost.api.host.HostStatus.PLAYING);
             else if (state == GameState.ENDED) data.setStatus(fr.corehost.api.host.HostStatus.FINISHED);
             
-            hostManager.saveHost(data);
+            hostManager.saveHost(data).join();
         }
     }
 
@@ -131,15 +131,15 @@ public class DacGameInstance {
         HostManager hostManager = new HostManager(coreGame.getRedisManager());
         HostData data = null;
         try {
-            data = hostManager.getHost(UUID.fromString(hostId));
+            data = hostManager.getHost(UUID.fromString(hostId)).join();
         } catch (Exception e) {
-            data = hostManager.getAllHosts().stream()
+            data = hostManager.getAllHosts().join().stream()
                     .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
                     .findFirst().orElse(null);
         }
         
         if (data != null) {
-            hostManager.deleteHost(data.getHostId());
+            hostManager.deleteHost(data.getHostId()).join();
         }
     }
 
@@ -584,6 +584,11 @@ public class DacGameInstance {
                 winner.playSound(winner.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                 
                 giveCoins(winner, totalCoins);
+                
+                CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+                if (coreGame != null && coreGame.getRedisManager() != null) {
+                    coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_STAT\", \"uuid\":\"" + winner.getUniqueId().toString() + "\", \"game\":\"dac\", \"statKey\":\"wins\", \"amount\": 1}");
+                }
             } else {
                 broadcast(CC.YELLOW + "Match terminé (aucun vainqueur).");
             }
@@ -595,6 +600,11 @@ public class DacGameInstance {
                     if (p != null) {
                         int totalCoins = matchLoseBonus + earnedCoins.getOrDefault(uuid, 0);
                         giveCoins(p, totalCoins);
+                        
+                        CoreHostGame coreGame = org.bukkit.plugin.java.JavaPlugin.getPlugin(CoreHostGame.class);
+                        if (coreGame != null && coreGame.getRedisManager() != null) {
+                            coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_STAT\", \"uuid\":\"" + p.getUniqueId().toString() + "\", \"game\":\"dac\", \"statKey\":\"losses\", \"amount\": 1}");
+                        }
                     }
                 }
             }
@@ -706,8 +716,10 @@ public class DacGameInstance {
 
     public GameState getState() { return state; }
     public World getWorld() { return world; }
-    public DacMapConfig getMapConfig() { return mapConfig; }
+    public String getHostId() { return hostId; }
     public List<UUID> getPlayers() { return players; }
+
+    public DacMapConfig getMapConfig() { return mapConfig; }
     public List<UUID> getAlivePlayers() { return alivePlayers; }
     public int getLives(UUID uuid) { return lives.getOrDefault(uuid, 0); }
     public CoreHostDac getPlugin() { return plugin; }

@@ -116,7 +116,7 @@ public class SumoCommand implements CommandExecutor {
             );
             hostData.setBestOf(bestOf);
             hostData.setStatus(fr.corehost.api.host.HostStatus.STARTING);
-            hostManager.saveHost(hostData);
+            hostManager.saveHost(hostData).join();
             
             JsonObject request = new JsonObject();
             request.addProperty("action", "create_slime_instance");

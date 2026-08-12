@@ -35,7 +35,7 @@ public class CloudNetListener {
 
             // Wait a small moment to let Velocity register the server internally from CloudNet-Bridge
             server.getScheduler().buildTask(plugin, () -> {
-                List<HostData> hosts = hostManager.getAllHosts();
+                List<HostData> hosts = hostManager.getAllHosts().join();
                 
                 for (HostData host : hosts) {
                     // Si ce serveur correspond a un Host en cours de demarrage (attendant un demarrage CloudNet complet)

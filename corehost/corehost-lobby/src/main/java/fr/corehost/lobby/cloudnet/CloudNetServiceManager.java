@@ -66,7 +66,7 @@ public class CloudNetServiceManager {
                 hostData.setDoubleJumpEnabled(doubleJumpEnabled);
                 hostData.setCustomKB(customKBEnabled);
                 hostData.setStatus(fr.corehost.api.host.HostStatus.STARTING);
-                plugin.getHostManager().saveHost(hostData);
+                plugin.getHostManager().saveHost(hostData).join();
             }
             
             if (plugin.getRedisManager() != null) {
@@ -98,7 +98,7 @@ public class CloudNetServiceManager {
                 Collection<ServiceInfoSnapshot> runningServices = serviceProvider.servicesByTask(gameType);
                 ServiceInfoSnapshot warmService = null;
                 
-                List<HostData> allHosts = plugin.getHostManager().getAllHosts();
+                List<HostData> allHosts = plugin.getHostManager().getAllHosts().join();
                 int maxInstances = plugin.getConfig().getInt("games." + gameType + ".max-slime-instances", 5);
                 
                 for (ServiceInfoSnapshot service : runningServices) {
@@ -134,7 +134,7 @@ public class CloudNetServiceManager {
                     
                     // The slime world needs to be generated, so status is STARTING
                     hostData.setStatus(fr.corehost.api.host.HostStatus.STARTING);
-                    plugin.getHostManager().saveHost(hostData);
+                    plugin.getHostManager().saveHost(hostData).join();
                     
                     if (player.isOnline()) {
                         player.sendMessage(prefix + CC.GREEN + "Serveur CloudNet trouvé ! Génération du monde Slime en cours...");
@@ -176,7 +176,7 @@ public class CloudNetServiceManager {
                         );
                         hostData.setBestOf(bestOf);
 
-                        plugin.getHostManager().saveHost(hostData);
+                        plugin.getHostManager().saveHost(hostData).join();
 
                         if (player.isOnline()) {
                             player.sendMessage(prefix + CC.GREEN + "Aucun serveur prêt. Démarrage complet du serveur " + CC.GOLD + serverName + CC.GREEN + " en cours...");

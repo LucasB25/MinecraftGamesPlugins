@@ -36,7 +36,7 @@ public class IsolationListener implements Listener {
                     if (targetHostId != null) {
                         // Player was explicitly sent here to join a specific host
                         java.util.UUID hId = java.util.UUID.fromString(targetHostId);
-                        fr.corehost.api.host.HostData h = hostManager.getHost(hId);
+                        fr.corehost.api.host.HostData h = hostManager.getHost(hId).join();
                         if (h != null && h.getServerName().equalsIgnoreCase(plugin.getServerName())) {
                             org.bukkit.World w = Bukkit.getWorld(h.getWorldName());
                             if (w != null) {
@@ -47,7 +47,7 @@ public class IsolationListener implements Listener {
                     }
                     
                     // 2. Fallback: if they are the owner of an active host on this server
-                    for (fr.corehost.api.host.HostData h : hostManager.getAllHosts()) {
+                    for (fr.corehost.api.host.HostData h : hostManager.getAllHosts().join()) {
                         if (h.getServerName().equalsIgnoreCase(plugin.getServerName())) {
                             if (h.getOwnerUuid().equals(player.getUniqueId())) {
                                 org.bukkit.World w = Bukkit.getWorld(h.getWorldName());

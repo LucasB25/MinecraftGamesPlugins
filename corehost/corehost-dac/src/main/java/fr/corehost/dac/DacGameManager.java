@@ -127,6 +127,10 @@ public class DacGameManager {
         return instances.get(hostId);
     }
     
+    public java.util.Collection<DacGameInstance> getActiveInstances() {
+        return instances.values();
+    }
+    
     public DacGameInstance getInstance(World world) {
         return getInstance(world.getName());
     }

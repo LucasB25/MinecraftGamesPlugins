@@ -7,13 +7,10 @@ import fr.corehost.api.redis.RedisManager;
 import com.google.gson.Gson;
 import redis.clients.jedis.Jedis;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -42,14 +39,24 @@ public class ProfileManager {
         }
     }
     
-    /**
-     * Gets a profile from cache or loads it synchronously from DB.
-     */
-    public PlayerProfile getProfile(UUID uuid) {
+    public PlayerProfile getCachedProfile(UUID uuid) {
         if (uuid == null) return null;
+        return profileCache.getIfPresent(uuid);
+    }
+    
+    /**
+     * Gets a profile asynchronously. It checks the cache first, then Redis, then MySQL.
+     */
+    public CompletableFuture<PlayerProfile> getProfile(UUID uuid) {
+        if (uuid == null) return CompletableFuture.completedFuture(null);
         
-        PlayerProfile profile = profileCache.getIfPresent(uuid);
-        if (profile == null) {
+        PlayerProfile cached = profileCache.getIfPresent(uuid);
+        if (cached != null) {
+            return CompletableFuture.completedFuture(cached);
+        }
+        
+        return CompletableFuture.supplyAsync(() -> {
+            PlayerProfile profile = null;
             if (redisManager != null && redisManager.isConnected()) {
                 try (Jedis jedis = redisManager.getPool().getResource()) {
                     String json = jedis.get("corehost:profile:data:" + uuid.toString());
@@ -60,77 +67,55 @@ public class ProfileManager {
                     logger.severe("Failed to load profile from redis for " + uuid + ": " + e.getMessage());
                 }
             }
-
-            if (profile == null) {
-                profile = loadProfileFromStorage(uuid);
-                if (profile != null) {
-                    saveProfileToRedis(profile);
-                }
-            }
-
+            return profile;
+        }).thenCompose(profile -> {
             if (profile != null) {
                 profileCache.put(uuid, profile);
+                return CompletableFuture.completedFuture(profile);
             }
-        }
-        return profile;
+            return loadProfileFromStorage(uuid).thenApply(loaded -> {
+                if (loaded != null) {
+                    saveProfileToRedis(loaded);
+                    profileCache.put(uuid, loaded);
+                }
+                return loaded;
+            });
+        });
     }
     
     /**
-     * Loads a profile completely from MySQL & Redis.
+     * Loads a profile completely from MySQL & Redis via DAOs.
      */
-    private PlayerProfile loadProfileFromStorage(UUID uuid) {
-        if (databaseManager == null) return null;
+    private CompletableFuture<PlayerProfile> loadProfileFromStorage(UUID uuid) {
+        if (databaseManager == null) return CompletableFuture.completedFuture(null);
         
-        PlayerProfile profile = null;
-        
-        // 1. Load base data from MySQL
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT name, last_seen, requests_blocked, coins FROM players WHERE uuid = ?")) {
-            stmt.setString(1, uuid.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    profile = new PlayerProfile(uuid, rs.getString("name"));
-                    profile.setLastSeen(rs.getLong("last_seen"));
-                    profile.setRequestsBlocked(rs.getBoolean("requests_blocked"));
-                    profile.setCoins(rs.getInt("coins"));
+        return databaseManager.getProfileDAO().loadProfile(uuid).thenCompose(profile -> {
+            if (profile == null) return CompletableFuture.completedFuture(null);
+            
+            // Load friends and stats in parallel
+            CompletableFuture<Void> friendsFuture = databaseManager.getFriendDAO().loadFriends(uuid)
+                .thenAccept(profile::setFriends);
+                
+            CompletableFuture<Void> statsFuture = databaseManager.getStatsDAO().loadStats(uuid)
+                .thenAccept(stats -> {
+                    stats.forEach((game, gameStats) -> {
+                        gameStats.forEach((stat, val) -> profile.setStat(game, stat, val));
+                    });
+                });
+                
+            return CompletableFuture.allOf(friendsFuture, statsFuture).thenApply(v -> {
+                // Load Redis settings (notifications)
+                if (redisManager != null && redisManager.isConnected()) {
+                    try (Jedis jedis = redisManager.getPool().getResource()) {
+                        String val = jedis.get("corehost:settings:notifications:" + uuid.toString());
+                        profile.setNotificationsEnabled(val == null || !val.equals("false"));
+                    } catch (Exception e) {
+                         logger.severe("Failed to load redis settings for " + uuid + ": " + e.getMessage());
+                    }
                 }
-            }
-        } catch (SQLException e) {
-            logger.severe("Failed to load profile for " + uuid + ": " + e.getMessage());
-            return null;
-        }
-        
-        // Player not found in DB
-        if (profile == null) {
-            return null;
-        }
-        
-        // 2. Load friends
-        Set<String> friends = new HashSet<>();
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT player2_uuid FROM friends WHERE player1_uuid = ?")) {
-            stmt.setString(1, uuid.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    friends.add(rs.getString("player2_uuid"));
-                }
-            }
-        } catch (SQLException e) {
-            logger.severe("Failed to load friends for " + uuid + ": " + e.getMessage());
-        }
-        profile.setFriends(friends);
-        
-        // 3. Load Redis settings (notifications)
-        if (redisManager != null && redisManager.isConnected()) {
-            try (Jedis jedis = redisManager.getPool().getResource()) {
-                String val = jedis.get("corehost:settings:notifications:" + uuid.toString());
-                profile.setNotificationsEnabled(val == null || !val.equals("false"));
-            } catch (Exception e) {
-                 logger.severe("Failed to load redis settings for " + uuid + ": " + e.getMessage());
-            }
-        }
-        
-        return profile;
+                return profile;
+            });
+        });
     }
     
     /**
@@ -150,42 +135,46 @@ public class ProfileManager {
     }
     
     /**
-     * Forces a synchronous load of the profile from storage and updates the cache.
-     * This avoids invalidating the cache which would cause a main thread freeze on the next getProfile() call.
+     * Forces an asynchronous load of the profile from storage and updates the cache.
      */
-    public void forceUpdateProfile(UUID uuid) {
-        PlayerProfile profile = loadProfileFromStorage(uuid);
-        if (profile != null) {
-            updateCache(profile);
-            saveProfileToRedis(profile);
-        }
+    public CompletableFuture<Void> forceUpdateProfile(UUID uuid) {
+        return loadProfileFromStorage(uuid).thenAccept(profile -> {
+            if (profile != null) {
+                updateCache(profile);
+                saveProfileToRedis(profile);
+            }
+        });
     }
     
     /**
      * Publishes an update message to Redis so all other servers invalidate their cache for this player.
      */
     public void publishProfileUpdate(UUID uuid) {
-        if (redisManager != null && redisManager.isConnected()) {
-            try (Jedis jedis = redisManager.getPool().getResource()) {
-                jedis.publish("corehost:profile:update", uuid.toString());
-            } catch (Exception e) {
-                logger.severe("Failed to publish profile update for " + uuid + ": " + e.getMessage());
+        CompletableFuture.runAsync(() -> {
+            if (redisManager != null && redisManager.isConnected()) {
+                try (Jedis jedis = redisManager.getPool().getResource()) {
+                    jedis.publish("corehost:profile:update", uuid.toString());
+                } catch (Exception e) {
+                    logger.severe("Failed to publish profile update for " + uuid + ": " + e.getMessage());
+                }
             }
-        }
+        });
     }
 
     /**
      * Invalidates Redis cache and publishes an update message.
      */
     public void syncAndInvalidateCache(UUID uuid) {
-        if (redisManager != null && redisManager.isConnected()) {
-            try (Jedis jedis = redisManager.getPool().getResource()) {
-                jedis.del("corehost:profile:data:" + uuid.toString());
-            } catch (Exception e) {
-                logger.severe("Failed to invalidate redis profile data for " + uuid + ": " + e.getMessage());
+        CompletableFuture.runAsync(() -> {
+            if (redisManager != null && redisManager.isConnected()) {
+                try (Jedis jedis = redisManager.getPool().getResource()) {
+                    jedis.del("corehost:profile:data:" + uuid.toString());
+                } catch (Exception e) {
+                    logger.severe("Failed to invalidate redis profile data for " + uuid + ": " + e.getMessage());
+                }
             }
-        }
-        publishProfileUpdate(uuid);
+            publishProfileUpdate(uuid);
+        });
     }
 
     /**
@@ -194,42 +183,51 @@ public class ProfileManager {
     public void addCoins(UUID uuid, int amount) {
         if (databaseManager == null) return;
         
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("UPDATE players SET coins = coins + ? WHERE uuid = ?")) {
-            stmt.setInt(1, amount);
-            stmt.setString(2, uuid.toString());
-            stmt.executeUpdate();
-            
+        databaseManager.getProfileDAO().addCoins(uuid, amount).thenRun(() -> {
             syncAndInvalidateCache(uuid);
-        } catch (SQLException e) {
-            logger.severe("Failed to add coins to " + uuid + ": " + e.getMessage());
-        }
+        });
     }
 
     public void saveProfileToRedis(PlayerProfile profile) {
-        if (redisManager != null && redisManager.isConnected()) {
-            try (Jedis jedis = redisManager.getPool().getResource()) {
-                // Expire in 1 hour (3600s) if not updated
-                jedis.set("corehost:profile:data:" + profile.getUuid().toString(), gson.toJson(profile), redis.clients.jedis.params.SetParams.setParams().ex(3600));
-            } catch (Exception e) {
-                logger.severe("Failed to save profile to redis for " + profile.getUuid() + ": " + e.getMessage());
+        CompletableFuture.runAsync(() -> {
+            if (redisManager != null && redisManager.isConnected()) {
+                try (Jedis jedis = redisManager.getPool().getResource()) {
+                    jedis.set("corehost:profile:data:" + profile.getUuid().toString(), gson.toJson(profile), redis.clients.jedis.params.SetParams.setParams().ex(3600));
+                } catch (Exception e) {
+                    logger.severe("Failed to save profile to redis for " + profile.getUuid() + ": " + e.getMessage());
+                }
             }
-        }
+        });
     }
     
     public void saveProfileToDatabase(PlayerProfile profile) {
         if (databaseManager == null) return;
         
-        try (Connection conn = databaseManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("UPDATE players SET name = ?, last_seen = ?, requests_blocked = ?, coins = ? WHERE uuid = ?")) {
-            stmt.setString(1, profile.getName());
-            stmt.setLong(2, profile.getLastSeen());
-            stmt.setBoolean(3, profile.isRequestsBlocked());
-            stmt.setInt(4, profile.getCoins());
-            stmt.setString(5, profile.getUuid().toString());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            logger.severe("Failed to save profile to database for " + profile.getUuid() + ": " + e.getMessage());
+        databaseManager.getProfileDAO().saveProfile(profile).thenRun(() -> {
+            // Also save stats
+            profile.getStats().forEach((game, stats) -> {
+                stats.forEach((statKey, statValue) -> {
+                    databaseManager.getStatsDAO().saveStat(profile.getUuid(), game, statKey, statValue);
+                });
+            });
+        });
+    }
+
+    public void saveAllProfilesSync() {
+        if (databaseManager == null) return;
+        
+        for (PlayerProfile profile : profileCache.asMap().values()) {
+            try {
+                databaseManager.getProfileDAO().saveProfile(profile).join();
+                profile.getStats().forEach((game, stats) -> {
+                    stats.forEach((statKey, statValue) -> {
+                        databaseManager.getStatsDAO().saveStat(profile.getUuid(), game, statKey, statValue).join();
+                    });
+                });
+                logger.info("Saved profile " + profile.getUuid() + " to database on shutdown.");
+            } catch (Exception e) {
+                logger.severe("Failed to save profile " + profile.getUuid() + " on shutdown: " + e.getMessage());
+            }
         }
     }
 }

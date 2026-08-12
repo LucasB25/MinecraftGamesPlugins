@@ -7,6 +7,7 @@ import fr.corehost.game.spectator.SpectatorListener;
 
 public class CoreHostGame extends JavaPlugin {
     
+    private static CoreHostGame instance;
     private Logger log;
     private fr.corehost.api.redis.RedisManager redisManager;
     private fr.corehost.game.redis.GamePubSubListener pubSubListener;
@@ -14,8 +15,13 @@ public class CoreHostGame extends JavaPlugin {
     private String serverName;
     private java.util.Map<java.util.UUID, String> pendingJoins = new java.util.concurrent.ConcurrentHashMap<>();
     
+    public static CoreHostGame getInstance() {
+        return instance;
+    }
+    
     @Override
     public void onEnable() {
+        instance = this;
         this.log = getLogger();
         log.info("CoreHostGame est en cours d'activation...");
         

@@ -151,7 +151,7 @@ public class PlayerProfileMenu implements CustomMenu {
             
             int fetchedCoins = 0;
             if (plugin.getProfileManager() != null) {
-                fr.corehost.api.profile.PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                fr.corehost.api.profile.PlayerProfile profile = plugin.getProfileManager().getCachedProfile(player.getUniqueId());
                 if (profile != null) {
                     fetchedCoins = profile.getCoins();
                 }
@@ -185,6 +185,8 @@ public class PlayerProfileMenu implements CustomMenu {
                 new PartyMenu(plugin).open(player);
             } else if (type == Material.REDSTONE_TORCH) {
                 new SettingsMenu(plugin).open(player);
+            } else if (type == Material.DIAMOND_SWORD) {
+                new StatsMenu(plugin, player).open();
             } else {
                 player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 1.0f, 1.0f);
                 player.sendMessage(Constants.PREFIX + "Cette fonctionnalité arrive bientôt !");

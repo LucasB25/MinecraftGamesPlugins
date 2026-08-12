@@ -101,10 +101,10 @@ public class SumoGameInstance {
             HostManager hostManager = new HostManager(coreGame.getRedisManager());
             HostData data = null;
             try {
-                data = hostManager.getHost(UUID.fromString(hostId));
+                data = hostManager.getHost(UUID.fromString(hostId)).join();
             } catch (Exception e) {
                 // Fallback for local testing (hostId is worldName "sumo")
-                data = hostManager.getAllHosts().stream()
+                data = hostManager.getAllHosts().join().stream()
                         .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
                         .findFirst().orElse(null);
             }
@@ -116,7 +116,7 @@ public class SumoGameInstance {
                 this.customKB = data.isCustomKB();
                 
                 data.setStatus(fr.corehost.api.host.HostStatus.WAITING);
-                hostManager.saveHost(data);
+                hostManager.saveHost(data).join();
             } else {
                 plugin.getLogger().warning("Could not find HostData for Sumo instance: " + hostId);
             }
@@ -130,9 +130,9 @@ public class SumoGameInstance {
         HostManager hostManager = new HostManager(coreGame.getRedisManager());
         HostData data = null;
         try {
-            data = hostManager.getHost(UUID.fromString(hostId));
+            data = hostManager.getHost(UUID.fromString(hostId)).join();
         } catch (Exception e) {
-            data = hostManager.getAllHosts().stream()
+            data = hostManager.getAllHosts().join().stream()
                     .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
                     .findFirst().orElse(null);
         }
@@ -145,7 +145,7 @@ public class SumoGameInstance {
             else if (state == GameState.PLAYING) data.setStatus(fr.corehost.api.host.HostStatus.PLAYING);
             else if (state == GameState.ENDED) data.setStatus(fr.corehost.api.host.HostStatus.FINISHED);
             
-            hostManager.saveHost(data);
+            hostManager.saveHost(data).join();
         }
     }
 
@@ -156,15 +156,15 @@ public class SumoGameInstance {
         HostManager hostManager = new HostManager(coreGame.getRedisManager());
         HostData data = null;
         try {
-            data = hostManager.getHost(UUID.fromString(hostId));
+            data = hostManager.getHost(UUID.fromString(hostId)).join();
         } catch (Exception e) {
-            data = hostManager.getAllHosts().stream()
+            data = hostManager.getAllHosts().join().stream()
                     .filter(h -> h.getWorldName().equalsIgnoreCase(hostId))
                     .findFirst().orElse(null);
         }
         
         if (data != null) {
-            hostManager.deleteHost(data.getHostId());
+            hostManager.deleteHost(data.getHostId()).join();
         }
     }
 
@@ -428,10 +428,20 @@ public class SumoGameInstance {
                                 
                                 p.sendTitle(CC.GOLD + "VICTOIRE", CC.YELLOW + "Bien joué ! (+" + totalCoins + " coins)", 10, 60, 20);
                                 p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+                                
+                                // Update stats (Win)
+                                if (coreGame != null && coreGame.getRedisManager() != null) {
+                                    coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_STAT\", \"uuid\":\"" + uuid.toString() + "\", \"game\":\"sumo\", \"statKey\":\"wins\", \"amount\": 1}");
+                                }
                             } else {
                                 // Loser logic
                                 totalCoins += matchLoseBonus;
                                 p.sendTitle(CC.RED + "DÉFAITE", CC.GRAY + "Tu gagnes " + totalCoins + " coins.", 10, 60, 20);
+                                
+                                // Update stats (Loss)
+                                if (coreGame != null && coreGame.getRedisManager() != null) {
+                                    coreGame.getRedisManager().publish("corehost:proxy:events", "{\"action\":\"ADD_STAT\", \"uuid\":\"" + uuid.toString() + "\", \"game\":\"sumo\", \"statKey\":\"losses\", \"amount\": 1}");
+                                }
                             }
                             
                             p.sendMessage(SUMO_PREFIX + CC.GOLD + "Récompense : " + CC.YELLOW + "+" + totalCoins + " Coins");
@@ -778,16 +788,20 @@ public class SumoGameInstance {
         return world;
     }
 
+    public String getHostId() {
+        return hostId;
+    }
+
+    public List<UUID> getPlayers() {
+        return players;
+    }
+
     public SumoMapConfig getMapConfig() {
         return mapConfig;
     }
 
     public int getTargetScore() {
         return targetScore;
-    }
-
-    public List<UUID> getPlayers() {
-        return players;
     }
 
     public int getWins(UUID uuid) {

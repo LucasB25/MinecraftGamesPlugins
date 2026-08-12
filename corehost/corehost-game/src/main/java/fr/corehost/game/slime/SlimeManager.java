@@ -87,7 +87,7 @@ public class SlimeManager {
             // Local teleport fallback
             try {
                 fr.corehost.api.host.HostManager hostManager = new fr.corehost.api.host.HostManager(redisManager);
-                for (fr.corehost.api.host.HostData h : hostManager.getAllHosts()) {
+                for (fr.corehost.api.host.HostData h : hostManager.getAllHosts().join()) {
                     if (h.getWorldName().equals(worldName) && h.getServerName().equalsIgnoreCase(serverName)) {
                         org.bukkit.entity.Player owner = Bukkit.getPlayer(h.getOwnerUuid());
                         if (owner != null && owner.isOnline()) {

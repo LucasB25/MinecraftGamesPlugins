@@ -150,7 +150,7 @@ public class HeadHuntManager {
                 }
 
                 // Give reward
-                PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                PlayerProfile profile = plugin.getProfileManager().getCachedProfile(player.getUniqueId());
                 if (profile != null) {
                     profile.setCoins(profile.getCoins() + COINS_PER_HEAD);
                 }

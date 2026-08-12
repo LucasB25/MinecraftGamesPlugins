@@ -1,8 +1,10 @@
 package fr.corehost.api.profile;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerProfile {
 
@@ -15,6 +17,7 @@ public class PlayerProfile {
     private boolean notificationsEnabled;
     private long lastSeen;
     private int coins;
+    private final Map<String, Map<String, Integer>> stats;
 
     public PlayerProfile(UUID uuid, String name) {
         this.uuid = uuid;
@@ -24,6 +27,7 @@ public class PlayerProfile {
         this.notificationsEnabled = true;
         this.lastSeen = 0;
         this.coins = 0;
+        this.stats = new ConcurrentHashMap<>();
     }
 
     public UUID getUuid() {
@@ -91,5 +95,21 @@ public class PlayerProfile {
 
     public void setCoins(int coins) {
         this.coins = coins;
+    }
+
+    public Map<String, Map<String, Integer>> getStats() {
+        return stats;
+    }
+
+    public int getStat(String game, String stat) {
+        return stats.getOrDefault(game, new ConcurrentHashMap<>()).getOrDefault(stat, 0);
+    }
+
+    public void setStat(String game, String stat, int value) {
+        stats.computeIfAbsent(game, k -> new ConcurrentHashMap<>()).put(stat, value);
+    }
+
+    public void addStat(String game, String stat, int value) {
+        setStat(game, stat, getStat(game, stat) + value);
     }
 }

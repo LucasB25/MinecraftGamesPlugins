@@ -7,9 +7,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import fr.corehost.api.database.dao.FriendDAO;
+import fr.corehost.api.database.dao.ProfileDAO;
+import fr.corehost.api.database.dao.StatsDAO;
+
 public class DatabaseManager {
 
     private final HikariDataSource dataSource;
+    private final ProfileDAO profileDAO;
+    private final FriendDAO friendDAO;
+    private final StatsDAO statsDAO;
 
     public DatabaseManager(String host, int port, String database, String user, String password) {
         HikariConfig config = new HikariConfig();
@@ -21,46 +28,27 @@ public class DatabaseManager {
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
-        config.setMaximumPoolSize(10);
+        config.setMaximumPoolSize(15);
+        config.setConnectionTimeout(3000); // 3 seconds timeout
+        config.setLeakDetectionThreshold(5000); // Detect leaks taking more than 5s
         
         this.dataSource = new HikariDataSource(config);
+        
+        this.profileDAO = new ProfileDAO(this);
+        this.friendDAO = new FriendDAO(this);
+        this.statsDAO = new StatsDAO(this);
+        
         createTables();
     }
 
     private void createTables() {
+        // Init tables through DAOs
+        profileDAO.createTable();
+        friendDAO.createTable();
+        statsDAO.createTable();
+        
+        // Other legacy tables
         try (Connection conn = getConnection()) {
-            
-            // Table for name <-> UUID cache
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "CREATE TABLE IF NOT EXISTS players (" +
-                    "uuid VARCHAR(36) PRIMARY KEY, " +
-                    "name VARCHAR(16) NOT NULL, " +
-                    "last_seen BIGINT DEFAULT 0, " +
-                    "requests_blocked BOOLEAN DEFAULT FALSE, " +
-                    "coins INT DEFAULT 0" +
-                    ");")) {
-                stmt.executeUpdate();
-            }
-            
-            // Alter table just in case the table already exists without coins column
-            try (java.sql.ResultSet rs = conn.getMetaData().getColumns(null, null, "players", "coins")) {
-                if (!rs.next()) {
-                    try (PreparedStatement stmt = conn.prepareStatement("ALTER TABLE players ADD COLUMN coins INT DEFAULT 0;")) {
-                        stmt.executeUpdate();
-                    }
-                }
-            }
-            
-            // Table for friends
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "CREATE TABLE IF NOT EXISTS friends (" +
-                    "player1_uuid VARCHAR(36) NOT NULL, " +
-                    "player2_uuid VARCHAR(36) NOT NULL, " +
-                    "PRIMARY KEY (player1_uuid, player2_uuid)" +
-                    ");")) {
-                stmt.executeUpdate();
-            }
-
             // Table for discord links
             try (PreparedStatement stmt = conn.prepareStatement(
                     "CREATE TABLE IF NOT EXISTS discord_links (" +
@@ -84,6 +72,18 @@ public class DatabaseManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public ProfileDAO getProfileDAO() {
+        return profileDAO;
+    }
+
+    public FriendDAO getFriendDAO() {
+        return friendDAO;
+    }
+
+    public StatsDAO getStatsDAO() {
+        return statsDAO;
     }
 
     public Connection getConnection() throws SQLException {

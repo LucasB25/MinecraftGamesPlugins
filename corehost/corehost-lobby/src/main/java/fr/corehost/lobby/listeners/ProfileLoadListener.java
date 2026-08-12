@@ -24,7 +24,7 @@ public class ProfileLoadListener implements Listener {
         // before the player physically joins the server.
         // This prevents the main thread from lagging during the PlayerJoinEvent or Scoreboard updates.
         if (plugin.getProfileManager() != null) {
-            plugin.getProfileManager().getProfile(event.getUniqueId());
+            plugin.getProfileManager().getProfile(event.getUniqueId()).join();
         }
     }
 }

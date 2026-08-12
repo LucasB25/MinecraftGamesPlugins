@@ -263,7 +263,7 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         if (coinsTeam != null) {
             int coins = 0;
             if (plugin.getProfileManager() != null) {
-                PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                PlayerProfile profile = plugin.getProfileManager().getCachedProfile(player.getUniqueId());
                 if (profile != null) {
                     coins = profile.getCoins();
                 }
@@ -316,7 +316,7 @@ public class LobbyScoreboardManager implements PluginMessageListener {
         if (coinsTeam != null) {
             int coins = 0;
             if (plugin.getProfileManager() != null) {
-                PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                PlayerProfile profile = plugin.getProfileManager().getCachedProfile(player.getUniqueId());
                 if (profile != null) {
                     coins = profile.getCoins();
                 }

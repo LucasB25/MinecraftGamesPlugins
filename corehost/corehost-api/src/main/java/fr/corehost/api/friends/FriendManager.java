@@ -68,7 +68,7 @@ public class FriendManager {
 
     public String getNameByUuid(UUID uuid) {
         if (profileManager != null) {
-            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid).join();
             if (profile != null) return profile.getName();
         }
         if (databaseManager == null) return null;
@@ -88,7 +88,7 @@ public class FriendManager {
 
     public Set<String> getFriends(UUID uuid) {
         if (profileManager != null) {
-            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid).join();
             if (profile != null) return profile.getFriends();
         }
         Set<String> friends = new HashSet<>();
@@ -120,7 +120,7 @@ public class FriendManager {
 
     public boolean areFriends(UUID player1, UUID player2) {
         if (profileManager != null) {
-            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(player1);
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(player1).join();
             if (profile != null) return profile.hasFriend(player2.toString());
         }
         if (databaseManager == null) return false;
@@ -224,7 +224,7 @@ public class FriendManager {
 
     public boolean areFriendRequestsBlocked(UUID uuid) {
         if (profileManager != null) {
-            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid).join();
             if (profile != null) return profile.isRequestsBlocked();
         }
         if (databaseManager == null) return false;
@@ -309,7 +309,7 @@ public class FriendManager {
 
     public boolean areNotificationsEnabled(UUID uuid) {
         if (profileManager != null) {
-            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid);
+            fr.corehost.api.profile.PlayerProfile profile = profileManager.getProfile(uuid).join();
             if (profile != null) return profile.isNotificationsEnabled();
         }
         try (Jedis jedis = redisManager.getPool().getResource()) {

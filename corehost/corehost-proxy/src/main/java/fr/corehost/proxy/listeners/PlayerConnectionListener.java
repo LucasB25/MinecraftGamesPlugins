@@ -90,7 +90,7 @@ public class PlayerConnectionListener {
                 
                 // Save profile to MySQL database on quit
                 if (plugin.getProfileManager() != null) {
-                    fr.corehost.api.profile.PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId());
+                    fr.corehost.api.profile.PlayerProfile profile = plugin.getProfileManager().getProfile(player.getUniqueId()).join();
                     if (profile != null) {
                         plugin.getProfileManager().saveProfileToDatabase(profile);
                     }

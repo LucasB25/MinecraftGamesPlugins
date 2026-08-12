@@ -114,6 +114,10 @@ public class SumoGameManager {
         return instances.get(hostId);
     }
     
+    public java.util.Collection<SumoGameInstance> getActiveInstances() {
+        return instances.values();
+    }
+    
     public SumoGameInstance getInstance(World world) {
         return getInstance(world.getName());
     }
